@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bar Studio · The Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,800&family=Jost:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ——————————————————————————————————————————————————————
+   THE WORKSHOP · Studio · design tokens
+   ——————————————————————————————————————————————————————— */
+:root {
+  --paper:   #f3ead7;
+  --paper-2: #ece1c9;
+  --ink:     #1a1510;
+  --ink-soft:#2a2319;
+  --muted:   #6b5d4f;
+  --dim:     #8c7f6b;
+  --accent:  #8c2e1a;
+  --measure: #2a3a55;
+  --measure-soft: rgba(42,58,85,.22);
+  --measure-grid: rgba(42,58,85,.09);
+
+  --east:  #1f4d54;
+  --west:  #c88a2f;
+  --north: #8c2e1a;
+  --south: #3d5c3d;
+  --other: #7a6b55;
+
+  --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --sans:  'Jost', ui-sans-serif, system-ui, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hindi: 'Tiro Devanagari Hindi', var(--serif);
+
+  --shadow-placard: 2px 2px 0 0 var(--ink);
+  --shadow-placard-hover: 3px 3px 0 0 var(--ink);
+
+  --rail-width: 300px;
+  --toolbar-height: 56px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.5;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+
+  background-image:
+    linear-gradient(to right,  var(--measure-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--measure-grid) 1px, transparent 1px),
+    linear-gradient(to right,  var(--measure-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--measure-soft) 1px, transparent 1px);
+  background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: .32;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0.55 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+}
+
+/* ——————————————————————————————————————————————————————
+   Toolbar
+   ——————————————————————————————————————————————————————— */
+.toolbar {
+  height: var(--toolbar-height);
+  padding: 0 28px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--measure);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  position: relative;
+}
+.toolbar::after {
+  content: "";
+  position: absolute;
+  left: 28px; right: 28px; bottom: -4px;
+  border-bottom: 1px solid var(--measure-soft);
+}
+
+.breadcrumb {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.breadcrumb a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+}
+.breadcrumb .sep {
+  color: var(--measure);
+  font-family: var(--mono);
+  font-weight: 500;
+}
+.breadcrumb .current {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Stamped-metal action buttons */
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.btn {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 9px 14px 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 0 var(--ink);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--ink);
+}
+.btn .mark {
+  display: inline-block;
+  font-family: var(--serif);
+  font-weight: 800;
+  color: var(--accent);
+}
+.btn.primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn.primary .mark { color: var(--paper-2); }
+
+/* ——————————————————————————————————————————————————————
+   Page grid — rail + canvas
+   ——————————————————————————————————————————————————————— */
+.workspace {
+  display: grid;
+  grid-template-columns: var(--rail-width) 1fr;
+  min-height: calc(100vh - var(--toolbar-height));
+}
+
+/* ——————————————————————————————————————————————————————
+   Config rail — the "drafting wall"
+   ——————————————————————————————————————————————————————— */
+.rail {
+  padding: 28px 24px 48px;
+  border-right: 1px solid var(--measure);
+  background: linear-gradient(to right, var(--paper) 0%, var(--paper) calc(100% - 4px), var(--measure-soft) calc(100% - 3px), transparent 100%);
+  position: relative;
+}
+
+.rail-section { margin-bottom: 32px; }
+.rail-section:last-child { margin-bottom: 0; }
+
+.rail-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--measure);
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--measure-soft);
+  margin-bottom: 14px;
+}
+.rail-label b {
+  color: var(--ink);
+  font-weight: 500;
+}
+.rail-label .index {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ——————————————————————————————————————————————————————
+   Hinged selector plates — the radio-group language
+   ——————————————————————————————————————————————————————— */
+.plates { display: flex; flex-direction: column; gap: 6px; }
+
+.plate {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px 9px 10px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  box-shadow: 2px 2px 0 0 var(--ink);
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out, background 100ms ease-out;
+  line-height: 1;
+}
+.plate:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+/* hinge — left edge notch showing it's pinned */
+.plate::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+.plate .pin-no {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--measure);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+}
+.plate .pin-hint {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ACTIVE plate — pressed in, vermilion notch, no shadow */
+.plate.active {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--ink);
+}
+.plate.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 10px solid var(--accent);
+  border-left: 10px solid transparent;
+}
+.plate.active .pin-no,
+.plate.active .pin-hint { color: var(--paper-2); }
+
+/* ——————————————————————————————————————————————————————
+   Entity chip field (multi-select)
+   ——————————————————————————————————————————————————————— */
+.chip-field {
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  padding: 10px 10px 8px;
+  box-shadow: 2px 2px 0 0 var(--ink);
+  min-height: 80px;
+  position: relative;
+}
+.chip-field::before {
+  /* "ticket edge" — a dashed tear along the top */
+  content: "";
+  position: absolute;
+  left: 8px; right: 8px; top: -6px;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right, var(--measure) 0 4px, transparent 4px 8px);
+  opacity: .5;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 6px 4px 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+.chip .dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.chip .x {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  padding-left: 2px;
+  border-left: 1px solid var(--measure-soft);
+  margin-left: 2px;
+  padding-top: 0;
+  cursor: pointer;
+}
+.chip-add {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: transparent;
+  border: 1px dashed var(--accent);
+  padding: 5px 8px 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+.chip-counter {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--measure);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid var(--measure-soft);
+}
+
+/* ——————————————————————————————————————————————————————
+   Drafting-table slider (dual-thumb time range)
+   ——————————————————————————————————————————————————————— */
+.slider {
+  padding: 14px 8px 6px;
+  position: relative;
+}
+.slider-rail {
+  position: relative;
+  height: 3px;
+  background: var(--ink);
+  margin: 28px 8px 0;
+}
+.slider-fill {
+  position: absolute;
+  top: 0;
+  height: 3px;
+  background: var(--accent);
+  /* simulated range */
+  left: 12%;
+  right: 8%;
+}
+.slider-tick {
+  position: absolute;
+  top: -5px;
+  width: 1px;
+  height: 13px;
+  background: var(--measure);
+}
+.slider-tick.major { height: 18px; top: -7px; background: var(--ink); }
+.slider-tick-label {
+  position: absolute;
+  top: 22px;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--measure);
+  white-space: nowrap;
+}
+.slider-tick-label.major { color: var(--ink); font-weight: 500; }
+
+.slider-thumb {
+  position: absolute;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 2px 2px 0 0 var(--ink);
+  cursor: grab;
+  z-index: 3;
+}
+.slider-thumb.left  { left: 12%; }
+.slider-thumb.right { left: 92%; }
+.slider-thumb::after {
+  /* the year tag hanging below */
+  content: attr(data-year);
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-45deg);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.slider-readout {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+  padding: 52px 0 0;
+}
+.slider-readout b { color: var(--ink); font-weight: 500; }
+
+/* ——————————————————————————————————————————————————————
+   Chart type segmented control (4-option)
+   ——————————————————————————————————————————————————————— */
+.seg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 0 var(--ink);
+  background: var(--paper);
+  overflow: hidden;
+}
+.seg-opt {
+  padding: 14px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border-right: 1px solid var(--measure-soft);
+  background: var(--paper);
+  transition: background 100ms ease-out;
+  position: relative;
+}
+.seg-opt:last-child { border-right: none; }
+.seg-opt:hover { background: var(--paper-2); }
+.seg-opt svg { width: 22px; height: 22px; color: var(--ink); }
+.seg-opt-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-weight: 500;
+  line-height: 1;
+}
+.seg-opt.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.seg-opt.active svg    { color: var(--paper); }
+.seg-opt.active .seg-opt-label { color: var(--paper); }
+.seg-opt.active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top: 6px solid var(--accent);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+
+/* ——————————————————————————————————————————————————————
+   The CANVAS — the worksheet
+   ——————————————————————————————————————————————————————— */
+.canvas {
+  padding: 56px 72px 72px;
+  min-height: calc(100vh - var(--toolbar-height));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.worksheet {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 3px 3px 0 0 var(--ink);
+  padding: 28px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* registration crosshairs — four corners, OUTSIDE the frame */
+.worksheet .reg {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-image:
+    linear-gradient(to right, var(--measure) 50%, transparent 50%),
+    linear-gradient(to bottom, var(--measure) 50%, transparent 50%);
+  background-size: 20px 1px, 1px 20px;
+  background-repeat: no-repeat;
+  background-position: center, center;
+  pointer-events: none;
+}
+.worksheet .reg.tl { top: -28px; left: -28px; }
+.worksheet .reg.tr { top: -28px; right: -28px; }
+.worksheet .reg.bl { bottom: -28px; left: -28px; }
+.worksheet .reg.br { bottom: -28px; right: -28px; }
+/* small ring at intersection */
+.worksheet .reg::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--measure);
+  border-radius: 50%;
+}
+
+/* stamped figure number at top-right */
+.worksheet-stamp {
+  position: absolute;
+  top: -14px;
+  right: 24px;
+  background: var(--paper);
+  padding: 2px 10px;
+  border: 1px solid var(--accent);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-transform: uppercase;
+  transform: rotate(-1.5deg);
+  box-shadow: 1px 1px 0 0 var(--accent);
+}
+
+/* ticker bar: metadata at the top of the worksheet */
+.worksheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--measure-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+}
+.worksheet-head .title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-transform: none;
+}
+.worksheet-head .subtitle {
+  font-family: var(--hindi);
+  font-size: 14px;
+  color: var(--muted);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.worksheet-head .right { text-align: right; }
+.worksheet-head .right b { color: var(--ink); font-weight: 500; }
+
+/* the chart body */
+.chart-body {
+  height: 420px;
+  padding: 18px 6px 6px;
+  position: relative;
+}
+.chart-body svg { width: 100%; height: 100%; display: block; font-family: var(--mono); }
+
+/* caption strip at the bottom of the worksheet */
+.worksheet-caption {
+  padding-top: 12px;
+  border-top: 1px solid var(--ink);
+  position: relative;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.worksheet-caption::before {
+  /* second, thinner rule above — "double rule" */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -4px;
+  border-top: 1px solid var(--measure-soft);
+}
+.worksheet-caption .cap-left { display: flex; gap: 18px; align-items: baseline; }
+.worksheet-caption .cap-left .mark {
+  color: var(--accent);
+  font-weight: 700;
+}
+.worksheet-caption .cap-left .dim {
+  color: var(--measure);
+}
+.worksheet-caption .cap-hand {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+/* editorial note below the worksheet */
+.worksheet-note {
+  max-width: 960px;
+  width: 100%;
+  padding: 24px 4px 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.worksheet-note::before {
+  content: "§";
+  font-family: var(--serif);
+  font-style: normal;
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+/* ——————————————————————————————————————————————————————
+   Entrance animation
+   ——————————————————————————————————————————————————————— */
+.rail-section,
+.worksheet { opacity: 0; transform: translateY(6px); animation: settle 480ms ease-out forwards; }
+.rail-section:nth-child(1) { animation-delay: 80ms; }
+.rail-section:nth-child(2) { animation-delay: 160ms; }
+.rail-section:nth-child(3) { animation-delay: 240ms; }
+.rail-section:nth-child(4) { animation-delay: 320ms; }
+.rail-section:nth-child(5) { animation-delay: 400ms; }
+.worksheet { animation-delay: 200ms; animation-duration: 640ms; }
+
+@keyframes settle {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ——————————————————————————————————————————————————————
+   Mobile — the builder is desktop-first; mobile sees a notice.
+   For the mock we just let the rail stack above the canvas.
+   ——————————————————————————————————————————————————————— */
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 1fr; }
+  .rail { border-right: none; border-bottom: 1px solid var(--measure); }
+  .canvas { padding: 36px 28px 48px; }
+  .toolbar { padding: 0 16px; }
+  .breadcrumb { font-size: 10px; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TOOLBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="toolbar">
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="/tools">THE WORKSHOP</a>
+    <span class="sep">▸</span>
+    <span class="current">BAR STUDIO</span>
+  </nav>
+  <div class="actions">
+    <button class="btn" type="button">
+      <span class="mark">⬇</span> Download PNG
+    </button>
+    <button class="btn primary" type="button">
+      <span class="mark">⎙</span> Print Report
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     WORKSPACE — rail + canvas
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="workspace">
+
+  <!-- ──────────────────────────── RAIL ──────────────────────────── -->
+  <aside class="rail" aria-label="Studio configuration">
+
+    <!-- § 01 · DATASET -->
+    <section class="rail-section">
+      <header class="rail-label">
+        <b>§ 01 · Dataset</b>
+        <span class="index">pick one</span>
+      </header>
+      <div class="plates" role="radiogroup">
+        <label class="plate" role="radio" aria-checked="false">
+          <span class="pin-no">01</span>
+          <span>Region</span>
+          <span class="pin-hint">5 rows</span>
+        </label>
+        <label class="plate active" role="radio" aria-checked="true">
+          <span class="pin-no">02</span>
+          <span>State</span>
+          <span class="pin-hint">18 rows</span>
+        </label>
+        <label class="plate" role="radio" aria-checked="false">
+          <span class="pin-no">03</span>
+          <span>Lok Sabha</span>
+          <span class="pin-hint">36 rows</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- § 02 · METRIC -->
+    <section class="rail-section">
+      <header class="rail-label">
+        <b>§ 02 · Metric</b>
+        <span class="index">y-axis</span>
+      </header>
+      <div class="plates" role="radiogroup">
+        <label class="plate active" role="radio" aria-checked="true">
+          <span class="pin-no">01</span>
+          <span>Population</span>
+          <span class="pin-hint">mn</span>
+        </label>
+        <label class="plate" role="radio" aria-checked="false">
+          <span class="pin-no">02</span>
+          <span>Growth · decadal</span>
+          <span class="pin-hint">%</span>
+        </label>
+        <label class="plate" role="radio" aria-checked="false">
+          <span class="pin-no">03</span>
+          <span>Indexed · 1901 = 100</span>
+          <span class="pin-hint">idx</span>
+        </label>
+        <label class="plate" role="radio" aria-checked="false">
+          <span class="pin-no">04</span>
+          <span>Pop · per seat</span>
+          <span class="pin-hint">lakh</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- § 03 · ENTITIES -->
+    <section class="rail-section">
+      <header class="rail-label">
+        <b>§ 03 · Entities</b>
+        <span class="index">8 / 18</span>
+      </header>
+      <div class="chip-field">
+        <div class="chips">
+          <span class="chip"><span class="dot" style="background:var(--north)"></span>UP <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--west)"></span>MH <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--east)"></span>BR <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--east)"></span>WB <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--south)"></span>AP <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--north)"></span>MP <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--south)"></span>TN <span class="x">×</span></span>
+          <span class="chip"><span class="dot" style="background:var(--north)"></span>RJ <span class="x">×</span></span>
+          <button class="chip-add" type="button">+ add</button>
+        </div>
+        <div class="chip-counter">
+          <span>SELECTED · 8</span>
+          <span>MAX · 18</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- § 04 · TIME RANGE -->
+    <section class="rail-section">
+      <header class="rail-label">
+        <b>§ 04 · Time range</b>
+        <span class="index">1901 – 2011</span>
+      </header>
+      <div class="slider" role="group" aria-label="Time range slider">
+        <div class="slider-rail">
+          <div class="slider-fill"></div>
+
+          <!-- 12 census years as ticks; labels on the majors -->
+          <span class="slider-tick"       style="left: 0%;"></span>
+          <span class="slider-tick major" style="left: 0%;"></span>
+          <span class="slider-tick-label major" style="left: 0%;">1901</span>
+
+          <span class="slider-tick" style="left: 9.09%;"></span>
+          <span class="slider-tick" style="left: 18.18%;"></span>
+          <span class="slider-tick major" style="left: 27.27%;"></span>
+          <span class="slider-tick-label" style="left: 27.27%;">31</span>
+
+          <span class="slider-tick" style="left: 36.36%;"></span>
+          <span class="slider-tick" style="left: 45.45%;"></span>
+          <span class="slider-tick major" style="left: 54.54%;"></span>
+          <span class="slider-tick-label" style="left: 54.54%;">61</span>
+
+          <span class="slider-tick" style="left: 63.63%;"></span>
+          <span class="slider-tick" style="left: 72.72%;"></span>
+          <span class="slider-tick major" style="left: 81.81%;"></span>
+          <span class="slider-tick-label" style="left: 81.81%;">91</span>
+
+          <span class="slider-tick" style="left: 90.90%;"></span>
+          <span class="slider-tick" style="left: 100%;"></span>
+          <span class="slider-tick major" style="left: 100%;"></span>
+          <span class="slider-tick-label major" style="left: 100%;">2011</span>
+
+          <!-- thumbs -->
+          <span class="slider-thumb left"  data-year="1901" style="left: 12%;"></span>
+          <span class="slider-thumb right" data-year="2011" style="left: 92%;"></span>
+        </div>
+        <div class="slider-readout">
+          <span><b>FROM</b> 1901</span>
+          <span><b>TO</b> 2011</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- § 05 · CHART TYPE -->
+    <section class="rail-section">
+      <header class="rail-label">
+        <b>§ 05 · Chart type</b>
+        <span class="index">flip freely</span>
+      </header>
+      <div class="seg" role="radiogroup">
+        <label class="seg-opt active" role="radio" aria-checked="true">
+          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2"  y="10" width="3" height="10"/>
+            <rect x="7"  y="6"  width="3" height="14"/>
+            <rect x="12" y="3"  width="3" height="17"/>
+            <rect x="17" y="8"  width="3" height="12"/>
+          </svg>
+          <span class="seg-opt-label">Bar</span>
+        </label>
+        <label class="seg-opt" role="radio" aria-checked="false">
+          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+            <polyline points="2,18 7,13 12,15 17,6 20,9"/>
+          </svg>
+          <span class="seg-opt-label">Line</span>
+        </label>
+        <label class="seg-opt" role="radio" aria-checked="false">
+          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M11 2 L17 4 L19 9 L15 14 L17 19 L11 20 L6 17 L3 12 L4 7 L8 5 Z"/>
+            <line x1="11" y1="2" x2="11" y2="20"/>
+            <line x1="3" y1="12" x2="19" y2="9"/>
+          </svg>
+          <span class="seg-opt-label">Map</span>
+        </label>
+        <label class="seg-opt" role="radio" aria-checked="false">
+          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="3"  width="8" height="7"/>
+            <rect x="12" y="3" width="8" height="7"/>
+            <rect x="2" y="12" width="8" height="7"/>
+            <rect x="12" y="12" width="8" height="7"/>
+          </svg>
+          <span class="seg-opt-label">Compare</span>
+        </label>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- ──────────────────────────── CANVAS ──────────────────────────── -->
+  <main class="canvas">
+
+    <article class="worksheet" aria-label="Figure B-01">
+      <span class="reg tl" aria-hidden="true"></span>
+      <span class="reg tr" aria-hidden="true"></span>
+      <span class="reg bl" aria-hidden="true"></span>
+      <span class="reg br" aria-hidden="true"></span>
+
+      <span class="worksheet-stamp">Fig. B-01</span>
+
+      <header class="worksheet-head">
+        <div>
+          <div class="title">Population by State · 2011</div>
+          <div class="subtitle">जनसंख्या · राज्यानुसार</div>
+        </div>
+        <div class="right">
+          <div><b>UNIT</b> MILLIONS</div>
+          <div><b>N</b> 8 · SORTED ↓</div>
+        </div>
+      </header>
+
+      <div class="chart-body">
+        <!-- horizontal bar chart, 8 states, region-coloured -->
+        <svg viewBox="0 0 860 380" preserveAspectRatio="none">
+          <defs>
+            <pattern id="gridv" width="86" height="380" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="380" stroke="#2a3a55" stroke-opacity="0.14" stroke-dasharray="2 3"/>
+            </pattern>
+          </defs>
+
+          <!-- gridlines, x axis -->
+          <rect x="100" y="10" width="720" height="320" fill="url(#gridv)"/>
+          <line x1="100" y1="330" x2="820" y2="330" stroke="#1a1510" stroke-width="1"/>
+
+          <!-- x-axis tick labels (values in millions) -->
+          <g font-size="11" fill="#2a3a55" font-family="JetBrains Mono" letter-spacing="1.2" text-anchor="middle">
+            <text x="100" y="352">0</text>
+            <text x="244" y="352">50</text>
+            <text x="388" y="352">100</text>
+            <text x="532" y="352">150</text>
+            <text x="676" y="352">200</text>
+            <text x="820" y="352">250</text>
+          </g>
+          <g font-size="9" fill="#2a3a55" font-family="JetBrains Mono" letter-spacing="1.8" text-anchor="middle">
+            <text x="460" y="370">↓ POPULATION · MILLIONS →</text>
+          </g>
+
+          <!-- reference line: India's 2011 avg per state (~67M) – dashed vermilion -->
+          <line x1="292.96" y1="10" x2="292.96" y2="330" stroke="#8c2e1a" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+          <text x="299" y="22" font-size="9" fill="#8c2e1a" font-family="JetBrains Mono" letter-spacing="1.2">AVG ~67</text>
+
+          <!-- 8 horizontal bars. Row height 36. Bar height 22. Row 0 at y=26. -->
+
+          <!-- UP — 199.81 → width = 575 -->
+          <g>
+            <rect x="100" y="26"  width="575" height="22" fill="#8c2e1a"/>
+            <text x="90"  y="41" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">UP</text>
+            <text x="683" y="41" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">199.81</text>
+          </g>
+          <!-- MH — 112.37 → width = 323 -->
+          <g>
+            <rect x="100" y="62"  width="323" height="22" fill="#c88a2f"/>
+            <text x="90"  y="77" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">MH</text>
+            <text x="431" y="77" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">112.37</text>
+          </g>
+          <!-- BR — 104.10 → width = 300 -->
+          <g>
+            <rect x="100" y="98"  width="300" height="22" fill="#1f4d54"/>
+            <text x="90"  y="113" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">BR</text>
+            <text x="408" y="113" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">104.10</text>
+          </g>
+          <!-- WB — 91.28 → width = 263 -->
+          <g>
+            <rect x="100" y="134" width="263" height="22" fill="#1f4d54"/>
+            <text x="90"  y="149" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">WB</text>
+            <text x="371" y="149" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">91.28</text>
+          </g>
+          <!-- AP — 84.58 → width = 243 -->
+          <g>
+            <rect x="100" y="170" width="243" height="22" fill="#3d5c3d"/>
+            <text x="90"  y="185" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">AP</text>
+            <text x="351" y="185" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">84.58</text>
+          </g>
+          <!-- MP — 72.63 → width = 209 -->
+          <g>
+            <rect x="100" y="206" width="209" height="22" fill="#8c2e1a"/>
+            <text x="90"  y="221" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">MP</text>
+            <text x="317" y="221" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">72.63</text>
+          </g>
+          <!-- TN — 72.15 → width = 208 -->
+          <g>
+            <rect x="100" y="242" width="208" height="22" fill="#3d5c3d"/>
+            <text x="90"  y="257" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">TN</text>
+            <text x="316" y="257" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">72.15</text>
+          </g>
+          <!-- RJ — 68.55 → width = 198 -->
+          <g>
+            <rect x="100" y="278" width="198" height="22" fill="#8c2e1a"/>
+            <text x="90"  y="293" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.6" text-anchor="end">RJ</text>
+            <text x="306" y="293" font-size="11" fill="#1a1510" font-family="JetBrains Mono" letter-spacing="1.4">68.55</text>
+          </g>
+        </svg>
+      </div>
+
+      <footer class="worksheet-caption">
+        <div class="cap-left">
+          <span><span class="mark">FIG. B-01</span> <span class="dim">▸</span> Population × State × 2011</span>
+        </div>
+        <div class="cap-hand">drafted on the 16pt grid</div>
+        <div>
+          <span><span class="dim">SHEET</span> 01 · 01</span>
+        </div>
+      </footer>
+    </article>
+
+    <p class="worksheet-note">
+      Eight states selected. Uttar Pradesh alone holds a population larger than every country except China,
+      the United States, Indonesia, Pakistan, and Brazil. Flip to <em>Line</em> to watch how that gap opened
+      over 110 years — or to <em>Compare</em> to put UP beside Kerala on the same sheet.
+    </p>
+
+  </main>
+
+</div>
+
+</body>
+</html>

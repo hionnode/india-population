@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Workshop · Census Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,800&family=Jost:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ——————————————————————————————————————————————————————
+   THE WORKSHOP · design tokens
+   Draft REV. 01 · extends the editorial essay's cream-paper palette
+   ——————————————————————————————————————————————————————— */
+:root {
+  --paper:   #f3ead7;
+  --paper-2: #ece1c9;
+  --ink:     #1a1510;
+  --ink-soft:#2a2319;
+  --muted:   #6b5d4f;
+  --dim:     #8c7f6b;
+  --rule:    #1a1510;
+  --accent:  #8c2e1a;           /* vermilion */
+  --measure: #2a3a55;           /* blueprint blue — gridlines & registration marks only */
+  --measure-soft: rgba(42,58,85,.22);
+  --measure-grid: rgba(42,58,85,.09);
+
+  --east:  #1f4d54;
+  --west:  #c88a2f;
+  --north: #8c2e1a;
+  --south: #3d5c3d;
+  --other: #7a6b55;
+
+  --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --sans:  'Jost', ui-sans-serif, system-ui, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hindi: 'Tiro Devanagari Hindi', var(--serif);
+
+  --step: 16px;                 /* the grid. every placement snaps to it. */
+  --shadow-placard: 2px 2px 0 0 var(--ink);
+  --shadow-placard-hover: 4px 4px 0 0 var(--ink);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.55;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+
+  /* graph-paper grid — 16px fine, 80px major — at 0.09 / 0.18 opacity */
+  background-image:
+    linear-gradient(to right,  var(--measure-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--measure-grid) 1px, transparent 1px),
+    linear-gradient(to right,  var(--measure-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--measure-soft) 1px, transparent 1px);
+  background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+}
+
+/* grain overlay — ported from editorial global.css — multiply blend on the cream */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: .35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0.55 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+}
+
+/* ——————————————————————————————————————————————————————
+   Top strip — the header of the drafting sheet
+   ——————————————————————————————————————————————————————— */
+.sheet-header {
+  padding: 22px 48px 14px;
+  border-bottom: 1px solid var(--measure);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  position: relative;
+}
+.sheet-header::after {
+  /* second rule, 3px below, gives the "sheet pocket" double-line */
+  content: "";
+  position: absolute;
+  left: 48px; right: 48px; bottom: -4px;
+  border-bottom: 1px solid var(--measure-soft);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.eyebrow a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+}
+.eyebrow .sep { color: var(--measure); margin: 0 10px; }
+.eyebrow .current { color: var(--accent); }
+
+.sheet-ident {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+  display: flex;
+  gap: 24px;
+}
+.sheet-ident b { color: var(--ink); font-weight: 500; }
+
+/* ——————————————————————————————————————————————————————
+   Main masthead
+   ——————————————————————————————————————————————————————— */
+.masthead {
+  padding: 80px 48px 56px;
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) 7fr;
+  gap: 64px;
+  align-items: end;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 800;
+  font-size: clamp(56px, 9vw, 118px);
+  line-height: 0.86;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 0 0 8px;
+  display: block;
+}
+.title-hi {
+  font-family: var(--hindi);
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 400;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+  margin: 6px 0 22px;
+  display: block;
+}
+.lede {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 28px;
+  max-width: 44ch;
+}
+
+.stamp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 20px;
+  border-top: 1px solid var(--measure);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+}
+.stamp-row span b { color: var(--ink); font-weight: 500; }
+.stamp-row .stamp-hand {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent);
+  padding-top: 6px;
+}
+
+/* ——————————————————————————————————————————————————————
+   The 2x2 card grid — "preset placards"
+   ——————————————————————————————————————————————————————— */
+.placards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-content: end;
+}
+
+.placard {
+  position: relative;
+  padding: 24px 26px 22px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-placard);
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+  min-height: 260px;
+  transition: transform 140ms ease-out, box-shadow 140ms ease-out;
+  will-change: transform;
+}
+.placard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-placard-hover);
+}
+.placard:active {
+  transform: translate(0, 0);
+  box-shadow: 1px 1px 0 0 var(--ink);
+  transition-duration: 60ms;
+}
+
+/* registration crosshairs — four corners, OUTSIDE the border */
+.placard::before,
+.placard::after,
+.placard > .reg-tl,
+.placard > .reg-br {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-image:
+    linear-gradient(to right, var(--measure) 50%, transparent 50%),
+    linear-gradient(to bottom, var(--measure) 50%, transparent 50%);
+  background-size: 14px 1px, 1px 14px;
+  background-repeat: no-repeat;
+  background-position: center, center;
+  pointer-events: none;
+}
+.placard::before { top: -20px; left: -20px; }                         /* TL */
+.placard::after  { bottom: -20px; right: -20px; }                     /* BR */
+.placard > .reg-tl { top: -20px; right: -20px; }                      /* TR */
+.placard > .reg-br { bottom: -20px; left: -20px; }                    /* BL */
+
+.placard-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.placard-tag .pin {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--accent);
+}
+
+.placard-title {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+.placard-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+.placard-hi {
+  display: block;
+  font-family: var(--hindi);
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+.placard-preview {
+  margin: 6px 0 8px;
+  padding: 12px 0 10px;
+  border-top: 1px dashed var(--measure-soft);
+  border-bottom: 1px dashed var(--measure-soft);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placard-preview svg { display: block; height: 100%; width: 100%; }
+
+.placard-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+.placard-desc {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 28ch;
+}
+.placard-cta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  align-self: end;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--accent);
+}
+
+/* ——————————————————————————————————————————————————————
+   Footer strip — colophon
+   ——————————————————————————————————————————————————————— */
+.sheet-footer {
+  max-width: 1280px;
+  margin: 96px auto 0;
+  padding: 20px 48px 28px;
+  border-top: 1px solid var(--measure);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--measure);
+}
+.sheet-footer b { color: var(--ink); font-weight: 500; }
+.sheet-footer .colophon-hand {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+/* ——————————————————————————————————————————————————————
+   Staggered reveal on first paint
+   ——————————————————————————————————————————————————————— */
+.placard    { opacity: 0; transform: translateY(8px); animation: settle 520ms ease-out forwards; }
+.placard:nth-child(1) { animation-delay: 120ms; }
+.placard:nth-child(2) { animation-delay: 200ms; }
+.placard:nth-child(3) { animation-delay: 280ms; }
+.placard:nth-child(4) { animation-delay: 360ms; }
+.title      { opacity: 0; animation: settle 620ms 60ms ease-out forwards; }
+.lede       { opacity: 0; animation: settle 620ms 160ms ease-out forwards; }
+.stamp-row  { opacity: 0; animation: settle 620ms 240ms ease-out forwards; }
+
+@keyframes settle {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ——————————————————————————————————————————————————————
+   Narrow viewports — tools are desktop-first, but the landing
+   remains readable. The placards stack.
+   ——————————————————————————————————————————————————————— */
+@media (max-width: 900px) {
+  .masthead { grid-template-columns: 1fr; gap: 40px; padding: 48px 28px 32px; }
+  .placards { grid-template-columns: 1fr; gap: 32px; }
+  .sheet-header { padding: 16px 24px 10px; }
+  .sheet-footer { padding: 18px 24px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SHEET HEADER
+     ═══════════════════════════════════════════════════════════════ -->
+<header class="sheet-header">
+  <nav class="eyebrow" aria-label="breadcrumb">
+    <a href="/">THE CENSUS</a>
+    <span class="sep">/</span>
+    <span class="current">THE WORKSHOP</span>
+  </nav>
+  <div class="sheet-ident" aria-label="sheet identification">
+    <span><b>SHEET</b> 00 · 01</span>
+    <span><b>REV.</b> 01</span>
+    <span><b>SCALE</b> 1 : 1</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MASTHEAD + 2x2 PLACARD GRID
+     ═══════════════════════════════════════════════════════════════ -->
+<main class="masthead">
+  <section>
+    <h1 class="title">The<br>Work<em>shop</em></h1>
+    <span class="title-hi">कार्यशाला</span>
+    <p class="lede">
+      The tools behind the essay. A drafting table where you can rank, trace,
+      and compare a century of Indian census data — and print the result on
+      your own letterhead.
+    </p>
+    <div class="stamp-row" role="note">
+      <span><b>DRAFTED</b> FROM · CENSUS 1881 – 2011</span>
+      <span><b>DRAFTSMAN</b> · YOU</span>
+      <span class="stamp-hand">pick an instrument from the wall →</span>
+    </div>
+  </section>
+
+  <section class="placards" aria-label="tool presets">
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━ BAR STUDIO ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <a class="placard" href="/tools/studio?preset=bar" style="animation-delay:120ms">
+      <span class="reg-tl" aria-hidden="true"></span>
+      <span class="reg-br" aria-hidden="true"></span>
+
+      <div class="placard-tag">
+        <span>FIG. B-01 · BAR</span>
+        <span class="pin" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <h2 class="placard-title">Bar <em>Studio</em></h2>
+        <span class="placard-hi">स्तंभ</span>
+
+        <div class="placard-preview" aria-hidden="true">
+          <svg viewBox="0 0 280 60" preserveAspectRatio="none">
+            <!-- baseline -->
+            <line x1="0" y1="58" x2="280" y2="58" stroke="#2a3a55" stroke-width="0.5"/>
+            <!-- bars in region palette, sorted tall→short -->
+            <rect x="8"   y="6"  width="24" height="52" fill="#8c2e1a"/>
+            <rect x="40"  y="18" width="24" height="40" fill="#c88a2f"/>
+            <rect x="72"  y="22" width="24" height="36" fill="#1f4d54"/>
+            <rect x="104" y="26" width="24" height="32" fill="#1f4d54"/>
+            <rect x="136" y="30" width="24" height="28" fill="#3d5c3d"/>
+            <rect x="168" y="32" width="24" height="26" fill="#8c2e1a"/>
+            <rect x="200" y="36" width="24" height="22" fill="#3d5c3d"/>
+            <rect x="232" y="40" width="24" height="18" fill="#8c2e1a"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="placard-meta">
+        <p class="placard-desc">Rank states, regions, or seats by any metric — sorted, region-coloured, exportable.</p>
+        <span class="placard-cta">OPEN ▸</span>
+      </div>
+    </a>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━ LINE STUDIO ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <a class="placard" href="/tools/studio?preset=line" style="animation-delay:200ms">
+      <span class="reg-tl" aria-hidden="true"></span>
+      <span class="reg-br" aria-hidden="true"></span>
+
+      <div class="placard-tag">
+        <span>FIG. L-01 · LINE</span>
+        <span class="pin" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <h2 class="placard-title">Line <em>Studio</em></h2>
+        <span class="placard-hi">रेखा</span>
+
+        <div class="placard-preview" aria-hidden="true">
+          <svg viewBox="0 0 280 60" preserveAspectRatio="none">
+            <!-- faint gridlines -->
+            <line x1="0" y1="14" x2="280" y2="14" stroke="#2a3a55" stroke-opacity=".18" stroke-dasharray="2 3"/>
+            <line x1="0" y1="30" x2="280" y2="30" stroke="#2a3a55" stroke-opacity=".18" stroke-dasharray="2 3"/>
+            <line x1="0" y1="46" x2="280" y2="46" stroke="#2a3a55" stroke-opacity=".18" stroke-dasharray="2 3"/>
+            <!-- four region trajectories — sampled at 1881→2011 -->
+            <path d="M0,48 C40,48 80,46 120,40 S200,22 280,6"   fill="none" stroke="#8c2e1a" stroke-width="2"/>
+            <path d="M0,50 C40,50 80,49 120,45 S200,28 280,14"  fill="none" stroke="#1f4d54" stroke-width="2"/>
+            <path d="M0,52 C40,52 80,51 120,48 S200,36 280,22"  fill="none" stroke="#c88a2f" stroke-width="2"/>
+            <path d="M0,54 C40,54 80,53 120,50 S200,40 280,28"  fill="none" stroke="#3d5c3d" stroke-width="2"/>
+            <!-- baseline -->
+            <line x1="0" y1="58" x2="280" y2="58" stroke="#2a3a55" stroke-width="0.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="placard-meta">
+        <p class="placard-desc">Trace a metric across 130 years — absolute, indexed, per-decade growth.</p>
+        <span class="placard-cta">OPEN ▸</span>
+      </div>
+    </a>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━ MAP STUDIO ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <a class="placard" href="/tools/studio?preset=map" style="animation-delay:280ms">
+      <span class="reg-tl" aria-hidden="true"></span>
+      <span class="reg-br" aria-hidden="true"></span>
+
+      <div class="placard-tag">
+        <span>FIG. M-01 · MAP</span>
+        <span class="pin" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <h2 class="placard-title">Map <em>Studio</em></h2>
+        <span class="placard-hi">मानचित्र</span>
+
+        <div class="placard-preview" aria-hidden="true">
+          <svg viewBox="0 0 280 60" preserveAspectRatio="xMidYMid meet">
+            <!-- a stylised India silhouette, region-tiled -->
+            <g transform="translate(94,3)">
+              <!-- north band -->
+              <path d="M 8,4  L 78,4  L 84,12 L 72,14 L 68,18 L 74,22 L 66,26 L 54,22 L 42,26 L 30,22 L 18,26 L 8,22 Z" fill="#8c2e1a"/>
+              <!-- west + central -->
+              <path d="M 8,22 L 18,26 L 22,34 L 30,38 L 22,42 L 16,46 L 12,42 L 10,34 Z" fill="#c88a2f"/>
+              <!-- east -->
+              <path d="M 54,22 L 66,26 L 74,22 L 82,24 L 84,30 L 78,34 L 70,32 L 60,28 Z" fill="#1f4d54"/>
+              <!-- central/other -->
+              <path d="M 30,22 L 42,26 L 54,22 L 60,28 L 54,32 L 42,34 L 30,38 L 22,34 Z" fill="#7a6b55"/>
+              <!-- south / peninsula -->
+              <path d="M 22,42 L 30,38 L 42,34 L 54,32 L 58,42 L 48,54 L 38,54 L 30,50 Z" fill="#3d5c3d"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="placard-meta">
+        <p class="placard-desc">See India as a choropleth — 36 states, any metric, any year.</p>
+        <span class="placard-cta">OPEN ▸</span>
+      </div>
+    </a>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━ COMPARE STUDIO ━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <a class="placard" href="/tools/studio?preset=compare" style="animation-delay:360ms">
+      <span class="reg-tl" aria-hidden="true"></span>
+      <span class="reg-br" aria-hidden="true"></span>
+
+      <div class="placard-tag">
+        <span>FIG. C-01 · COMPARE</span>
+        <span class="pin" aria-hidden="true"></span>
+      </div>
+
+      <div>
+        <h2 class="placard-title">Compare <em>Studio</em></h2>
+        <span class="placard-hi">तुलना</span>
+
+        <div class="placard-preview" aria-hidden="true">
+          <svg viewBox="0 0 280 60" preserveAspectRatio="none">
+            <!-- two worksheets side by side with a divider -->
+            <!-- worksheet A -->
+            <rect x="6"   y="6"  width="126" height="48" fill="none" stroke="#2a3a55" stroke-width="0.8"/>
+            <path d="M 12,46 L 32,30 L 52,36 L 72,20 L 92,14 L 112,10 L 126,12" fill="none" stroke="#8c2e1a" stroke-width="1.6"/>
+            <!-- registration crosshairs -->
+            <line x1="0" y1="6" x2="8" y2="6" stroke="#2a3a55" stroke-width="0.6"/>
+            <line x1="6" y1="0" x2="6" y2="8" stroke="#2a3a55" stroke-width="0.6"/>
+            <!-- divider -->
+            <line x1="139" y1="2" x2="139" y2="58" stroke="#2a3a55" stroke-width="0.4" stroke-dasharray="2 3"/>
+            <!-- worksheet B -->
+            <rect x="146" y="6"  width="126" height="48" fill="none" stroke="#2a3a55" stroke-width="0.8"/>
+            <rect x="152" y="34" width="14" height="18" fill="#1f4d54"/>
+            <rect x="170" y="28" width="14" height="24" fill="#c88a2f"/>
+            <rect x="188" y="22" width="14" height="30" fill="#3d5c3d"/>
+            <rect x="206" y="18" width="14" height="34" fill="#8c2e1a"/>
+            <rect x="224" y="26" width="14" height="26" fill="#7a6b55"/>
+            <rect x="242" y="30" width="14" height="22" fill="#1f4d54"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="placard-meta">
+        <p class="placard-desc">Side-by-side report for 2 – 6 states. Downloadable as PNG, printable as PDF.</p>
+        <span class="placard-cta">OPEN ▸</span>
+      </div>
+    </a>
+
+  </section>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SHEET FOOTER / COLOPHON
+     ═══════════════════════════════════════════════════════════════ -->
+<footer class="sheet-footer">
+  <div>
+    <span><b>SOURCE</b> · CENSUS OF INDIA · NADA TABLE 43333</span>
+  </div>
+  <div class="colophon-hand">
+    <em>drafted on cream, grid 16pt, measure blue.</em>
+  </div>
+  <div>
+    <span><b>DRAWN</b> · 2026 · 01</span>
+  </div>
+</footer>
+
+</body>
+</html>

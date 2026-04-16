@@ -1,0 +1,201 @@
+---
+import type { Preset } from '../../scripts/studio';
+export interface Props { initialPreset: Preset }
+const { initialPreset } = Astro.props;
+---
+
+<article class="chart-panel" data-panel="bar" style={initialPreset !== 'bar' ? 'display:none' : ''}>
+  <div class="worksheet" aria-label="Figure B-01">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. B-01</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title" data-bar-title>Bar Studio</div>
+        <div class="subtitle" data-bar-subtitle>जनसंख्या</div>
+      </div>
+      <div class="right">
+        <div><b>Unit</b> <span data-bar-unit>millions</span></div>
+        <div><b>N</b> <span data-bar-n>0</span></div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="bar-canvas" class="ws-chart-canvas"></div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left">
+        <span><span class="mark">Fig. B-01</span> <span class="dim">▸</span> <span data-bar-caption>Population × State × 2011</span></span>
+      </div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 01 · 01</span></div>
+    </footer>
+  </div>
+</article>
+
+<style>
+  body.workshop .ws-chart-canvas {
+    width: 100%;
+    min-height: 420px;
+  }
+  body.workshop .bar-empty {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    padding: 140px 20px;
+    border: 1px dashed var(--measure-soft);
+  }
+</style>
+
+<script>
+  import ApexCharts from 'apexcharts';
+  import type { StudioState } from '../../scripts/studio';
+  import { getStore, filenameFor, downloadDataUri } from '../../scripts/studio';
+  import { barSeries, metricLabel, unitFor } from '../../scripts/metrics';
+
+  const target = document.getElementById('bar-canvas');
+  if (target) {
+    let chart: ApexCharts | null = null;
+
+    const empty = document.createElement('div');
+    empty.className = 'bar-empty';
+    empty.textContent = 'Select at least one entity in the rail to draw the chart.';
+
+    const render = (state: StudioState) => {
+      const data = barSeries(state);
+      document.querySelector<HTMLElement>('[data-bar-unit]')!.textContent = unitFor(state.metric);
+      document.querySelector<HTMLElement>('[data-bar-n]')!.textContent = `${data.length} · sorted ↓`;
+      document.querySelector<HTMLElement>('[data-bar-title]')!.textContent =
+        state.dataset === 'region' ? 'Regional ranking' :
+        state.dataset === 'state'  ? 'State ranking'    : 'Lok Sabha ranking';
+      document.querySelector<HTMLElement>('[data-bar-caption]')!.textContent =
+        `${metricLabel(state.metric)} × ${state.dataset} × ${state.to}`;
+
+      if (!data.length) {
+        if (chart) { chart.destroy(); chart = null; }
+        if (!target!.contains(empty)) { target!.innerHTML = ''; target!.appendChild(empty); }
+        return;
+      }
+
+      if (target!.contains(empty)) target!.removeChild(empty);
+
+      const categories = data.map((d) => d.code);
+      const colors = data.map((d) => d.color);
+      const values = data.map((d) => +d.value.toFixed(2));
+
+      const options: ApexCharts.ApexOptions = {
+        chart: {
+          type: 'bar',
+          height: Math.max(360, data.length * 36 + 80),
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          toolbar: { show: false },
+          background: 'transparent',
+          parentHeightOffset: 0,
+          animations: { enabled: true, speed: 320, dynamicAnimation: { enabled: true, speed: 320 } },
+        },
+        series: [{ name: metricLabel(state.metric), data: values }],
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            distributed: true,
+            borderRadius: 0,
+            barHeight: '68%',
+            dataLabels: { position: 'top' },
+          },
+        },
+        colors,
+        stroke: { show: true, width: 1, colors: ['#1a1510'] },
+        states: {
+          hover: { filter: { type: 'darken', value: 0.9 } },
+          active: { filter: { type: 'none' } },
+        },
+        xaxis: {
+          categories,
+          labels: {
+            style: {
+              fontSize: '10px',
+              fontFamily: '"JetBrains Mono", monospace',
+              colors: '#2a3a55',
+            },
+          },
+          axisBorder: { show: true, color: '#1a1510', height: 1 },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          labels: {
+            style: {
+              fontSize: '11px',
+              fontFamily: '"JetBrains Mono", monospace',
+              colors: '#1a1510',
+              fontWeight: 500,
+            },
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          formatter: (val) => Number(val).toFixed(state.metric === 'seats' ? 0 : 1),
+          offsetX: 28,
+          style: {
+            fontSize: '11px',
+            fontFamily: '"JetBrains Mono", monospace',
+            fontWeight: 500,
+            colors: ['#1a1510'],
+          },
+        },
+        legend: { show: false },
+        grid: {
+          borderColor: 'rgba(42,58,85,0.18)',
+          strokeDashArray: 2,
+          xaxis: { lines: { show: true } },
+          yaxis: { lines: { show: false } },
+          padding: { top: 8, right: 36, bottom: 0, left: 8 },
+        },
+        tooltip: {
+          custom: ({ dataPointIndex }) => {
+            const d = data[dataPointIndex];
+            return `
+              <div style="padding:12px 14px;min-width:200px;background:#f5efe3;border:1px solid #1a1510;box-shadow:3px 3px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="width:10px;height:10px;background:${d.color};border:1px solid #1a1510;display:inline-block"></span>
+                  <span style="font-family:'Fraunces',serif;font-weight:700;font-size:15px">${d.label}</span>
+                </div>
+                ${d.labelHi ? `<div style="font-family:'Tiro Devanagari Hindi',serif;font-size:12px;color:#6b5d4f;margin-bottom:8px">${d.labelHi}</div>` : ''}
+                <div style="border-top:1px solid #1a1510;padding-top:6px;display:flex;align-items:baseline;gap:8px">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700">${d.value.toFixed(2)}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b5d4f;letter-spacing:0.12em;text-transform:uppercase">${d.unit}</span>
+                </div>
+              </div>
+            `;
+          },
+        },
+      };
+
+      if (chart) {
+        chart.updateOptions(options, false, true);
+      } else {
+        chart = new ApexCharts(target!, options);
+        chart.render();
+      }
+    }
+
+    getStore().onChange((state) => {
+      if (state.preset !== 'bar') return;
+      render(state);
+    });
+
+    document.addEventListener('studio:export-png', async () => {
+      if (getStore().snapshot.preset !== 'bar' || !chart) return;
+      const uri = await chart.dataURI();
+      if (typeof uri === 'object' && 'imgURI' in uri) downloadDataUri(uri.imgURI, filenameFor('png'));
+    });
+
+    // If the page loaded with preset=bar, the store will fire a change event
+    // via queueMicrotask after initStudio. No manual first-render needed.
+  }
+</script>

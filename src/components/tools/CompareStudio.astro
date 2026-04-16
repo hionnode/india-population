@@ -1,0 +1,449 @@
+---
+import type { Preset } from '../../scripts/studio';
+export interface Props { initialPreset: Preset }
+const { initialPreset } = Astro.props;
+---
+
+<article class="chart-panel compare-panel" data-panel="compare" style={initialPreset !== 'compare' ? 'display:none' : ''}>
+
+  <!-- ─── Section 1 · Header / chips ─────────────────────── -->
+  <section class="worksheet compare-section compare-header" aria-label="Compare header">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. C-01</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title">State comparison report</div>
+        <div class="subtitle">राज्य तुलना</div>
+      </div>
+      <div class="right">
+        <div><b>States</b> <span data-cmp-n>—</span> / 6</div>
+        <div><b>Span</b> <span data-cmp-span>1901 – 2011</span></div>
+      </div>
+    </header>
+
+    <div class="cmp-chips" data-cmp-chips></div>
+
+    <p class="cmp-note" data-cmp-summary>
+      Select 2 – 6 states from the rail to build the report. Each section below is page-break aware;
+      use <em>Print Report</em> in the toolbar to export a single PDF.
+    </p>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left"><span><span class="mark">Sheet A</span> <span class="dim">▸</span> Selection</span></div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 01 · 04</span></div>
+    </footer>
+  </section>
+
+  <!-- ─── Section 2 · Line trajectory ─────────────────────── -->
+  <section class="worksheet compare-section" aria-label="Compare line">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. C-02</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title">Population trajectory</div>
+        <div class="subtitle">कालक्रम</div>
+      </div>
+      <div class="right">
+        <div><b>Unit</b> millions</div>
+        <div><b>Scale</b> linear</div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="cmp-line-canvas" class="ws-chart-canvas"></div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left"><span><span class="mark">Sheet B</span> <span class="dim">▸</span> Time series</span></div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 02 · 04</span></div>
+    </footer>
+  </section>
+
+  <!-- ─── Section 3 · 2011 snapshot bar ─────────────────────── -->
+  <section class="worksheet compare-section" aria-label="Compare bar">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. C-03</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title">2011 snapshot</div>
+        <div class="subtitle">वर्तमान</div>
+      </div>
+      <div class="right">
+        <div><b>Unit</b> millions</div>
+        <div><b>Sort</b> ↓ population</div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="cmp-bar-canvas" class="ws-chart-canvas"></div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left"><span><span class="mark">Sheet C</span> <span class="dim">▸</span> Snapshot</span></div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 03 · 04</span></div>
+    </footer>
+  </section>
+
+  <!-- ─── Section 4 · Choropleth highlighting selection ─────── -->
+  <section class="worksheet compare-section" aria-label="Compare map">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. C-04</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title">India · selection highlighted</div>
+        <div class="subtitle">भारत</div>
+      </div>
+      <div class="right">
+        <div><b>Projection</b> equirectangular</div>
+        <div><b>Year</b> 2011</div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="cmp-map-canvas" class="ws-map-canvas">
+        <svg id="cmp-map-svg" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet" aria-label="India states choropleth" style="width:100%;height:auto;display:block;font-family:var(--mono);"></svg>
+      </div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left"><span><span class="mark">Sheet D</span> <span class="dim">▸</span> Locator</span></div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 04 · 04</span></div>
+    </footer>
+  </section>
+
+</article>
+
+<style>
+  body.workshop .compare-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+    width: 100%;
+    max-width: 960px;
+  }
+  body.workshop .compare-section { max-width: 100%; }
+  body.workshop .cmp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 6px 0 12px;
+  }
+  body.workshop .cmp-chips .cmp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 8px;
+    border: 1px solid var(--ink);
+    background: var(--paper-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 0 var(--ink);
+    line-height: 1;
+  }
+  body.workshop .cmp-chips .cmp-chip .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  body.workshop .cmp-chips .cmp-chip .nm {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  body.workshop .cmp-chips .cmp-chip .hi {
+    font-family: var(--deva);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  body.workshop .cmp-note {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+  }
+  body.workshop .cmp-note em { color: var(--accent); }
+  body.workshop .cmp-warning {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 10px 14px;
+    border: 1px dashed var(--accent);
+    background: rgba(140, 46, 26, 0.04);
+    margin-top: 6px;
+  }
+
+  @media print {
+    body.workshop .compare-panel { gap: 0; max-width: 100%; }
+    body.workshop .compare-section {
+      break-after: page;
+      page-break-after: always;
+      box-shadow: none;
+      max-width: 100%;
+      margin-bottom: 0;
+    }
+    body.workshop .compare-section:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+  }
+</style>
+
+<script>
+  import ApexCharts from 'apexcharts';
+  import type { StudioState } from '../../scripts/studio';
+  import { getStore, filenameFor, svgToPng } from '../../scripts/studio';
+  import { lineSeries, barSeries, mapValues, metricLabel, unitFor } from '../../scripts/metrics';
+  import { GEO_NAME_TO_CODE, GEOJSON_URL, type IndiaGeo, type IndiaGeoFeature } from '../../data/india-geo';
+
+  const lineTarget = document.getElementById('cmp-line-canvas');
+  const barTarget  = document.getElementById('cmp-bar-canvas');
+  const mapSvg     = document.getElementById('cmp-map-svg') as unknown as SVGSVGElement | null;
+  const chipsEl    = document.querySelector<HTMLElement>('[data-cmp-chips]');
+
+  let lineChart: ApexCharts | null = null;
+  let barChart:  ApexCharts | null = null;
+  const cmpPathsByCode = new Map<string, SVGPathElement>();
+
+  if (mapSvg) loadMap();
+
+  async function loadMap() {
+    try {
+      const r = await fetch(GEOJSON_URL);
+      const geo: IndiaGeo = await r.json();
+      const W = 960, H = 620, padding = 24;
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      const scan = (c: number[]) => {
+        if (c[0] < minLng) minLng = c[0]; if (c[0] > maxLng) maxLng = c[0];
+        if (c[1] < minLat) minLat = c[1]; if (c[1] > maxLat) maxLat = c[1];
+      };
+      for (const f of geo.features) walk(f.geometry, scan);
+      const scale = Math.min((W - padding * 2) / (maxLng - minLng), (H - padding * 2) / (maxLat - minLat));
+      const offsetX = (W - (maxLng - minLng) * scale) / 2;
+      const offsetY = (H - (maxLat - minLat) * scale) / 2;
+      const project = (lng: number, lat: number): [number, number] => [
+        offsetX + (lng - minLng) * scale,
+        offsetY + (maxLat - lat) * scale,
+      ];
+
+      for (const f of geo.features) {
+        const code = GEO_NAME_TO_CODE[f.properties.st_nm] ?? 'XX';
+        const d = toPath(f, project);
+        if (!d) continue;
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('d', d);
+        p.setAttribute('data-code', code);
+        p.setAttribute('class', 'map-path');
+        mapSvg!.appendChild(p);
+        cmpPathsByCode.set(code, p);
+      }
+      paintMap(getStore().snapshot);
+    } catch (e) {
+      console.error('[CompareStudio] map failed', e);
+    }
+  }
+
+  getStore().onChange((state) => {
+    if (state.preset !== 'compare') return;
+    renderAll(state);
+  });
+
+  // Compare has 4 sections in one panel — PNG export is a single image, so
+  // we pick the locator map (most visual, self-contained SVG). Full 4-page
+  // report uses Print instead.
+  document.addEventListener('studio:export-png', async () => {
+    if (getStore().snapshot.preset !== 'compare' || !mapSvg) return;
+    await svgToPng(mapSvg, filenameFor('png'));
+  });
+
+  function renderAll(state: StudioState) {
+    const n = state.entities.length;
+    document.querySelector<HTMLElement>('[data-cmp-n]')!.textContent = String(n);
+    document.querySelector<HTMLElement>('[data-cmp-span]')!.textContent = `${state.from} – ${state.to}`;
+
+    renderChips(state);
+    renderLine(state);
+    renderBar(state);
+    paintMap(state);
+
+    const summary = document.querySelector<HTMLElement>('[data-cmp-summary]')!;
+    if (n < 2) {
+      summary.innerHTML = `<span class="cmp-warning">Pick at least 2 states in the rail to build the report.</span>`;
+    } else if (n > 6) {
+      summary.innerHTML = `<span class="cmp-warning">Too many states (${n}). The report reads best with 2–6. Remove a chip to continue.</span>`;
+    } else {
+      const names = state.entities.join(', ');
+      summary.innerHTML = `Comparing <em>${names}</em> across <em>${state.from} – ${state.to}</em>. Each section below is page-break aware; use <em>Print Report</em> in the toolbar to export a PDF.`;
+    }
+  }
+
+  function renderChips(state: StudioState) {
+    if (!chipsEl) return;
+    const vals = mapValues(state);
+    chipsEl.innerHTML = state.entities
+      .map((code) => {
+        const v = vals.get(code);
+        if (!v) return '';
+        return `
+          <span class="cmp-chip">
+            <span class="dot" style="background:${v.color}"></span>
+            <span class="nm">${v.name}</span>
+            <span class="hi">${v.nameHi}</span>
+          </span>
+        `;
+      })
+      .join('');
+  }
+
+  function renderLine(state: StudioState) {
+    if (!lineTarget) return;
+    const series = lineSeries({ ...state, dataset: 'state', metric: 'population' });
+    if (!series.length) { if (lineChart) { lineChart.destroy(); lineChart = null; } lineTarget.innerHTML = ''; return; }
+    const allYears = Array.from(new Set(series.flatMap((s) => s.points.map((p) => p.year)))).sort((a, b) => a - b);
+    const apex: ApexCharts.ApexOptions = {
+      chart: {
+        type: 'line', height: 380, toolbar: { show: false }, background: 'transparent',
+        fontFamily: '"JetBrains Mono", monospace', animations: { enabled: true, speed: 320 },
+      },
+      series: series.map((s) => ({
+        name: s.label,
+        data: allYears.map((y) => ({ x: String(y), y: s.points.find((p) => p.year === y)?.v ?? null })),
+      })),
+      colors: series.map((s) => s.color),
+      stroke: { width: 2.4, curve: 'straight' },
+      markers: { size: 4, strokeWidth: 1, strokeColors: '#1a1510', hover: { size: 7 } },
+      dataLabels: { enabled: false },
+      xaxis: {
+        type: 'category', categories: allYears.map(String),
+        labels: { style: { fontSize: '10px', fontFamily: '"JetBrains Mono", monospace', colors: '#2a3a55' } },
+        axisBorder: { show: true, color: '#1a1510' }, axisTicks: { show: false }, tooltip: { enabled: false },
+      },
+      yaxis: {
+        labels: { formatter: (v) => Number(v).toFixed(0), style: { fontSize: '10px', fontFamily: '"JetBrains Mono", monospace', colors: '#2a3a55' } },
+        title: { text: 'MILLIONS', style: { fontSize: '9px', color: '#2a3a55', fontWeight: 500, fontFamily: '"JetBrains Mono", monospace' } },
+      },
+      legend: {
+        position: 'top', horizontalAlign: 'left', fontSize: '10px',
+        fontFamily: '"JetBrains Mono", monospace', labels: { colors: '#1a1510' },
+        markers: { size: 7 } as any, itemMargin: { horizontal: 10, vertical: 4 },
+      },
+      grid: { borderColor: 'rgba(42,58,85,0.18)', strokeDashArray: 2, padding: { top: 6, right: 20, bottom: 0, left: 10 } },
+      tooltip: { shared: true, intersect: false },
+    };
+    if (lineChart) lineChart.updateOptions(apex, false, true);
+    else { lineChart = new ApexCharts(lineTarget, apex); lineChart.render(); }
+  }
+
+  function renderBar(state: StudioState) {
+    if (!barTarget) return;
+    const data = barSeries({ ...state, dataset: 'state', metric: 'population', to: 2011 });
+    if (!data.length) { if (barChart) { barChart.destroy(); barChart = null; } barTarget.innerHTML = ''; return; }
+    const apex: ApexCharts.ApexOptions = {
+      chart: {
+        type: 'bar', height: Math.max(280, data.length * 40 + 60), toolbar: { show: false },
+        background: 'transparent', fontFamily: '"JetBrains Mono", monospace',
+        animations: { enabled: true, speed: 320 },
+      },
+      series: [{ name: 'Population 2011', data: data.map((d) => +d.value.toFixed(2)) }],
+      plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 0, barHeight: '60%', dataLabels: { position: 'top' } } },
+      colors: data.map((d) => d.color),
+      stroke: { show: true, width: 1, colors: ['#1a1510'] },
+      xaxis: {
+        categories: data.map((d) => d.code),
+        labels: { style: { fontSize: '10px', fontFamily: '"JetBrains Mono", monospace', colors: '#2a3a55' } },
+        axisBorder: { show: true, color: '#1a1510' }, axisTicks: { show: false },
+      },
+      yaxis: { labels: { style: { fontSize: '11px', fontFamily: '"JetBrains Mono", monospace', colors: '#1a1510' } } },
+      dataLabels: {
+        enabled: true, formatter: (v) => Number(v).toFixed(1), offsetX: 24,
+        style: { fontSize: '11px', fontFamily: '"JetBrains Mono", monospace', fontWeight: 500, colors: ['#1a1510'] },
+      },
+      legend: { show: false },
+      grid: { borderColor: 'rgba(42,58,85,0.18)', strokeDashArray: 2, padding: { top: 4, right: 36, bottom: 0, left: 8 } },
+      tooltip: { enabled: false },
+    };
+    if (barChart) barChart.updateOptions(apex, false, true);
+    else { barChart = new ApexCharts(barTarget, apex); barChart.render(); }
+  }
+
+  function paintMap(state: StudioState) {
+    if (!cmpPathsByCode.size) return;
+    const values = mapValues(state);
+    cmpPathsByCode.forEach((p, code) => {
+      const v = values.get(code);
+      const selected = state.entities.includes(code);
+      if (selected && v) {
+        // For compare, selected states keep their regional hue to reinforce
+        // the chip color up top. Unselected states get a graphite-rub base.
+        p.setAttribute('fill', v.color);
+        p.setAttribute('stroke', '#1a1510');
+        p.setAttribute('stroke-width', '2');
+        p.style.opacity = '1';
+      } else {
+        p.setAttribute('fill', '#ece1c9');
+        p.setAttribute('stroke', '#8c7a5e');
+        p.setAttribute('stroke-width', '0.9');
+        p.style.opacity = '0.75';
+      }
+    });
+  }
+
+  // Helpers mirrored from MapStudio (kept local to avoid module gymnastics)
+  function walk(geometry: IndiaGeoFeature['geometry'], visit: (c: number[]) => void) {
+    if (geometry.type === 'Polygon') {
+      for (const ring of geometry.coordinates as number[][][]) for (const pt of ring) visit(pt);
+    } else {
+      for (const poly of geometry.coordinates as number[][][][]) for (const ring of poly) for (const pt of ring) visit(pt);
+    }
+  }
+  function toPath(f: IndiaGeoFeature, project: (lng: number, lat: number) => [number, number]): string {
+    const parts: string[] = [];
+    const ringToPath = (ring: number[][]) => {
+      if (!ring.length) return '';
+      const [x0, y0] = project(ring[0][0], ring[0][1]);
+      let d = `M${x0.toFixed(1)},${y0.toFixed(1)}`;
+      for (let i = 1; i < ring.length; i++) {
+        const [x, y] = project(ring[i][0], ring[i][1]);
+        d += `L${x.toFixed(1)},${y.toFixed(1)}`;
+      }
+      return d + 'Z';
+    };
+    if (f.geometry.type === 'Polygon') {
+      for (const ring of f.geometry.coordinates as number[][][]) parts.push(ringToPath(ring));
+    } else {
+      for (const poly of f.geometry.coordinates as number[][][][]) for (const ring of poly) parts.push(ringToPath(ring));
+    }
+    return parts.join(' ');
+  }
+</script>

@@ -1,0 +1,197 @@
+---
+import type { Preset } from '../../scripts/studio';
+export interface Props { initialPreset: Preset }
+const { initialPreset } = Astro.props;
+---
+
+<article class="chart-panel" data-panel="line" style={initialPreset !== 'line' ? 'display:none' : ''}>
+  <div class="worksheet" aria-label="Figure L-01">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. L-01</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title" data-line-title>Line Studio</div>
+        <div class="subtitle" data-line-subtitle>कालक्रम</div>
+      </div>
+      <div class="right">
+        <div><b>Unit</b> <span data-line-unit>millions</span></div>
+        <div><b>Span</b> <span data-line-span>1881 – 2011</span></div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="line-canvas" class="ws-chart-canvas"></div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left">
+        <span><span class="mark">Fig. L-01</span> <span class="dim">▸</span> <span data-line-caption>Population × Region × 1881–2011</span></span>
+      </div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 01 · 01</span></div>
+    </footer>
+  </div>
+</article>
+
+<script>
+  import ApexCharts from 'apexcharts';
+  import { getStore, filenameFor, downloadDataUri } from '../../scripts/studio';
+  import { lineSeries, metricLabel, unitFor } from '../../scripts/metrics';
+
+  const target = document.getElementById('line-canvas');
+  if (target) {
+    let chart: ApexCharts | null = null;
+
+    function render(state: StudioState) {
+      const series = lineSeries(state);
+
+      document.querySelector<HTMLElement>('[data-line-unit]')!.textContent = unitFor(state.metric);
+      document.querySelector<HTMLElement>('[data-line-span]')!.textContent = `${state.from} – ${state.to}`;
+      document.querySelector<HTMLElement>('[data-line-title]')!.textContent =
+        state.dataset === 'region' ? 'Regional trajectory'
+        : state.dataset === 'state' ? 'State trajectory'
+        : 'Lok Sabha snapshot';
+      document.querySelector<HTMLElement>('[data-line-caption]')!.textContent =
+        `${metricLabel(state.metric)} × ${state.dataset} × ${state.from} – ${state.to}`;
+
+      if (!series.length || series.every((s) => s.points.length === 0)) {
+        if (chart) { chart.destroy(); chart = null; }
+        target!.innerHTML = `<div class="bar-empty">Select at least one entity in the rail to draw the chart.</div>`;
+        return;
+      }
+
+      const allYears = Array.from(
+        new Set(series.flatMap((s) => s.points.map((p) => p.year))),
+      ).sort((a, b) => a - b);
+
+      const apexSeries = series.map((s) => ({
+        name: s.label,
+        data: allYears.map((y) => {
+          const hit = s.points.find((p) => p.year === y);
+          return { x: String(y), y: hit ? +hit.v.toFixed(2) : null };
+        }),
+      }));
+      const colors = series.map((s) => s.color);
+
+      const options: ApexCharts.ApexOptions = {
+        chart: {
+          type: 'line',
+          height: 460,
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          toolbar: { show: false },
+          background: 'transparent',
+          animations: { enabled: true, speed: 340 },
+          parentHeightOffset: 0,
+        },
+        series: apexSeries,
+        colors,
+        stroke: { width: 2.4, curve: 'straight' },
+        markers: {
+          size: 4,
+          strokeWidth: 1,
+          strokeColors: '#1a1510',
+          hover: { size: 7 },
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+          type: 'category',
+          categories: allYears.map(String),
+          labels: {
+            style: {
+              fontSize: '10px',
+              fontFamily: '"JetBrains Mono", monospace',
+              colors: '#2a3a55',
+              fontWeight: 500,
+            },
+            rotate: 0,
+          },
+          axisBorder: { show: true, color: '#1a1510' },
+          axisTicks: { show: false },
+          tooltip: { enabled: false },
+          title: {
+            text: 'CENSUS YEAR',
+            style: { fontSize: '9px', color: '#2a3a55', fontWeight: 500, fontFamily: '"JetBrains Mono", monospace' },
+            offsetY: 4,
+          },
+        },
+        yaxis: {
+          labels: {
+            formatter: (v) => Number(v).toFixed(state.metric === 'indexed1901' ? 0 : 1),
+            style: {
+              fontSize: '10px',
+              fontFamily: '"JetBrains Mono", monospace',
+              colors: '#2a3a55',
+            },
+          },
+          title: {
+            text: unitFor(state.metric).toUpperCase(),
+            style: { fontSize: '9px', color: '#2a3a55', fontWeight: 500, fontFamily: '"JetBrains Mono", monospace' },
+          },
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'left',
+          fontSize: '10px',
+          fontFamily: '"JetBrains Mono", monospace',
+          labels: { colors: '#1a1510' },
+          markers: { size: 7 } as any,
+          itemMargin: { horizontal: 10, vertical: 4 },
+          offsetY: -4,
+        },
+        grid: {
+          borderColor: 'rgba(42,58,85,0.18)',
+          strokeDashArray: 2,
+          yaxis: { lines: { show: true } },
+          xaxis: { lines: { show: false } },
+          padding: { top: 8, right: 20, bottom: 0, left: 10 },
+        },
+        tooltip: {
+          shared: true,
+          intersect: false,
+          custom: ({ dataPointIndex }) => {
+            const year = allYears[dataPointIndex];
+            const rows = series
+              .map((s) => {
+                const pt = s.points.find((p) => p.year === year);
+                return pt
+                  ? `<div style="display:flex;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:3px">
+                       <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;background:${s.color};border:1px solid #1a1510;display:inline-block"></span>${s.label}</span>
+                       <span style="font-family:'JetBrains Mono',monospace;font-weight:600">${pt.v.toFixed(2)}</span>
+                     </div>`
+                  : '';
+              })
+              .join('');
+            return `
+              <div style="padding:12px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:3px 3px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+                <div style="font-family:'Fraunces',serif;font-weight:800;font-size:18px;margin-bottom:8px;border-bottom:1px solid #1a1510;padding-bottom:6px">${year}</div>
+                ${rows}
+              </div>
+            `;
+          },
+        },
+      };
+
+      if (chart) {
+        chart.updateOptions(options, false, true);
+      } else {
+        chart = new ApexCharts(target!, options);
+        chart.render();
+      }
+    }
+
+    getStore().onChange((state) => {
+      if (state.preset !== 'line') return;
+      render(state);
+    });
+
+    document.addEventListener('studio:export-png', async () => {
+      if (getStore().snapshot.preset !== 'line' || !chart) return;
+      const uri = await chart.dataURI();
+      if (typeof uri === 'object' && 'imgURI' in uri) downloadDataUri(uri.imgURI, filenameFor('png'));
+    });
+  }
+</script>
