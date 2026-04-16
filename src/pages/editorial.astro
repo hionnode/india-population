@@ -1,0 +1,481 @@
+---
+import '../styles/global.css';
+import PageNav from '../components/PageNav.astro';
+import FourShares from '../components/FourShares.astro';
+import UPCollapse from '../components/UPCollapse.astro';
+import CumulativeGrowth from '../components/CumulativeGrowth.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>The Consequence · परिणाम · The Indian Census, Part IV</title>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page">
+
+      <PageNav current={4} />
+
+      <hr class="rule double" />
+
+      <header class="masthead">
+        <div class="masthead-copy">
+          <p class="kicker">Part the Fourth · Vol. IV</p>
+          <h1 class="title">
+            <span class="title-en">The</span>
+            <span class="title-en-b">Consequence</span>
+            <span class="title-hi">परिणाम</span>
+          </h1>
+          <p class="lede">
+            A case against the arithmetic this paper has just made.
+            Before accepting that the Hindi belt has exploded and the South
+            restrained itself, read the series again — all of it.
+          </p>
+        </div>
+        <div class="masthead-figure" aria-hidden="true">
+          <div class="glyph">§</div>
+          <div class="figure-no">No.<br /><b>IV</b></div>
+        </div>
+      </header>
+
+      <hr class="rule" />
+
+      <section class="chapter-opener">
+        <span class="smallcaps">§ the data, reread</span>
+        <h2 class="chapter-title">
+          <span class="chapter-numeral">v.</span>
+          A century, read from 1901
+          <span class="chapter-hi hi">एक शताब्दी</span>
+        </h2>
+        <p class="chapter-lede">
+          Three counter-factual figures. Taken from 1901 — when the Census
+          of India first became legible at the regional level — the popular
+          framing of "North exploded, South restrained itself" does not
+          survive contact with the series.
+        </p>
+      </section>
+
+      <hr class="rule" />
+
+      <FourShares />
+
+      <hr class="rule" />
+
+      <UPCollapse />
+
+      <hr class="rule" />
+
+      <CumulativeGrowth />
+
+      <hr class="rule double" />
+
+      <!-- The signed editorial -->
+      <section class="editorial">
+        <div class="editorial-head">
+          <span class="smallcaps">§ an editorial</span>
+          <h3 class="editorial-title">
+            One person, one vote —
+            <em>and the argument that forgets it.</em>
+          </h3>
+        </div>
+
+        <div class="editorial-body">
+          <p>
+            The series does not support the premise. Taken from 1901, when
+            the Census of India first became legible at the regional level,
+            the Hindi belt is the <b>second-fastest-growing</b> of the four
+            big regions — barely above the national average, outgrown by
+            the West, ahead of the East and South. It is not now, and has
+            never been, the runaway the argument requires.
+          </p>
+          <p>
+            UP alone — the state most often named as shorthand for
+            &ldquo;unchecked population&rdquo; — <em>shrank</em> between 1901
+            and 1921 and has never, since 1901, recovered its share of the
+            country. The South grew faster than the North for the first
+            half of the twentieth century. The demographic transition the
+            argument now cites is a story about the last forty years, not
+            about India's demographic history.
+          </p>
+          <p>
+            And if the premise were to stand — that restraint earns weight
+            — the logic has somewhere to go that none of its advocates have
+            been willing to follow.
+          </p>
+        </div>
+
+        <aside class="pullquote editorial-pullquote">
+          <span class="pullquote-mark" aria-hidden="true">“</span>
+          <blockquote class="pullquote-text">
+            Why stop at population? Property qualification?
+            Literacy test? GDP contribution?
+          </blockquote>
+          <cite class="pullquote-cite">
+            <span class="cite-dash">—</span>
+            after
+            <a
+              href="https://www.indiatoday.in/opinion/"
+              target="_blank"
+              rel="noopener noreferrer"
+            ><b>Anand Singh</b></a>, <em>India Today</em>, 2025.
+            The reductio belongs to him; the data, here, are ours.
+          </cite>
+        </aside>
+
+        <div class="editorial-body">
+          <p>
+            That is not federalism. That is the premise of democracy,
+            refused. The question worth asking is narrower: whether the
+            2026 arithmetic rewards the 1971 choice fairly, whether Finance
+            Commission formulas adequately compensate, whether the Rajya
+            Sabha's federal balance still holds. Those are real policy
+            problems. This report takes no view on them.
+          </p>
+          <p>
+            It takes a view only on the argument that reaches for
+            &ldquo;one person, one vote&rdquo; and asks to keep the first
+            two words. That argument, on the century of data behind it,
+            has nothing to stand on.
+          </p>
+        </div>
+
+        <div class="editorial-sign">
+          <span class="editorial-dash">—</span>
+          <span class="editorial-signoff">
+            <b>The Editorial</b>
+            <span class="editorial-hi hi">सम्पादकीय टिप्पणी</span>
+          </span>
+        </div>
+      </section>
+
+      <hr class="rule double" />
+
+      <!-- Loop close — back to Page 1 -->
+      <aside class="next-step">
+        <span class="smallcaps">close the volume</span>
+        <a href="/" class="next-link">
+          <span class="next-arrow">↻</span>
+          <span class="next-title">Return to The Present</span>
+          <span class="next-subtitle hi">वर्तमान की ओर</span>
+        </a>
+        <p class="next-blurb">
+          The archive is open. Return to the beginning, or write to the desk.
+        </p>
+      </aside>
+
+      <hr class="rule" />
+
+      <footer class="colophon">
+        <div class="colophon-col">
+          <span class="smallcaps">§ source</span>
+          <p>
+            Regional population totals from <b>Census of India, Table A-02
+            (1901–2011)</b>, NADA catalog 43333. 1881 and 1891 values are
+            reconstructions; all counter-factual analysis here uses 1901 as
+            the canonical baseline.
+          </p>
+        </div>
+        <div class="colophon-col">
+          <span class="smallcaps">§ after</span>
+          <p>
+            The satirical reductio (<em>property qualification, literacy
+            test, GDP contribution</em>) is owed to Anand Singh, writing in
+            India Today in 2025. The argument is paraphrased with
+            acknowledgement; the numerical rebuttal is this paper's own.
+          </p>
+        </div>
+      </footer>
+
+      <div class="running-foot">
+        <span class="eyebrow">Set in Fraunces &amp; Tiro Devanagari Hindi</span>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">Composed on cream</span>
+      </div>
+    </div>
+
+    <script>
+      import ApexCharts from 'apexcharts';
+      import {
+        CENSUS,
+        REGION_LABELS,
+        REGION_COLORS,
+        shareSeries,
+        cumulativeGrowth,
+        cumulativeGrowthIndia,
+        type Region,
+      } from '../data/census';
+      import { STATE_CENSUS, STATE_CENSUS_YEARS } from '../data/state-census';
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. — The arc of four shares, 1901 → 2011
+         ───────────────────────────────────────────────────────────── */
+      const fourRegions: Region[] = ['East', 'West', 'North', 'South'];
+      const fourSharesSeries = fourRegions.map((r) => ({
+        name: REGION_LABELS[r].en,
+        data: shareSeries(r).map((p) => ({ x: String(p.year), y: +p.pct.toFixed(2) })),
+      }));
+
+      const fourSharesChart = new ApexCharts(document.querySelector('#fourshares-chart')!, {
+        chart: {
+          type: 'line',
+          height: 460,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false },
+          background: 'transparent',
+          animations: { enabled: true, speed: 600 },
+          parentHeightOffset: 0,
+        },
+        series: fourSharesSeries,
+        colors: fourRegions.map((r) => REGION_COLORS[r]),
+        stroke: { width: [2, 2, 3.5, 3.5], curve: 'smooth' },
+        markers: { size: 4, strokeWidth: 1, strokeColors: '#1a1510', hover: { size: 7 } },
+        dataLabels: { enabled: false },
+        xaxis: {
+          type: 'category',
+          tickAmount: 6,
+          labels: { style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' } },
+          axisBorder: { show: true, color: '#1a1510' },
+          axisTicks: { show: false },
+          title: { text: 'CENSUS YEAR', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
+        },
+        yaxis: {
+          min: 0,
+          max: 50,
+          tickAmount: 5,
+          labels: {
+            formatter: (v: number) => `${v.toFixed(0)}%`,
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
+          },
+          title: { text: '% of India', style: { fontSize: '11px', color: '#6b5d4f', fontWeight: 500 } },
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'left',
+          fontFamily: '"Jost",sans-serif',
+          fontSize: '12px',
+          labels: { colors: '#1a1510' },
+          markers: { size: 8, strokeWidth: 1, shape: 'square' },
+          itemMargin: { horizontal: 14, vertical: 4 },
+          offsetY: -4,
+        },
+        grid: {
+          borderColor: '#d8cdb8',
+          strokeDashArray: 2,
+          padding: { top: 10, right: 24, bottom: 0, left: 8 },
+        },
+        annotations: {
+          points: [
+            {
+              x: '1951',
+              y: shareSeries('South').find((p) => p.year === 1951)!.pct,
+              marker: { size: 5, strokeColor: '#1a1510', fillColor: REGION_COLORS.South, strokeWidth: 1 },
+              label: { text: 'South peaks · 26.1%', borderWidth: 0, offsetY: -8,
+                style: { color: REGION_COLORS.South, background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 } },
+            },
+            {
+              x: '1971',
+              y: shareSeries('North').find((p) => p.year === 1971)!.pct,
+              marker: { size: 5, strokeColor: '#1a1510', fillColor: REGION_COLORS.North, strokeWidth: 1 },
+              label: { text: 'North troughs · 41.9%', borderWidth: 0, offsetY: 24,
+                style: { color: REGION_COLORS.North, background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 } },
+            },
+          ],
+          yaxis: [
+            {
+              y: shareSeries('North').find((p) => p.year === 1901)!.pct,
+              borderColor: REGION_COLORS.North,
+              strokeDashArray: 3,
+              borderWidth: 1,
+              opacity: 0.4,
+              label: { text: "North's 1901 level", borderWidth: 0, offsetY: -4, position: 'left', textAnchor: 'start',
+                style: { color: REGION_COLORS.North, background: 'transparent', fontFamily: '"Jost",sans-serif', fontSize: '10px', fontWeight: 500 } },
+            },
+          ],
+        },
+        tooltip: {
+          shared: true,
+          intersect: false,
+          custom: ({ dataPointIndex, w }) => {
+            const year = String(w.globals.categoryLabels[dataPointIndex]);
+            const rows = w.globals.series
+              .map((s: number[], i: number) => {
+                const name = w.globals.seriesNames[i];
+                const color = w.globals.colors[i];
+                return `<div style="display:flex;gap:8px;align-items:baseline;font-size:12px">
+                  <span style="width:8px;height:8px;background:${color};border:1px solid #1a1510;display:inline-block"></span>
+                  <span style="flex:1">${name}</span>
+                  <b style="font-family:'Fraunces',serif;font-size:14px">${s[dataPointIndex]?.toFixed(1)}%</b>
+                </div>`;
+              })
+              .join('');
+            return `<div style="padding:10px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+              <div style="font-family:'Fraunces',serif;font-weight:700;font-size:16px;margin-bottom:6px;border-bottom:1px solid #1a1510;padding-bottom:4px">${year}</div>
+              ${rows}
+            </div>`;
+          },
+        },
+      });
+      fourSharesChart.render();
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. — UP's share of India, 1901 → 2011
+         ───────────────────────────────────────────────────────────── */
+      const upRow = STATE_CENSUS.find((s) => s.code === 'UP')!;
+      const upSeriesData = STATE_CENSUS_YEARS.map((y) => {
+        const total = CENSUS.find((r) => r.year === y)!.totalIndiaMillions;
+        return { x: String(y), y: +((upRow.values[y] / total) * 100).toFixed(2) };
+      });
+
+      const upCollapseChart = new ApexCharts(document.querySelector('#upcollapse-chart')!, {
+        chart: {
+          type: 'area', height: 380,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false }, background: 'transparent',
+          animations: { enabled: true, speed: 600 }, parentHeightOffset: 0,
+        },
+        series: [{ name: "UP's share of India", data: upSeriesData }],
+        colors: [REGION_COLORS.North],
+        stroke: { width: 3, curve: 'smooth' },
+        fill: {
+          type: 'gradient',
+          gradient: { shadeIntensity: 0.3, opacityFrom: 0.28, opacityTo: 0.02, stops: [0, 100] },
+        },
+        markers: { size: 5, strokeWidth: 1, strokeColors: '#1a1510', fillColors: [REGION_COLORS.North], hover: { size: 8 } },
+        dataLabels: { enabled: false },
+        xaxis: {
+          type: 'category',
+          labels: { style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' } },
+          axisBorder: { show: true, color: '#1a1510' }, axisTicks: { show: false },
+          title: { text: 'CENSUS YEAR', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
+        },
+        yaxis: {
+          min: 14, max: 22, tickAmount: 4,
+          labels: { formatter: (v: number) => `${v.toFixed(0)}%`, style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' } },
+          title: { text: "UP as % of India", style: { fontSize: '11px', color: '#6b5d4f', fontWeight: 500 } },
+        },
+        legend: { show: false },
+        grid: { borderColor: '#d8cdb8', strokeDashArray: 2, padding: { top: 10, right: 24, bottom: 0, left: 8 } },
+        annotations: {
+          points: [
+            {
+              x: '1921', y: upSeriesData.find((p) => p.x === '1921')!.y,
+              marker: { size: 6, strokeColor: '#1a1510', fillColor: '#8c2e1a', strokeWidth: 1 },
+              label: { text: "1901 → 1921 · −4.5%", borderWidth: 0, offsetY: 26,
+                style: { color: '#8c2e1a', background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 } },
+            },
+            {
+              x: '1971', y: upSeriesData.find((p) => p.x === '1971')!.y,
+              marker: { size: 6, strokeColor: '#1a1510', fillColor: '#8c2e1a', strokeWidth: 1 },
+              label: { text: "1971 trough · 15.3%", borderWidth: 0, offsetY: 24,
+                style: { color: '#8c2e1a', background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 } },
+            },
+          ],
+          yaxis: [
+            {
+              y: upSeriesData.find((p) => p.x === '1901')!.y,
+              borderColor: '#6b5d4f', strokeDashArray: 3, borderWidth: 1, opacity: 0.5,
+              label: { text: "1901 level · 19.6%", borderWidth: 0, offsetY: -4, position: 'left', textAnchor: 'start',
+                style: { color: '#6b5d4f', background: 'transparent', fontFamily: '"Jost",sans-serif', fontSize: '10px', fontWeight: 500 } },
+            },
+          ],
+        },
+        tooltip: {
+          custom: ({ dataPointIndex }: any) => {
+            const p = upSeriesData[dataPointIndex];
+            const abs = upRow.values[Number(p.x)];
+            return `<div style="padding:10px 14px;min-width:200px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+              <div style="font-family:'Fraunces',serif;font-weight:700;font-size:16px;margin-bottom:6px;border-bottom:1px solid #1a1510;padding-bottom:4px">${p.x}</div>
+              <div style="display:flex;justify-content:space-between;gap:12px;font-size:12px"><span>UP population</span><b style="font-family:'Fraunces',serif;font-size:14px">${abs.toFixed(1)}M</b></div>
+              <div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-top:2px"><span>Share of India</span><b style="font-family:'Fraunces',serif;font-size:14px">${p.y.toFixed(2)}%</b></div>
+            </div>`;
+          },
+        },
+      });
+      upCollapseChart.render();
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. — Cumulative % growth by region, 1901 → 2011
+         ───────────────────────────────────────────────────────────── */
+      const cumRegions: Region[] = ['West', 'North', 'East', 'South'];
+      const cumShortLabel: Record<Region, string> = {
+        East: 'East', West: 'West', North: 'North', South: 'South', Other: 'Other',
+      };
+      const cumulativeData = cumRegions
+        .map((r) => ({
+          region: r, name: REGION_LABELS[r].en, shortName: cumShortLabel[r],
+          pct: +cumulativeGrowth(r).toFixed(1),
+        }))
+        .sort((a, b) => b.pct - a.pct);
+      const nationalCum = +cumulativeGrowthIndia().toFixed(1);
+
+      const cumChart = new ApexCharts(document.querySelector('#cumulative-chart')!, {
+        chart: {
+          type: 'bar', height: 340,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false }, background: 'transparent', parentHeightOffset: 0,
+        },
+        series: [{ name: 'Cumulative growth', data: cumulativeData.map((d) => ({ x: d.shortName, y: d.pct })) }],
+        colors: cumulativeData.map((d) => REGION_COLORS[d.region]),
+        plotOptions: {
+          bar: { horizontal: true, barHeight: '64%', borderRadius: 0, distributed: true, dataLabels: { position: 'top' } },
+        },
+        stroke: { show: true, width: 0.5, colors: ['#1a1510'] },
+        dataLabels: {
+          enabled: true,
+          formatter: (v: number) => `${v.toFixed(0)}%`,
+          offsetX: 28,
+          style: { fontSize: '12px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#1a1510'] },
+        },
+        xaxis: {
+          labels: { formatter: (v: string) => `${Number(v).toFixed(0)}%`,
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' } },
+          axisBorder: { show: true, color: '#1a1510' }, axisTicks: { show: false },
+          title: { text: 'CUMULATIVE % GROWTH, 1901 → 2011', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
+        },
+        yaxis: {
+          labels: { style: { fontSize: '12px', fontFamily: '"Jost",sans-serif', colors: '#1a1510', fontWeight: 500 } },
+        },
+        legend: { show: false },
+        grid: { borderColor: '#d8cdb8', strokeDashArray: 2, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } }, padding: { top: 0, right: 44, bottom: 0, left: 8 } },
+        annotations: {
+          xaxis: [
+            {
+              x: nationalCum, borderColor: '#8c2e1a', strokeDashArray: 4, borderWidth: 1.5,
+              label: { text: `national · ${nationalCum.toFixed(0)}%`, orientation: 'horizontal', position: 'top', offsetY: -6, borderWidth: 0,
+                style: { color: '#8c2e1a', background: '#f5efe3', fontFamily: '"Fraunces",serif', fontSize: '11px', fontWeight: 600, padding: { left: 6, right: 6, top: 2, bottom: 2 } } },
+            },
+          ],
+        },
+        tooltip: {
+          custom: ({ dataPointIndex }: any) => {
+            const d = cumulativeData[dataPointIndex];
+            const color = REGION_COLORS[d.region];
+            return `<div style="padding:12px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+                <span style="width:10px;height:10px;background:${color};border:1px solid #1a1510;display:inline-block"></span>
+                <span style="font-family:'Fraunces',serif;font-weight:700;font-size:15px">${d.name}</span>
+              </div>
+              <div style="border-top:1px solid #1a1510;padding-top:6px;display:flex;justify-content:space-between;gap:12px">
+                <div><div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">growth</div><b style="font-family:'Fraunces',serif;font-size:22px">${d.pct.toFixed(1)}%</b></div>
+                <div><div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">vs. India</div><b style="font-family:'Fraunces',serif;font-size:22px;color:${d.pct > nationalCum ? '#8c2e1a' : '#1f4d54'}">${d.pct > nationalCum ? '+' : ''}${(d.pct - nationalCum).toFixed(1)}pp</b></div>
+              </div>
+            </div>`;
+          },
+        },
+      });
+      cumChart.render();
+
+      requestAnimationFrame(() => { document.body.classList.add('ready'); });
+    </script>
+  </body>
+</html>

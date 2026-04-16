@@ -7,7 +7,11 @@ export interface YearRow {
   regions: Record<Region, number>;
 }
 
-export const REGION_ORDER: Region[] = ['East', 'West', 'North', 'South', 'Other'];
+// Iteration order for the four main regions shown in aggregate charts.
+// 'Other' (NE states, J&K, Ladakh, Punjab, Goa, UTs) is excluded here to keep
+// the primary regional comparison simple. Per-state charts still colour
+// 'Other'-region states via REGION_COLORS, and LOKSABHA_DATA retains the tag.
+export const REGION_ORDER: Region[] = ['East', 'West', 'North', 'South'];
 
 export const REGION_LABELS: Record<Region, { en: string; hi: string; states: string }> = {
   East: { en: 'East', hi: 'पूर्व', states: 'West Bengal, Odisha' },
@@ -161,4 +165,37 @@ export function decadalGrowthIndia(): { year: number; pct: number }[] {
     out.push({ year: CENSUS[i].year, pct: ((cur - prev) / prev) * 100 });
   }
   return out;
+}
+
+// Cumulative % growth for a region between two census years. Defaults to
+// 1901→2011 — the full span of canonical (non-estimated) data. Skips the
+// 1881/1891 reconstructions unless the caller explicitly asks for them.
+export function cumulativeGrowth(
+  region: Region,
+  fromYear = 1901,
+  toYear = 2011,
+): number {
+  const from = CENSUS.find((r) => r.year === fromYear);
+  const to = CENSUS.find((r) => r.year === toYear);
+  if (!from || !to) throw new Error(`cumulativeGrowth: missing year ${fromYear} or ${toYear}`);
+  return ((to.regions[region] - from.regions[region]) / from.regions[region]) * 100;
+}
+
+// Same, but for the India-wide total.
+export function cumulativeGrowthIndia(fromYear = 1901, toYear = 2011): number {
+  const from = CENSUS.find((r) => r.year === fromYear);
+  const to = CENSUS.find((r) => r.year === toYear);
+  if (!from || !to) throw new Error(`cumulativeGrowthIndia: missing year ${fromYear} or ${toYear}`);
+  return ((to.totalIndiaMillions - from.totalIndiaMillions) / from.totalIndiaMillions) * 100;
+}
+
+// Full % share series for a region, one point per census. Excludes the two
+// estimated years (1881/1891) unless includeEstimated is true.
+export function shareSeries(
+  region: Region,
+  includeEstimated = false,
+): { year: number; pct: number }[] {
+  return CENSUS
+    .filter((r) => includeEstimated || !r.estimated)
+    .map((r) => ({ year: r.year, pct: (r.regions[region] / r.totalIndiaMillions) * 100 }));
 }

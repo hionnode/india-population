@@ -119,6 +119,22 @@ export interface ShareRow {
   gapCurrent: number; // popShare − seatShareCurrent
 }
 
+// Freeze penalty: popShare − seatShareCurrent, in percentage points.
+// Positive = under-seated (state has more people than its current share of seats).
+// Negative = over-seated (state has more seats than its population warrants).
+// Already exposed as `gapCurrent` on each ShareRow; this helper is just sugar.
+export function freezePenalty(code: string): number {
+  const row = shareRows().find((r) => r.code === code);
+  return row ? row.gapCurrent : 0;
+}
+
+// % change in seats for a given state under a given scenario, relative to current.
+// e.g. Bihar current 40 → Scenario 2 73 seats = (33 / 40) × 100 = 82.5%.
+export function scenarioGainPct(row: StateSeatRow, scenario: 1 | 2): number {
+  const delta = scenario === 1 ? row.scenario1Delta : row.scenario2Delta;
+  return (delta / row.currentSeats) * 100;
+}
+
 // Share-of-population vs share-of-seats for every state. Used by the
 // representation slope chart (Fig. 4).
 export function shareRows(): ShareRow[] {

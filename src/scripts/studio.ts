@@ -42,7 +42,7 @@ const DEFAULTS: Record<Preset, StudioState> = {
     preset: 'line',
     dataset: 'region',
     metric: 'population',
-    entities: ['East', 'West', 'North', 'South', 'Other'],
+    entities: ['East', 'West', 'North', 'South'],
     from: 1881,
     to: 2011,
   },
@@ -170,7 +170,7 @@ export function getStore(): Store {
 // ——————————————————————————————————————————————
 
 const DEFAULT_ENTITIES_BY_DATASET: Record<Dataset, string[]> = {
-  region: ['East', 'West', 'North', 'South', 'Other'],
+  region: ['East', 'West', 'North', 'South'],
   state: ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'],
   loksabha: [],
 };

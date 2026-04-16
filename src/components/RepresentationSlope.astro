@@ -2,55 +2,125 @@
 // Fig. 4 — Share of population vs share of Lok Sabha seats, per state.
 // The argument chart. Lines sloping DOWN left-to-right = under-represented
 // (state's people > its seats); sloping UP = over-represented. Toggling
-// "Scenario 2" pivots every line toward the horizontal — visual proof that
-// a population-proportional reallocation flattens the gap.
+// "Scenario 2" pivots every line toward the horizontal.
+//
+// Broken-axis layout: Uttar Pradesh alone lives in the top panel (14%-18%).
+// Every other state lives in the bottom panel (0%-10%). A visible gap with
+// two diagonal break glyphs sits between — so the reader cannot miss the
+// axis discontinuity.
 import { shareRows } from '../data/loksabha';
-import { REGION_COLORS, REGION_LABELS } from '../data/census';
+import { REGION_COLORS } from '../data/census';
 
 const rows = shareRows();
 
 // Viewbox
 const W = 920;
 const H = 640;
-const MARGIN = { top: 48, right: 200, bottom: 48, left: 200 };
-const PLOT_W = W - MARGIN.left - MARGIN.right;
-const PLOT_H = H - MARGIN.top - MARGIN.bottom;
+const MARGIN = { top: 56, right: 210, bottom: 48, left: 210 };
 const LEFT_X = MARGIN.left;
+const PLOT_W = W - MARGIN.left - MARGIN.right;
 const RIGHT_X = MARGIN.left + PLOT_W;
 
-// Axis domain: values range 0% → ~17%. Pad to 18% for headroom.
-const Y_MAX = 18;
-const yScale = (v: number) => MARGIN.top + PLOT_H - (v / Y_MAX) * PLOT_H;
+// Two panels with a visible break between.
+const TOP_MIN = 14;
+const TOP_MAX = 18;
+const BOT_MIN = 0;
+const BOT_MAX = 10;
+const TOP_Y0 = MARGIN.top;              // pixel y of top panel's top edge
+const TOP_H = 110;                      // height of top panel
+const GAP_H = 42;                       // visible break zone
+const BOT_Y0 = TOP_Y0 + TOP_H + GAP_H;  // pixel y of bottom panel's top edge
+const BOT_H = H - BOT_Y0 - MARGIN.bottom;
 
-// Precompute everything
-const geom = rows.map((r) => {
-  const yLeft = yScale(r.popShare);
-  const yRightCurrent = yScale(r.seatShareCurrent);
-  const yRightScenario = yScale(r.seatShareScenario2);
+const yTop = (v: number) => TOP_Y0 + ((TOP_MAX - v) / (TOP_MAX - TOP_MIN)) * TOP_H;
+const yBot = (v: number) => BOT_Y0 + ((BOT_MAX - v) / (BOT_MAX - BOT_MIN)) * BOT_H;
+
+// Every state fits entirely in one panel (no value straddles 10-14%).
+// Pick the panel by the larger of popShare and seatShare to be safe.
+const inTopPanel = (popShare: number, seatShare: number) =>
+  Math.max(popShare, seatShare) > 12;
+const y = (v: number, useTop: boolean) => (useTop ? yTop(v) : yBot(v));
+
+// Precompute geometry for each state.
+type Geom = {
+  code: string;
+  name: string;
+  region: string;
+  popShare: number;
+  seatShareCurrent: number;
+  seatShareScenario2: number;
+  useTop: boolean;
+  yLeft: number;
+  yRightCurrent: number;
+  yRightScenario: number;
+  absGapCurrent: number;
+  color: string;
+  emphasise: boolean;
+  yLabelLeft: number;
+  yLabelRightCurrent: number;
+  yLabelRightScenario: number;
+};
+
+const geom: Geom[] = rows.map((r) => {
+  const useTop = inTopPanel(r.popShare, r.seatShareCurrent);
+  const yLeft = y(r.popShare, useTop);
+  const yRightCurrent = y(r.seatShareCurrent, useTop);
+  const yRightScenario = y(r.seatShareScenario2, useTop);
   const absGapCurrent = Math.abs(r.popShare - r.seatShareCurrent);
   return {
     ...r,
+    useTop,
     yLeft,
     yRightCurrent,
     yRightScenario,
     absGapCurrent,
-    color: REGION_COLORS[r.region],
-    emphasise: absGapCurrent >= 1.0, // UP, Bihar, TN, Rajasthan
+    color: REGION_COLORS[r.region as keyof typeof REGION_COLORS],
+    emphasise: absGapCurrent >= 1.0,
+    yLabelLeft: yLeft,
+    yLabelRightCurrent: yRightCurrent,
+    yLabelRightScenario: yRightScenario,
   };
 });
 
-// Sort so emphasised lines render on top
+// Render emphasized lines last (on top)
 const ordered = [...geom].sort((a, b) => (a.emphasise ? 1 : 0) - (b.emphasise ? 1 : 0));
 
-// Axis gridlines every 2%
-const gridValues = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18];
+// Grid values per panel
+const topGrid = [14, 16, 18];
+const botGrid = [0, 2, 4, 6, 8, 10];
 
-// The "winners" story: a few states we want to always label
-const alwaysLabel = new Set(['UP', 'MH', 'BR', 'WB', 'AP', 'TN', 'KL', 'MP', 'RJ', 'KA', 'GJ', 'OD']);
+// Only label states with popShare >= 2%. Everyone below is mostly a small state
+// or UT; keeping the line but dropping the label keeps the chart readable.
+const MIN_LABEL_SHARE = 2.0;
+const labelables = geom.filter((g) => g.popShare >= MIN_LABEL_SHARE);
 
-const labelables = geom
-  .filter((g) => g.popShare >= 1.0 || alwaysLabel.has(g.code))
-  .sort((a, b) => b.popShare - a.popShare);
+// Collision avoidance — walk top-to-bottom per panel, push labels apart.
+// Left column carries full state names → larger gap; right column carries
+// 2-letter codes → smaller gap.
+function deconflict(rows: Geom[], yKey: 'yLabelLeft' | 'yLabelRightCurrent' | 'yLabelRightScenario', minGap: number, onlyUseTop: boolean) {
+  const subset = rows.filter((r) => r.useTop === onlyUseTop);
+  subset.sort((a, b) => a[yKey] - b[yKey]);
+  let prev = -Infinity;
+  for (const r of subset) {
+    if (r[yKey] < prev + minGap) r[yKey] = prev + minGap;
+    prev = r[yKey];
+  }
+}
+// Run deconflict per panel per column
+for (const useTop of [true, false]) {
+  deconflict(labelables, 'yLabelLeft', 16, useTop);
+  deconflict(labelables, 'yLabelRightCurrent', 13, useTop);
+  deconflict(labelables, 'yLabelRightScenario', 13, useTop);
+}
+
+// Break zone geometry
+const breakY = TOP_Y0 + TOP_H + GAP_H / 2;
+
+// How many small/UT rows are folded into "plotted but unlabelled"
+const smallCount = geom.length - labelables.length;
+const smallSumPop = geom
+  .filter((g) => g.popShare < MIN_LABEL_SHARE)
+  .reduce((s, g) => s + g.popShare, 0);
 ---
 
 <figure class="chart-figure slope-figure">
@@ -88,32 +158,68 @@ const labelables = geom
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="Slope chart — share of population vs share of Lok Sabha seats"
+      aria-label="Slope chart — share of population vs share of seats, with a broken vertical axis"
     >
-      <!-- Gridlines -->
-      {gridValues.map((v) => (
+      <!-- Column headers -->
+      <text class="slope-col-head" x={LEFT_X} y={TOP_Y0 - 28} text-anchor="middle">
+        SHARE OF POPULATION
+      </text>
+      <text class="slope-col-head" x={RIGHT_X} y={TOP_Y0 - 28} text-anchor="middle">
+        SHARE OF SEATS
+      </text>
+
+      <!-- Top panel gridlines -->
+      {topGrid.map((v) => (
         <g class="slope-grid">
-          <line
-            x1={LEFT_X}
-            y1={yScale(v)}
-            x2={RIGHT_X}
-            y2={yScale(v)}
-          />
-          <text class="slope-grid-label" x={LEFT_X - 14} y={yScale(v)} text-anchor="end" dy="0.32em">{v}%</text>
-          <text class="slope-grid-label" x={RIGHT_X + 14} y={yScale(v)} text-anchor="start" dy="0.32em">{v}%</text>
+          <line x1={LEFT_X} y1={yTop(v)} x2={RIGHT_X} y2={yTop(v)} />
+          <text class="slope-grid-label" x={LEFT_X - 14} y={yTop(v)} text-anchor="end" dy="0.32em">{v}%</text>
+          <text class="slope-grid-label" x={RIGHT_X + 14} y={yTop(v)} text-anchor="start" dy="0.32em">{v}%</text>
         </g>
       ))}
 
-      <!-- Axis columns (hairlines) -->
-      <line class="slope-axis" x1={LEFT_X} y1={MARGIN.top} x2={LEFT_X} y2={MARGIN.top + PLOT_H} />
-      <line class="slope-axis" x1={RIGHT_X} y1={MARGIN.top} x2={RIGHT_X} y2={MARGIN.top + PLOT_H} />
+      <!-- Bottom panel gridlines -->
+      {botGrid.map((v) => (
+        <g class="slope-grid">
+          <line x1={LEFT_X} y1={yBot(v)} x2={RIGHT_X} y2={yBot(v)} />
+          <text class="slope-grid-label" x={LEFT_X - 14} y={yBot(v)} text-anchor="end" dy="0.32em">{v}%</text>
+          <text class="slope-grid-label" x={RIGHT_X + 14} y={yBot(v)} text-anchor="start" dy="0.32em">{v}%</text>
+        </g>
+      ))}
 
-      <!-- Column headers -->
-      <text class="slope-col-head" x={LEFT_X} y={MARGIN.top - 24} text-anchor="middle">
-        SHARE OF POPULATION
-      </text>
-      <text class="slope-col-head" x={RIGHT_X} y={MARGIN.top - 24} text-anchor="middle">
-        SHARE OF SEATS
+      <!-- Axis columns, with a visible gap for the break -->
+      <line class="slope-axis" x1={LEFT_X} y1={TOP_Y0} x2={LEFT_X} y2={TOP_Y0 + TOP_H} />
+      <line class="slope-axis" x1={RIGHT_X} y1={TOP_Y0} x2={RIGHT_X} y2={TOP_Y0 + TOP_H} />
+      <line class="slope-axis" x1={LEFT_X} y1={BOT_Y0} x2={LEFT_X} y2={BOT_Y0 + BOT_H} />
+      <line class="slope-axis" x1={RIGHT_X} y1={BOT_Y0} x2={RIGHT_X} y2={BOT_Y0 + BOT_H} />
+
+      <!-- Break-zone band: cream rectangle blocking any connecting ink -->
+      <rect
+        class="slope-break-mask"
+        x={LEFT_X - 20}
+        y={TOP_Y0 + TOP_H + 2}
+        width={PLOT_W + 40}
+        height={GAP_H - 4}
+      />
+
+      <!-- Break glyphs — two ink diagonals on each axis column -->
+      {[LEFT_X, RIGHT_X].map((cx) => (
+        <g class="slope-break-glyph">
+          <line x1={cx - 6} y1={TOP_Y0 + TOP_H + 8} x2={cx + 6} y2={TOP_Y0 + TOP_H - 4} />
+          <line x1={cx - 6} y1={TOP_Y0 + TOP_H + 14} x2={cx + 6} y2={TOP_Y0 + TOP_H + 2} />
+          <line x1={cx - 6} y1={BOT_Y0 - 2} x2={cx + 6} y2={BOT_Y0 - 14} />
+          <line x1={cx - 6} y1={BOT_Y0 + 4} x2={cx + 6} y2={BOT_Y0 - 8} />
+        </g>
+      ))}
+
+      <!-- Axis-break caption, slotted into the gap, below the glyphs -->
+      <text
+        class="slope-break-note"
+        x={(LEFT_X + RIGHT_X) / 2}
+        y={breakY + 2}
+        text-anchor="middle"
+        dy="0.32em"
+      >
+        ╱╱ axis broken · Uttar Pradesh is the only state above 10%
       </text>
 
       <!-- State lines + dots -->
@@ -150,29 +256,51 @@ const labelables = geom
         </g>
       ))}
 
-      <!-- State labels (only for selected states to avoid overlap) -->
+      <!-- Labels + leader lines, only for states with popShare >= 2% -->
       {labelables.map((g) => (
         <g
           class={`slope-labels ${g.emphasise ? 'is-emph' : 'is-faint'}`}
           data-code={g.code}
         >
+          {Math.abs(g.yLabelLeft - g.yLeft) > 0.5 && (
+            <line
+              class="slope-leader"
+              x1={LEFT_X - 24}
+              y1={g.yLeft}
+              x2={LEFT_X - 8}
+              y2={g.yLabelLeft}
+            />
+          )}
           <text
             class="slope-label-left"
-            x={LEFT_X - 30}
-            y={g.yLeft}
+            x={LEFT_X - 28}
+            y={g.yLabelLeft}
             text-anchor="end"
             dy="0.32em"
           >
             {g.name}
           </text>
+          {Math.abs(g.yLabelRightCurrent - g.yRightCurrent) > 0.5 && (
+            <line
+              class="slope-leader slope-leader-right"
+              x1={RIGHT_X + 8}
+              y1={g.yRightCurrent}
+              x2={RIGHT_X + 24}
+              y2={g.yLabelRightCurrent}
+              data-y1-current={g.yRightCurrent}
+              data-y1-scenario={g.yRightScenario}
+              data-y2-current={g.yLabelRightCurrent}
+              data-y2-scenario={g.yLabelRightScenario}
+            />
+          )}
           <text
             class="slope-label-right"
-            x={RIGHT_X + 30}
-            y={g.yRightCurrent}
+            x={RIGHT_X + 28}
+            y={g.yLabelRightCurrent}
             text-anchor="start"
             dy="0.32em"
-            data-y-current={g.yRightCurrent}
-            data-y-scenario={g.yRightScenario}
+            data-y-current={g.yLabelRightCurrent}
+            data-y-scenario={g.yLabelRightScenario}
           >
             {g.code}
           </text>
@@ -182,10 +310,12 @@ const labelables = geom
   </div>
 
   <p class="fig-note">
-    A line sloping <b>down</b> left-to-right means that state's share of
-    population exceeds its share of seats — the Hindi belt. Sloping <b>up</b>
-    means over-representation — the South, Kerala most of all. Toggle
-    <em>Scenario 2</em> to pivot every line toward horizontal: a seat
-    allocation based purely on population would flatten the gap.
+    <span class="hi">अनुपातिक प्रतिनिधित्व</span> ·
+    Each line connects a state's share of India's population (left) to its
+    share of the Lok Sabha (right). A line falling to the right marks a state
+    whose citizens are worth less in Delhi than their numbers would warrant.
+    <b>{smallCount} smaller states &amp; UTs</b> (combined {smallSumPop.toFixed(1)}%
+    of India's population) are plotted without labels; each drifts too close
+    to its neighbours to name individually.
   </p>
 </figure>

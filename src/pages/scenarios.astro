@@ -1,0 +1,466 @@
+---
+import '../styles/global.css';
+import PageNav from '../components/PageNav.astro';
+import ScenarioLegend from '../components/ScenarioLegend.astro';
+import TripleDumbbell from '../components/TripleDumbbell.astro';
+import WinnersLosers from '../components/WinnersLosers.astro';
+import PercentGain from '../components/PercentGain.astro';
+import ScenarioSlope from '../components/ScenarioSlope.astro';
+import ScenarioStacks from '../components/ScenarioStacks.astro';
+import SmallMultiples from '../components/SmallMultiples.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Three Parliaments · तीन संसदें · The Indian Census, Part III</title>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page">
+
+      <PageNav current={3} />
+
+      <hr class="rule double" />
+
+      <header class="masthead">
+        <div class="masthead-copy">
+          <p class="kicker">Part the Third · Vol. III</p>
+          <h1 class="title">
+            <span class="title-en">Three</span>
+            <span class="title-en-b">Parliaments</span>
+            <span class="title-hi">तीन&nbsp;संसदें</span>
+          </h1>
+          <p class="lede">
+            Three Parliaments sit on the page. One exists; two are
+            arithmetic. The exercise that follows is not prediction but
+            <em>construction</em> — what the House looks like when we apply
+            two different rules to the same 2011 population, state by state.
+          </p>
+        </div>
+        <div class="masthead-figure" aria-hidden="true">
+          <div class="glyph">¶</div>
+          <div class="figure-no">No.<br /><b>III</b></div>
+        </div>
+      </header>
+
+      <hr class="rule" />
+
+      <ScenarioLegend />
+
+      <hr class="rule" />
+
+      <!-- Cross-reference back to Page 1 Fig. 4 (no duplicate chart) -->
+      <aside class="fig-backref">
+        <span class="smallcaps">§ the grievance, in one number</span>
+        <p>
+          Before redrawing, the present. <b>Uttar Pradesh</b> holds
+          <b>16.5%</b> of India's population but only <b>14.7%</b> of
+          the Lok Sabha — a <em>1.77-percentage-point</em> deficit. The
+          twelve small states and UTs, taken together, sit a matching
+          distance above their population share. The Freeze Penalty chart
+          in <a href="/#freeze-penalty-chart">Fig.&nbsp;4 of the Present</a>
+          shows every state's distance from its own numbers.
+        </p>
+      </aside>
+
+      <hr class="rule" />
+
+      <TripleDumbbell />
+
+      <hr class="rule" />
+
+      <WinnersLosers />
+
+      <hr class="rule" />
+
+      <PercentGain />
+
+      <hr class="rule" />
+
+      <ScenarioSlope />
+
+      <hr class="rule" />
+
+      <ScenarioStacks />
+
+      <hr class="rule double" />
+
+      <section class="chapter-opener">
+        <span class="smallcaps">§ the state-level substrate</span>
+        <h2 class="chapter-title">
+          <span class="chapter-numeral">iv.</span>
+          The eighteen that move the map
+          <span class="chapter-hi hi">अठारह बड़े राज्य</span>
+        </h2>
+        <p class="chapter-lede">
+          Why the scenarios land the way they do: eighteen state trajectories,
+          indexed to their 1901 population. Divergence in the trajectories
+          is the mechanism behind divergence in the scenarios.
+        </p>
+      </section>
+
+      <hr class="rule" />
+
+      <SmallMultiples />
+
+      <hr class="rule double" />
+
+      <aside class="bridge-callout">
+        <p>
+          The arithmetic is honest.<br />
+          <em>Whether it is just is a separate question.</em>
+        </p>
+      </aside>
+
+      <hr class="rule double" />
+
+      <aside class="next-step">
+        <span class="smallcaps">continue reading</span>
+        <a href="/editorial/" class="next-link">
+          <span class="next-arrow">→</span>
+          <span class="next-title">The Consequence</span>
+          <span class="next-subtitle hi">परिणाम</span>
+        </a>
+        <p class="next-blurb">
+          The numbers are settled. The politics are not. A case against
+          the arithmetic just made.
+        </p>
+      </aside>
+
+      <hr class="rule" />
+
+      <footer class="colophon">
+        <div class="colophon-col">
+          <span class="smallcaps">§ method</span>
+          <p>
+            <b>Scenario&nbsp;1</b> applies <em>⌈seats&thinsp;×&thinsp;1.5⌉</em> to every
+            state's current seat count. <b>Scenario&nbsp;2</b> applies
+            <em>⌈pop&thinsp;÷&thinsp;14,24,535⌉</em>, using 2011 Census
+            populations. Both round up; both enforce a one-seat floor for
+            every state and UT; both reproduce the existing seat floor for
+            Union Territories currently at one seat.
+          </p>
+        </div>
+        <div class="colophon-col">
+          <span class="smallcaps">§ caveats</span>
+          <p>
+            These are illustrative redistributions, not forecasts. Actual
+            delimitation after 2026 will also account for SC/ST reservation
+            under Articles 330–332, within-state boundary re-drawing, and
+            the decade's fresh census — none of which is modelled here.
+            The magnitudes are the point, not the last decimal.
+          </p>
+        </div>
+      </footer>
+
+      <div class="running-foot">
+        <span class="eyebrow">Set in Fraunces &amp; Tiro Devanagari Hindi</span>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">Composed on cream</span>
+      </div>
+    </div>
+
+    <script>
+      import ApexCharts from 'apexcharts';
+      import { REGION_COLORS, REGION_LABELS, REGION_ORDER, type Region } from '../data/census';
+      import {
+        LOKSABHA_DATA,
+        byRegion,
+        scenarioGainPct,
+      } from '../data/loksabha';
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 6 — Winners & losers (absolute delta, Scenario 2)
+         ───────────────────────────────────────────────────────────── */
+      const winnersSorted = [...LOKSABHA_DATA]
+        .filter((r) => r.scenario2Delta !== 0)
+        .sort((a, b) => b.scenario2Delta - a.scenario2Delta);
+      const winnersColors = winnersSorted.map((r) => REGION_COLORS[r.region]);
+
+      const winnersChart = new ApexCharts(document.querySelector('#winners-chart')!, {
+        chart: {
+          type: 'bar',
+          height: 560,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false },
+          background: 'transparent',
+          parentHeightOffset: 0,
+        },
+        colors: winnersColors,
+        series: [{
+          name: 'Δ seats',
+          data: winnersSorted.map((r) => ({ x: r.name, y: r.scenario2Delta })),
+        }],
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            barHeight: '70%',
+            borderRadius: 0,
+            distributed: true,
+            dataLabels: { position: 'top' },
+          },
+        },
+        stroke: { show: true, width: 0.5, colors: ['#1a1510'] },
+        dataLabels: {
+          enabled: true,
+          formatter: (v: number) => (v > 0 ? `+${v}` : v < 0 ? `${v}` : ''),
+          offsetX: 18,
+          style: { fontSize: '11px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#1a1510'] },
+        },
+        xaxis: {
+          max: 70,
+          labels: {
+            formatter: (v: string) => {
+              const n = Number(v);
+              return n > 0 ? `+${n}` : `${n}`;
+            },
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
+          },
+          axisBorder: { show: true, color: '#1a1510' },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          labels: {
+            style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' },
+          },
+        },
+        legend: { show: false },
+        grid: {
+          borderColor: '#d8cdb8',
+          strokeDashArray: 2,
+          xaxis: { lines: { show: true } },
+          yaxis: { lines: { show: false } },
+          padding: { top: 0, right: 60, bottom: 0, left: 8 },
+        },
+        annotations: {
+          xaxis: [
+            {
+              x: 0,
+              borderColor: '#1a1510',
+              strokeDashArray: 0,
+              borderWidth: 1.5,
+            },
+          ],
+        },
+        tooltip: {
+          custom: ({ dataPointIndex }: any) => {
+            const r = winnersSorted[dataPointIndex];
+            const color = REGION_COLORS[r.region];
+            const sign = r.scenario2Delta > 0 ? '+' : r.scenario2Delta < 0 ? '' : '±';
+            return `<div style="padding:12px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+                <span style="width:10px;height:10px;background:${color};border:1px solid #1a1510;display:inline-block"></span>
+                <span style="font-family:'Fraunces',serif;font-weight:700;font-size:15px">${r.name}</span>
+              </div>
+              <div style="font-size:10.5px;color:#6b5d4f;margin-bottom:8px;letter-spacing:0.02em">Current: ${r.currentSeats} · Scenario 2: ${r.scenario2Seats}</div>
+              <div style="border-top:1px solid #1a1510;padding-top:8px">
+                <div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">delta</div>
+                <b style="font-family:'Fraunces',serif;font-size:26px;color:${r.scenario2Delta > 0 ? '#8c2e1a' : r.scenario2Delta < 0 ? '#1f4d54' : '#6b5d4f'}">${sign}${r.scenario2Delta}</b>
+              </div>
+            </div>`;
+          },
+        },
+      });
+      winnersChart.render();
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 7 — Percentage gain (Scenario 2 relative to current)
+         ───────────────────────────────────────────────────────────── */
+      const pctRows = [...LOKSABHA_DATA]
+        .filter((r) => r.scenario2Delta !== 0)
+        .map((r) => ({ ...r, pct: scenarioGainPct(r, 2) }))
+        .sort((a, b) => b.pct - a.pct);
+      const pctColors = pctRows.map((r) => REGION_COLORS[r.region]);
+
+      const pctChart = new ApexCharts(document.querySelector('#pct-gain-chart')!, {
+        chart: {
+          type: 'bar',
+          height: 560,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false },
+          background: 'transparent',
+          parentHeightOffset: 0,
+        },
+        colors: pctColors,
+        series: [{
+          name: '% change',
+          data: pctRows.map((r) => ({ x: r.name, y: +r.pct.toFixed(1) })),
+        }],
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            barHeight: '70%',
+            borderRadius: 0,
+            distributed: true,
+            dataLabels: { position: 'top' },
+          },
+        },
+        stroke: { show: true, width: 0.5, colors: ['#1a1510'] },
+        dataLabels: {
+          enabled: true,
+          formatter: (v: number) => (v > 0 ? `+${v.toFixed(0)}%` : v < 0 ? `${v.toFixed(0)}%` : ''),
+          offsetX: 22,
+          style: { fontSize: '11px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#1a1510'] },
+        },
+        xaxis: {
+          max: 100,
+          labels: {
+            formatter: (v: string) => `${Number(v).toFixed(0)}%`,
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
+          },
+          axisBorder: { show: true, color: '#1a1510' },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          labels: {
+            style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' },
+          },
+        },
+        legend: { show: false },
+        grid: {
+          borderColor: '#d8cdb8',
+          strokeDashArray: 2,
+          xaxis: { lines: { show: true } },
+          yaxis: { lines: { show: false } },
+          padding: { top: 0, right: 60, bottom: 0, left: 8 },
+        },
+        annotations: {
+          xaxis: [
+            { x: 0, borderColor: '#1a1510', strokeDashArray: 0, borderWidth: 1.5 },
+            {
+              x: 50,
+              borderColor: '#8c2e1a',
+              strokeDashArray: 4,
+              borderWidth: 1,
+              label: {
+                text: '+50% · the Scenario 1 baseline',
+                orientation: 'horizontal',
+                position: 'top',
+                offsetY: -6,
+                borderWidth: 0,
+                style: {
+                  color: '#8c2e1a',
+                  background: '#f5efe3',
+                  fontFamily: '"Fraunces",serif',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: { left: 6, right: 6, top: 2, bottom: 2 },
+                },
+              },
+            },
+          ],
+        },
+        tooltip: {
+          custom: ({ dataPointIndex }: any) => {
+            const r = pctRows[dataPointIndex];
+            const color = REGION_COLORS[r.region];
+            return `<div style="padding:12px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+                <span style="width:10px;height:10px;background:${color};border:1px solid #1a1510;display:inline-block"></span>
+                <span style="font-family:'Fraunces',serif;font-weight:700;font-size:15px">${r.name}</span>
+              </div>
+              <div style="font-size:10.5px;color:#6b5d4f;margin-bottom:8px;letter-spacing:0.02em">${r.currentSeats} → ${r.scenario2Seats} seats &nbsp;(+${r.scenario2Delta})</div>
+              <div style="border-top:1px solid #1a1510;padding-top:8px">
+                <div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">relative change</div>
+                <b style="font-family:'Fraunces',serif;font-size:26px;color:#8c2e1a">+${r.pct.toFixed(1)}%</b>
+              </div>
+            </div>`;
+          },
+        },
+      });
+      pctChart.render();
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 9 — Regional reshuffle (three-scenario stacked bars)
+         ───────────────────────────────────────────────────────────── */
+      const curByRegion = byRegion('currentSeats');
+      const s1ByRegion = byRegion('scenario1Seats');
+      const s2ByRegion = byRegion('scenario2Seats');
+      const stackedSeries = REGION_ORDER.map((r) => ({
+        name: REGION_LABELS[r].en,
+        data: [curByRegion[r], s1ByRegion[r], s2ByRegion[r]],
+      }));
+
+      const stacksChart = new ApexCharts(document.querySelector('#stacks-chart')!, {
+        chart: {
+          type: 'bar',
+          stacked: true,
+          stackType: '100%',
+          height: 420,
+          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
+          toolbar: { show: false },
+          background: 'transparent',
+          parentHeightOffset: 0,
+        },
+        colors: REGION_ORDER.map((r) => REGION_COLORS[r]),
+        series: stackedSeries,
+        plotOptions: {
+          bar: {
+            horizontal: false,
+            columnWidth: '50%',
+            borderRadius: 0,
+            dataLabels: { position: 'center' },
+          },
+        },
+        stroke: { show: true, width: 1, colors: ['#1a1510'] },
+        dataLabels: {
+          enabled: true,
+          formatter: (v: number) => (v >= 6 ? `${Math.round(v)}%` : ''),
+          style: { fontSize: '12px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#f5efe3'] },
+        },
+        xaxis: {
+          categories: ['Current', 'Scenario 1', 'Scenario 2'],
+          labels: {
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510', fontWeight: 500 },
+          },
+          axisBorder: { show: true, color: '#1a1510' },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          labels: {
+            formatter: (v: number) => `${v.toFixed(0)}%`,
+            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
+          },
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'left',
+          fontFamily: '"Jost",sans-serif',
+          fontSize: '12px',
+          labels: { colors: '#1a1510' },
+          markers: { size: 8, strokeWidth: 1, shape: 'square' },
+          itemMargin: { horizontal: 14, vertical: 4 },
+          offsetY: -4,
+        },
+        grid: {
+          borderColor: '#d8cdb8',
+          strokeDashArray: 2,
+          padding: { top: 6, right: 12, bottom: 0, left: 8 },
+        },
+        tooltip: { enabled: false },
+      });
+      stacksChart.render();
+
+      /* ─────────────────────────────────────────────────────────────
+         Small multiples — each of the Big Eighteen states' population
+         trajectory 1901 → 2011 (indexed to 1901 = 100).
+         This component renders its own SVG in frontmatter; no JS needed.
+         ───────────────────────────────────────────────────────────── */
+
+      // Staggered entrance — trigger after first paint
+      requestAnimationFrame(() => {
+        document.body.classList.add('ready');
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+---
+// Page 3 · Fig. 5 — Three Parliaments, Thirty-six States.
+// The hero chart of the scenarios page.
+// Each state gets one row with three dots: Current / Scenario 1 / Scenario 2,
+// joined by a thin region-coloured connector. Sorted by current seat count.
+// UP at top with a "+60 seats" annotation bracket.
+import { LOKSABHA_DATA } from '../data/loksabha';
+import { REGION_COLORS } from '../data/census';
+
+const rows = [...LOKSABHA_DATA].sort((a, b) => b.currentSeats - a.currentSeats);
+
+// Geometry
+const W = 1000;
+const ROW_H = 20;
+const TOP = 60;
+const BOT = 40;
+const H = TOP + rows.length * ROW_H + BOT;
+const MARGIN = { left: 220, right: 96, top: TOP, bottom: BOT };
+const PLOT_W = W - MARGIN.left - MARGIN.right;
+
+// Data range — find largest single value across all three scenarios
+const maxSeats = Math.max(
+  ...rows.map((r) => Math.max(r.currentSeats, r.scenario1Seats, r.scenario2Seats))
+);
+const X_MAX = Math.ceil(maxSeats / 20) * 20; // round up to nearest 20
+const xScale = (v: number) => MARGIN.left + (v / X_MAX) * PLOT_W;
+
+// Gridlines at multiples of 20
+const gridValues: number[] = [];
+for (let v = 0; v <= X_MAX; v += 20) gridValues.push(v);
+---
+
+<figure class="chart-figure triple-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 5</span>
+    <span class="fig-title">Three parliaments, thirty-six states</span>
+    <span class="fig-unit">— seats per state under each rule —</span>
+  </figcaption>
+
+  <div class="triple-legend" aria-hidden="true">
+    <span class="tl-swatch-grp">
+      <span class="tl-dot tl-dot-current"></span>
+      <span class="tl-label">Today · 543</span>
+    </span>
+    <span class="tl-swatch-grp">
+      <span class="tl-dot tl-dot-s1"></span>
+      <span class="tl-label">Scenario 1 · 824</span>
+    </span>
+    <span class="tl-swatch-grp">
+      <span class="tl-dot tl-dot-s2"></span>
+      <span class="tl-label">Scenario 2 · 854</span>
+    </span>
+  </div>
+
+  <div class="triple-wrap">
+    <svg
+      id="triple-svg"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Triple-dot dumbbell — every state's seat count under Current, Scenario 1, and Scenario 2"
+    >
+      <!-- Vertical gridlines -->
+      {gridValues.map((v) => (
+        <g class="triple-grid">
+          <line
+            x1={xScale(v)}
+            y1={MARGIN.top - 18}
+            x2={xScale(v)}
+            y2={H - MARGIN.bottom}
+          />
+          <text
+            class="triple-grid-label"
+            x={xScale(v)}
+            y={MARGIN.top - 24}
+            text-anchor="middle"
+          >
+            {v}
+          </text>
+          <text
+            class="triple-grid-label"
+            x={xScale(v)}
+            y={H - MARGIN.bottom + 18}
+            text-anchor="middle"
+          >
+            {v}
+          </text>
+        </g>
+      ))}
+
+      <!-- Axis labels -->
+      <text class="triple-axis-label" x={MARGIN.left + PLOT_W / 2} y={MARGIN.top - 40} text-anchor="middle">
+        SEATS IN THE LOK SABHA
+      </text>
+
+      <!-- Rows -->
+      {rows.map((r, i) => {
+        const y = MARGIN.top + i * ROW_H + ROW_H / 2;
+        const xCur = xScale(r.currentSeats);
+        const xS1 = xScale(r.scenario1Seats);
+        const xS2 = xScale(r.scenario2Seats);
+        const xMin = Math.min(xCur, xS1, xS2);
+        const xMax = Math.max(xCur, xS1, xS2);
+        const color = REGION_COLORS[r.region];
+        const delta2 = r.scenario2Delta;
+        return (
+          <g class="triple-row" data-code={r.code} style={`--region: ${color}`}>
+            <text
+              class="triple-state-label"
+              x={MARGIN.left - 14}
+              y={y}
+              text-anchor="end"
+              dy="0.34em"
+            >
+              {r.name}
+            </text>
+            {xMax > xMin && (
+              <line
+                class="triple-connector"
+                x1={xMin}
+                y1={y}
+                x2={xMax}
+                y2={y}
+              />
+            )}
+            <circle class="triple-dot triple-dot-current" cx={xCur} cy={y} r="3.8" />
+            <circle class="triple-dot triple-dot-s1" cx={xS1} cy={y} r="3.8" />
+            <circle class="triple-dot triple-dot-s2" cx={xS2} cy={y} r="4.4" />
+            <text
+              class="triple-delta"
+              x={xScale(r.scenario2Seats) + 10}
+              y={y}
+              dy="0.34em"
+              data-sign={delta2 > 0 ? 'pos' : delta2 < 0 ? 'neg' : 'zero'}
+            >
+              {delta2 > 0 ? '+' : ''}{delta2 !== 0 ? delta2 : ''}
+            </text>
+          </g>
+        );
+      })}
+
+      <!-- Annotation bracket on UP (top row, i=0) -->
+      {(() => {
+        const y = MARGIN.top + 0 * ROW_H + ROW_H / 2;
+        const x1 = xScale(rows[0].currentSeats);
+        const x2 = xScale(rows[0].scenario2Seats);
+        const xMid = (x1 + x2) / 2;
+        return (
+          <g class="triple-annotation">
+            <path
+              d={`M ${x1} ${y - 14} L ${x1} ${y - 18} L ${x2} ${y - 18} L ${x2} ${y - 14}`}
+            />
+            <text
+              class="triple-annotation-label"
+              x={xMid}
+              y={y - 24}
+              text-anchor="middle"
+            >
+              +60 seats under Scenario 2
+            </text>
+          </g>
+        );
+      })()}
+    </svg>
+  </div>
+
+  <p class="fig-note">
+    <span class="hi">तीन परिदृश्य, छत्तीस राज्य</span> ·
+    Each row is a state. Hollow dot: today. Small filled dot: <em>Scenario&nbsp;1</em>
+    (current × 1.5). Larger dot: <em>Scenario&nbsp;2</em> (equal population).
+    Rows ordered by today's seat count. The connector is tinted by region.
+  </p>
+</figure>

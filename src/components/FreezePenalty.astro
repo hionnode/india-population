@@ -1,0 +1,57 @@
+---
+// Fig. 4 — The Freeze Penalty.
+// Horizontal diverging bar: popShare − seatShareCurrent, in percentage points.
+// Positive → under-seated (more people than the state's share of seats).
+// Negative → over-seated (more seats than its population warrants).
+// The hero chart of Page 1: establishes the grievance at state level.
+import { shareRows } from '../data/loksabha';
+import { REGION_COLORS } from '../data/census';
+
+const rows = [...shareRows()].sort((a, b) => b.gapCurrent - a.gapCurrent);
+const mostUnder = rows[0];
+const mostOver = rows[rows.length - 1];
+---
+
+<figure class="chart-figure freeze-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 4</span>
+    <span class="fig-title">The freeze penalty</span>
+    <span class="fig-unit">— share of population minus share of seats, by state, 2011 —</span>
+  </figcaption>
+
+  <div id="freeze-penalty-chart" class="chart freeze-penalty-chart"></div>
+
+  <div class="freeze-faceoff">
+    <div class="ff-col ff-under">
+      <span class="ff-sign">+</span>
+      <span class="ff-num" style={`color: ${REGION_COLORS[mostUnder.region]}`}>
+        {mostUnder.gapCurrent.toFixed(2)}<span class="ff-unit">pp</span>
+      </span>
+      <span class="ff-text">
+        <b>{mostUnder.name}</b> is the most <em>under</em>-seated state —
+        {mostUnder.gapCurrent.toFixed(2)} percentage points of the country's
+        population, missing from its share of the House.
+      </span>
+    </div>
+    <div class="ff-sep">◇</div>
+    <div class="ff-col ff-over">
+      <span class="ff-sign">−</span>
+      <span class="ff-num" style={`color: ${REGION_COLORS[mostOver.region]}`}>
+        {Math.abs(mostOver.gapCurrent).toFixed(2)}<span class="ff-unit">pp</span>
+      </span>
+      <span class="ff-text">
+        <b>{mostOver.name}</b> sits <em>{Math.abs(mostOver.gapCurrent).toFixed(2)}&nbsp;pp</em>
+        above its population share — a small-state bonus the 1971 freeze
+        has held in place.
+      </span>
+    </div>
+  </div>
+
+  <p class="fig-note">
+    <span class="hi">ठहराव-दंड</span> ·
+    Each bar shows how far a state's share of India's population exceeds
+    (right) or falls below (left) its share of the Lok Sabha.
+    <b>Positive</b> bars are the argument for redrawing; <b>negative</b>
+    bars are the bargain currently in place.
+  </p>
+</figure>

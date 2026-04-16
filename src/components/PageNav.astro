@@ -1,0 +1,56 @@
+---
+// Shared running-head page indicator for the 4-chapter almanac.
+// I · The Present       II · Seven Dates       III · Three Parliaments       IV · The Consequence
+//
+// Current page rendered in ink; others muted. On mobile collapses to
+// "⦿ III" (just the current numeral) with a hidden menu.
+
+interface Props {
+  current: 1 | 2 | 3 | 4;
+}
+
+const { current } = Astro.props;
+
+const pages = [
+  { n: 'I',   num: 1, href: '/',          title: 'The Present',       hi: 'वर्तमान' },
+  { n: 'II',  num: 2, href: '/history/',  title: 'Seven Dates',       hi: 'सात तिथियाँ' },
+  { n: 'III', num: 3, href: '/scenarios/',title: 'Three Parliaments', hi: 'तीन संसदें' },
+  { n: 'IV',  num: 4, href: '/editorial/',title: 'The Consequence',   hi: 'परिणाम' },
+] as const;
+
+const prev = pages[current - 2]; // undefined on Page 1
+---
+
+<nav class="page-nav" aria-label="Chapter navigation">
+  {prev && (
+    <a href={prev.href} class="page-nav-back" aria-label={`Back to ${prev.title}`}>
+      ← <span class="pn-back-num">{prev.n}</span>
+      <span class="pn-back-title">{prev.title}</span>
+    </a>
+  )}
+  <ol class="page-nav-list">
+    {pages.map((p) => (
+      <li class={`pn-item ${p.num === current ? 'is-current' : ''}`}>
+        {p.num === current ? (
+          <span class="pn-current" aria-current="page">
+            <span class="pn-numeral">{p.n}</span>
+            <span class="pn-sep">·</span>
+            <span class="pn-title">{p.title}</span>
+            <span class="pn-hi hi">{p.hi}</span>
+          </span>
+        ) : (
+          <a href={p.href} class="pn-link">
+            <span class="pn-numeral">{p.n}</span>
+            <span class="pn-sep">·</span>
+            <span class="pn-title">{p.title}</span>
+          </a>
+        )}
+      </li>
+    ))}
+  </ol>
+  <a class="pn-workshop" href="/tools/" aria-label="The Workshop — experimental tools">
+    <span class="pn-workshop-mark">§</span>
+    <span class="pn-workshop-text">The Workshop</span>
+    <span class="pn-workshop-arrow">→</span>
+  </a>
+</nav>
