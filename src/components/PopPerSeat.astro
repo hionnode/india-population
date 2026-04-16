@@ -1,0 +1,49 @@
+---
+// Fig. 3 — Population each Lok Sabha seat represents, by state, sorted.
+// Purpose: the representation-inequality punchline. A vertical reference line
+// at 14,24,535 marks the "if every seat held the same number of people" target.
+import { sortedByPopPerSeat, LOKSABHA_META } from '../data/loksabha';
+import { REGION_COLORS } from '../data/census';
+
+const sorted = sortedByPopPerSeat();
+const top = sorted[0];
+const bottom = sorted[sorted.length - 1];
+const ratio = top.popPerSeat / bottom.popPerSeat;
+const idealLakh = (LOKSABHA_META.delimitationAvgConstituency / 100_000).toFixed(2);
+---
+
+<figure class="chart-figure popseat-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 3</span>
+    <span class="fig-title">One seat, how many citizens</span>
+    <span class="fig-unit">— lakh of people per Lok Sabha seat, 2011 —</span>
+  </figcaption>
+  <div id="pop-per-seat-chart" class="chart popseat-chart"></div>
+  <div class="faceoff">
+    <div class="faceoff-quote">
+      <span class="faceoff-num" style={`color: ${REGION_COLORS[top.region]}`}>
+        {(top.popPerSeat / 100_000).toFixed(1)}<span class="faceoff-unit">L</span>
+      </span>
+      <span class="faceoff-text">
+        One <b>{top.name}</b> MP speaks for
+        <b>{(top.popPerSeat / 100_000).toFixed(1)} lakh</b> citizens.
+      </span>
+    </div>
+    <div class="faceoff-sep">✕</div>
+    <div class="faceoff-quote">
+      <span class="faceoff-num" style={`color: ${REGION_COLORS[bottom.region]}`}>
+        {(bottom.popPerSeat / 100_000).toFixed(1)}<span class="faceoff-unit">L</span>
+      </span>
+      <span class="faceoff-text">
+        One <b>{bottom.name}</b> MP speaks for
+        <b>{(bottom.popPerSeat / 100_000).toFixed(1)} lakh</b>.
+        A <b>{ratio.toFixed(0)}×</b> gap without leaving the map.
+      </span>
+    </div>
+  </div>
+  <p class="fig-note">
+    Dashed vermilion line marks <b>{idealLakh} lakh</b> —
+    India's 2011 population divided by a hypothetical 850 seats, i.e. the
+    one-seat-one-size ideal.
+  </p>
+</figure>

@@ -1,0 +1,89 @@
+---
+// Fig. 7 — State trajectory small multiples, 1901-2011, indexed to 1901=100.
+import { STATE_CENSUS, STATE_CENSUS_YEARS, indexedAt1901 } from '../data/state-census';
+import { REGION_COLORS } from '../data/census';
+
+// Group states by region for a sensible reading order.
+const ORDER_BY_REGION: string[] = [
+  // North (Hindi belt), then West, East, South, Other-ish
+  'UP', 'BR', 'MP', 'RJ', 'JH', 'HR',
+  'CG', 'UK', 'HP', 'DL',
+  'MH', 'GJ',
+  'WB', 'OD',
+  'AP', 'TN', 'KA', 'KL',
+];
+const ordered = ORDER_BY_REGION
+  .map((code) => STATE_CENSUS.find((s) => s.code === code)!)
+  .filter(Boolean);
+
+// SVG box per tile
+const W = 200;
+const H = 60;
+const PAD = { top: 4, right: 6, bottom: 4, left: 6 };
+const plotW = W - PAD.left - PAD.right;
+const plotH = H - PAD.top - PAD.bottom;
+
+// Global Y max (indexed) — UP/Delhi blow this scale, cap at 5000 to keep others readable
+const GLOBAL_YMAX = 5000; // 50× would be the top
+const yScale = (v: number) => PAD.top + plotH - Math.min(v / GLOBAL_YMAX, 1) * plotH;
+const xScale = (y: number) =>
+  PAD.left + (STATE_CENSUS_YEARS.indexOf(y as (typeof STATE_CENSUS_YEARS)[number]) /
+    (STATE_CENSUS_YEARS.length - 1)) * plotW;
+
+function pathFor(row: (typeof STATE_CENSUS)[number]) {
+  const indexed = indexedAt1901(row);
+  return indexed
+    .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${xScale(pt.year).toFixed(1)},${yScale(pt.v).toFixed(1)}`)
+    .join(' ');
+}
+
+function areaFor(row: (typeof STATE_CENSUS)[number]) {
+  const indexed = indexedAt1901(row);
+  const first = indexed[0];
+  const last = indexed[indexed.length - 1];
+  const linePath = indexed
+    .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${xScale(pt.year).toFixed(1)},${yScale(pt.v).toFixed(1)}`)
+    .join(' ');
+  return `${linePath} L ${xScale(last.year).toFixed(1)},${PAD.top + plotH} L ${xScale(first.year).toFixed(1)},${PAD.top + plotH} Z`;
+}
+---
+
+<figure class="chart-figure multiples-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 7</span>
+    <span class="fig-title">Eighteen state trajectories, indexed to 1901</span>
+    <span class="fig-unit">— population, 1901 = 100 —</span>
+  </figcaption>
+  <div class="multiples-grid">
+    {ordered.map((row) => {
+      const indexed = indexedAt1901(row);
+      const final = indexed[indexed.length - 1].v;
+      const multiplier = (final / 100).toFixed(1);
+      const color = REGION_COLORS[row.region];
+      return (
+        <div class="mini-tile" style={`--region-color: ${color}`}>
+          <div class="mini-head">
+            <span class="mini-name">{row.name}</span>
+            <span class="mini-mult">{multiplier}×</span>
+          </div>
+          <svg class="mini-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+            <path class="mini-area" d={areaFor(row)} />
+            <path class="mini-line" d={pathFor(row)} />
+          </svg>
+          <div class="mini-footer">
+            <span>1901</span>
+            <span>{indexed[indexed.length - 1].v > GLOBAL_YMAX ? `↑ off-scale` : ''}</span>
+            <span>2011</span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+  <p class="fig-note">
+    Each tile starts at <b>1</b>× in 1901 and traces where the state's
+    population multiplied to by 2011. <b>Delhi</b> and <b>Haryana</b>
+    break the scale — Delhi grew roughly <em>forty-fold</em>. Tamil Nadu
+    and Kerala's curves bend earliest — the South was already decelerating
+    when the North was still steepening.
+  </p>
+</figure>

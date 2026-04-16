@@ -1,0 +1,45 @@
+---
+// Fig. 6 — Three-scenario stacked bars.
+// Regional share of Lok Sabha seats under (a) current, (b) Scenario 1 (+50% uplift),
+// (c) Scenario 2 (equal-constituency-size). Closes Part 1.
+import { byRegion, totalSeats } from '../data/loksabha';
+import { REGION_ORDER, REGION_COLORS, REGION_LABELS } from '../data/census';
+
+const current = byRegion('currentSeats');
+const s1 = byRegion('scenario1Seats');
+const s2 = byRegion('scenario2Seats');
+const totCurrent = totalSeats('currentSeats');
+const totS1 = totalSeats('scenario1Seats');
+const totS2 = totalSeats('scenario2Seats');
+---
+
+<figure class="chart-figure stacks-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 6</span>
+    <span class="fig-title">Three futures, one parliament</span>
+    <span class="fig-unit">— seats by region, three allocations —</span>
+  </figcaption>
+  <div id="stacks-chart" class="chart stacks-chart"></div>
+  <div class="stacks-caption">
+    <div class="stacks-col">
+      <span class="stacks-label">Today</span>
+      <span class="stacks-num">{totCurrent}</span>
+      <span class="stacks-sub">seats</span>
+    </div>
+    <div class="stacks-col">
+      <span class="stacks-label">+ 50% uplift</span>
+      <span class="stacks-num">{totS1}</span>
+      <span class="stacks-sub">Scenario 1</span>
+    </div>
+    <div class="stacks-col">
+      <span class="stacks-label">Equal constituencies</span>
+      <span class="stacks-num">{totS2}</span>
+      <span class="stacks-sub">Scenario 2</span>
+    </div>
+  </div>
+  <p class="fig-note">
+    Under <em>any</em> rule that holds a constituency at a common size, the
+    Hindi belt crosses <b>46%</b> of the house on its own. The current
+    composition holds its share near <b>42%</b>.
+  </p>
+</figure>

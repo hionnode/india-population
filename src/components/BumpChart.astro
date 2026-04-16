@@ -1,0 +1,151 @@
+---
+// Fig. 9 — Bump chart: rank of the top-10 most populous states at each census.
+import { rankMatrix, STATE_CENSUS_YEARS } from '../data/state-census';
+import { REGION_COLORS } from '../data/census';
+
+const TOP_N = 10;
+const rows = rankMatrix(TOP_N);
+
+const W = 960;
+const H = 480;
+const MARGIN = { top: 50, right: 140, bottom: 40, left: 120 };
+const plotW = W - MARGIN.left - MARGIN.right;
+const plotH = H - MARGIN.top - MARGIN.bottom;
+
+const xScale = (y: number) =>
+  MARGIN.left + (STATE_CENSUS_YEARS.indexOf(y as (typeof STATE_CENSUS_YEARS)[number]) /
+    (STATE_CENSUS_YEARS.length - 1)) * plotW;
+const yScale = (rank: number) =>
+  MARGIN.top + ((rank - 1) / (TOP_N - 1)) * plotH;
+
+function linePath(row: (typeof rows)[number]): string {
+  let d = '';
+  let started = false;
+  for (const y of STATE_CENSUS_YEARS) {
+    const r = row.ranks[y];
+    if (r == null) {
+      started = false;
+      continue;
+    }
+    d += `${started ? ' L ' : 'M '}${xScale(y).toFixed(1)},${yScale(r).toFixed(1)}`;
+    started = true;
+  }
+  return d;
+}
+
+function lastVisibleRank(row: (typeof rows)[number]): { year: number; rank: number } | null {
+  for (let i = STATE_CENSUS_YEARS.length - 1; i >= 0; i--) {
+    const y = STATE_CENSUS_YEARS[i];
+    if (row.ranks[y] != null) return { year: y, rank: row.ranks[y]! };
+  }
+  return null;
+}
+
+function firstVisibleRank(row: (typeof rows)[number]): { year: number; rank: number } | null {
+  for (const y of STATE_CENSUS_YEARS) {
+    if (row.ranks[y] != null) return { year: y, rank: row.ranks[y]! };
+  }
+  return null;
+}
+---
+
+<figure class="chart-figure bump-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 9</span>
+    <span class="fig-title">Who led the country, census by census</span>
+    <span class="fig-unit">— ranks 1–10 by population, 1901&nbsp;→&nbsp;2011 —</span>
+  </figcaption>
+
+  <div class="slope-wrap">
+    <svg class="bump-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Bump chart of state population rank over time">
+      <!-- Y-axis (rank) labels -->
+      <g class="bump-rank-axis">
+        {Array.from({ length: TOP_N }, (_, i) => i + 1).map((rank) => (
+          <text
+            x={MARGIN.left - 16}
+            y={yScale(rank)}
+            text-anchor="end"
+            dy="0.32em"
+          >{rank}</text>
+        ))}
+      </g>
+
+      <!-- X-axis (year) labels -->
+      <g class="bump-year-axis">
+        {STATE_CENSUS_YEARS.map((y) => (
+          <text
+            x={xScale(y)}
+            y={MARGIN.top + plotH + 24}
+            text-anchor="middle"
+          >{y}</text>
+        ))}
+      </g>
+
+      <!-- Axis frame -->
+      <line
+        x1={MARGIN.left}
+        y1={MARGIN.top + plotH + 4}
+        x2={MARGIN.left + plotW}
+        y2={MARGIN.top + plotH + 4}
+        stroke="#1a1510"
+        stroke-width="1"
+      />
+
+      <!-- Horizontal rank gridlines -->
+      {Array.from({ length: TOP_N }, (_, i) => i + 1).map((rank) => (
+        <line
+          x1={MARGIN.left}
+          y1={yScale(rank)}
+          x2={MARGIN.left + plotW}
+          y2={yScale(rank)}
+          stroke="#d8cdb8"
+          stroke-width="0.5"
+          stroke-dasharray="2 3"
+        />
+      ))}
+
+      <!-- Lines + dots -->
+      {rows.map((row) => {
+        const color = REGION_COLORS[row.region];
+        const first = firstVisibleRank(row);
+        const last = lastVisibleRank(row);
+        return (
+          <g class="bump-group" style={`--region: ${color}`} data-code={row.code}>
+            <path class="bump-line" d={linePath(row)} />
+            {STATE_CENSUS_YEARS.map((y) => {
+              const r = row.ranks[y];
+              if (r == null) return null;
+              return <circle class="bump-dot" cx={xScale(y)} cy={yScale(r)} r="3.5" />;
+            })}
+            {last && (
+              <text
+                class="bump-label"
+                x={xScale(last.year) + 10}
+                y={yScale(last.rank)}
+                dy="0.32em"
+                fill={color}
+              >{row.name}</text>
+            )}
+            {first && first.year !== STATE_CENSUS_YEARS[0] && (
+              <text
+                class="bump-label"
+                x={xScale(first.year) - 10}
+                y={yScale(first.rank)}
+                dy="0.32em"
+                text-anchor="end"
+                fill={color}
+              >{row.code}</text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+
+  <p class="fig-note">
+    <b>Uttar Pradesh</b> has been <b>#1</b> for every recorded census. <b>Kerala</b>
+    drops out of the top 10 by 1991. <b>Jharkhand</b> and <b>Chhattisgarh</b> never
+    enter it — their populations are counted but in smaller slices. A line that
+    arrives from below-10 is a state whose rank has risen into the frame.
+  </p>
+</figure>

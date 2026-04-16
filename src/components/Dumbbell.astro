@@ -1,0 +1,115 @@
+---
+// Fig. 8 — Dumbbell growth: for each state, the % growth 1901→1951 (hollow dot)
+// and 1951→2011 (filled dot), connected by a hairline. Sorted by post-1951 growth.
+import { STATE_CENSUS, percentGrowth } from '../data/state-census';
+import { REGION_COLORS } from '../data/census';
+
+const rows = STATE_CENSUS.map((r) => ({
+  ...r,
+  early: percentGrowth(r, 1901, 1951),
+  late: percentGrowth(r, 1951, 2011),
+}));
+rows.sort((a, b) => b.late - a.late);
+
+const W = 900;
+const rowH = 28;
+const H = rows.length * rowH + 80;
+const MARGIN = { top: 50, right: 80, bottom: 30, left: 170 };
+const plotW = W - MARGIN.left - MARGIN.right;
+
+// X scale — handle negatives
+const xMin = Math.min(0, ...rows.map((r) => Math.min(r.early, r.late)));
+const xMax = Math.max(...rows.map((r) => Math.max(r.early, r.late)));
+const xPad = 40;
+const domainMin = Math.floor(xMin / 100) * 100;
+const domainMax = Math.ceil(xMax / 100) * 100 + 50;
+const xScale = (v: number) =>
+  MARGIN.left + ((v - domainMin) / (domainMax - domainMin)) * plotW;
+
+// Gridlines
+const gridTicks: number[] = [];
+for (let v = domainMin; v <= domainMax; v += 200) gridTicks.push(v);
+---
+
+<figure class="chart-figure dumbbell-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 8</span>
+    <span class="fig-title">Where the century landed — vs where it took off</span>
+    <span class="fig-unit">— % growth per half-century —</span>
+  </figcaption>
+
+  <div class="dumbbell-legend">
+    <div class="dumbbell-legend-item">
+      <span class="dumbbell-legend-dot"></span>
+      <span>1901 → 1951 growth (first half)</span>
+    </div>
+    <div class="dumbbell-legend-item">
+      <span class="dumbbell-legend-dot is-filled"></span>
+      <span>1951 → 2011 growth (second half)</span>
+    </div>
+  </div>
+
+  <div class="slope-wrap">
+    <svg class="dumbbell-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Dumbbell growth chart by state">
+      <!-- Gridlines + x-axis labels -->
+      <g class="dumbbell-grid">
+        {gridTicks.map((v) => (
+          <line
+            x1={xScale(v)}
+            y1={MARGIN.top}
+            x2={xScale(v)}
+            y2={MARGIN.top + rows.length * rowH}
+          />
+        ))}
+      </g>
+      <g class="dumbbell-axis">
+        {gridTicks.map((v) => (
+          <text
+            x={xScale(v)}
+            y={MARGIN.top - 10}
+            text-anchor="middle"
+            font-family='"Jost",sans-serif'
+            font-size="10"
+            letter-spacing="0.06em"
+          >{v > 0 ? `+${v}%` : `${v}%`}</text>
+        ))}
+        <line x1={xScale(0)} y1={MARGIN.top} x2={xScale(0)} y2={MARGIN.top + rows.length * rowH} stroke-width="1" />
+      </g>
+
+      {rows.map((r, i) => {
+        const y = MARGIN.top + i * rowH + rowH / 2;
+        const color = REGION_COLORS[r.region];
+        const xA = xScale(r.early);
+        const xB = xScale(r.late);
+        const lineX1 = Math.min(xA, xB);
+        const lineX2 = Math.max(xA, xB);
+        return (
+          <g class="dumbbell-row" style={`--region: ${color}`}>
+            <text
+              class="dumbbell-label"
+              x={MARGIN.left - 12}
+              y={y}
+              text-anchor="end"
+              dy="0.32em"
+            >{r.name}</text>
+            <line class="dumbbell-line" x1={lineX1} y1={y} x2={lineX2} y2={y} />
+            <circle class="dumbbell-dot-a" cx={xA} cy={y} r="5" />
+            <circle class="dumbbell-dot-b" cx={xB} cy={y} r="5" />
+            <text
+              class="dumbbell-value"
+              x={Math.max(xA, xB) + 10}
+              y={y}
+              dy="0.32em"
+            >+{r.late.toFixed(0)}%</text>
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+
+  <p class="fig-note">
+    <b>Rajasthan, Haryana and Delhi</b> grew four- to six-fold after Independence;
+    <b>Kerala</b> and <b>Tamil Nadu</b> barely doubled. The gap between the two
+    dots is the story of India's uneven second half.
+  </p>
+</figure>

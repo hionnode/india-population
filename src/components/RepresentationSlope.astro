@@ -1,0 +1,191 @@
+---
+// Fig. 4 — Share of population vs share of Lok Sabha seats, per state.
+// The argument chart. Lines sloping DOWN left-to-right = under-represented
+// (state's people > its seats); sloping UP = over-represented. Toggling
+// "Scenario 2" pivots every line toward the horizontal — visual proof that
+// a population-proportional reallocation flattens the gap.
+import { shareRows } from '../data/loksabha';
+import { REGION_COLORS, REGION_LABELS } from '../data/census';
+
+const rows = shareRows();
+
+// Viewbox
+const W = 920;
+const H = 640;
+const MARGIN = { top: 48, right: 200, bottom: 48, left: 200 };
+const PLOT_W = W - MARGIN.left - MARGIN.right;
+const PLOT_H = H - MARGIN.top - MARGIN.bottom;
+const LEFT_X = MARGIN.left;
+const RIGHT_X = MARGIN.left + PLOT_W;
+
+// Axis domain: values range 0% → ~17%. Pad to 18% for headroom.
+const Y_MAX = 18;
+const yScale = (v: number) => MARGIN.top + PLOT_H - (v / Y_MAX) * PLOT_H;
+
+// Precompute everything
+const geom = rows.map((r) => {
+  const yLeft = yScale(r.popShare);
+  const yRightCurrent = yScale(r.seatShareCurrent);
+  const yRightScenario = yScale(r.seatShareScenario2);
+  const absGapCurrent = Math.abs(r.popShare - r.seatShareCurrent);
+  return {
+    ...r,
+    yLeft,
+    yRightCurrent,
+    yRightScenario,
+    absGapCurrent,
+    color: REGION_COLORS[r.region],
+    emphasise: absGapCurrent >= 1.0, // UP, Bihar, TN, Rajasthan
+  };
+});
+
+// Sort so emphasised lines render on top
+const ordered = [...geom].sort((a, b) => (a.emphasise ? 1 : 0) - (b.emphasise ? 1 : 0));
+
+// Axis gridlines every 2%
+const gridValues = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18];
+
+// The "winners" story: a few states we want to always label
+const alwaysLabel = new Set(['UP', 'MH', 'BR', 'WB', 'AP', 'TN', 'KL', 'MP', 'RJ', 'KA', 'GJ', 'OD']);
+
+const labelables = geom
+  .filter((g) => g.popShare >= 1.0 || alwaysLabel.has(g.code))
+  .sort((a, b) => b.popShare - a.popShare);
+---
+
+<figure class="chart-figure slope-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 4</span>
+    <span class="fig-title">The representation gap</span>
+    <span class="fig-unit">— share of population vs share of seats —</span>
+  </figcaption>
+
+  <div class="slope-controls">
+    <span class="smallcaps">right axis ·</span>
+    <div class="scenario-toggle" role="radiogroup" aria-label="Seat allocation scenario">
+      <button
+        type="button"
+        class="scenario-btn is-active"
+        data-scenario="current"
+        aria-pressed="true"
+      >
+        Current 543 seats
+      </button>
+      <button
+        type="button"
+        class="scenario-btn"
+        data-scenario="scenario2"
+        aria-pressed="false"
+      >
+        Scenario 2 — equal constituencies
+      </button>
+    </div>
+  </div>
+
+  <div class="slope-wrap">
+    <svg
+      id="slope-svg"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Slope chart — share of population vs share of Lok Sabha seats"
+    >
+      <!-- Gridlines -->
+      {gridValues.map((v) => (
+        <g class="slope-grid">
+          <line
+            x1={LEFT_X}
+            y1={yScale(v)}
+            x2={RIGHT_X}
+            y2={yScale(v)}
+          />
+          <text class="slope-grid-label" x={LEFT_X - 14} y={yScale(v)} text-anchor="end" dy="0.32em">{v}%</text>
+          <text class="slope-grid-label" x={RIGHT_X + 14} y={yScale(v)} text-anchor="start" dy="0.32em">{v}%</text>
+        </g>
+      ))}
+
+      <!-- Axis columns (hairlines) -->
+      <line class="slope-axis" x1={LEFT_X} y1={MARGIN.top} x2={LEFT_X} y2={MARGIN.top + PLOT_H} />
+      <line class="slope-axis" x1={RIGHT_X} y1={MARGIN.top} x2={RIGHT_X} y2={MARGIN.top + PLOT_H} />
+
+      <!-- Column headers -->
+      <text class="slope-col-head" x={LEFT_X} y={MARGIN.top - 24} text-anchor="middle">
+        SHARE OF POPULATION
+      </text>
+      <text class="slope-col-head" x={RIGHT_X} y={MARGIN.top - 24} text-anchor="middle">
+        SHARE OF SEATS
+      </text>
+
+      <!-- State lines + dots -->
+      {ordered.map((g) => (
+        <g
+          class={`slope-group ${g.emphasise ? 'is-emph' : 'is-faint'}`}
+          data-code={g.code}
+          data-region={g.region}
+          style={`--region: ${g.color}`}
+        >
+          <line
+            class="slope-line"
+            x1={LEFT_X}
+            y1={g.yLeft}
+            x2={RIGHT_X}
+            y2={g.yRightCurrent}
+            data-y2-current={g.yRightCurrent}
+            data-y2-scenario={g.yRightScenario}
+          />
+          <circle
+            class="slope-dot slope-dot-left"
+            cx={LEFT_X}
+            cy={g.yLeft}
+            r={g.emphasise ? 4 : 2.5}
+          />
+          <circle
+            class="slope-dot slope-dot-right"
+            cx={RIGHT_X}
+            cy={g.yRightCurrent}
+            r={g.emphasise ? 4 : 2.5}
+            data-cy-current={g.yRightCurrent}
+            data-cy-scenario={g.yRightScenario}
+          />
+        </g>
+      ))}
+
+      <!-- State labels (only for selected states to avoid overlap) -->
+      {labelables.map((g) => (
+        <g
+          class={`slope-labels ${g.emphasise ? 'is-emph' : 'is-faint'}`}
+          data-code={g.code}
+        >
+          <text
+            class="slope-label-left"
+            x={LEFT_X - 30}
+            y={g.yLeft}
+            text-anchor="end"
+            dy="0.32em"
+          >
+            {g.name}
+          </text>
+          <text
+            class="slope-label-right"
+            x={RIGHT_X + 30}
+            y={g.yRightCurrent}
+            text-anchor="start"
+            dy="0.32em"
+            data-y-current={g.yRightCurrent}
+            data-y-scenario={g.yRightScenario}
+          >
+            {g.code}
+          </text>
+        </g>
+      ))}
+    </svg>
+  </div>
+
+  <p class="fig-note">
+    A line sloping <b>down</b> left-to-right means that state's share of
+    population exceeds its share of seats — the Hindi belt. Sloping <b>up</b>
+    means over-representation — the South, Kerala most of all. Toggle
+    <em>Scenario 2</em> to pivot every line toward horizontal: a seat
+    allocation based purely on population would flatten the gap.
+  </p>
+</figure>

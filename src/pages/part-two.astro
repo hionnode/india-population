@@ -1,0 +1,126 @@
+---
+import '../styles/global.css';
+import SmallMultiples from '../components/SmallMultiples.astro';
+import Dumbbell from '../components/Dumbbell.astro';
+import BumpChart from '../components/BumpChart.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Part II · The Big Eighteen · अठारह बड़े राज्य · India Census Explorer</title>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page">
+
+      <div class="running-head">
+        <a href="/" class="eyebrow back-link">← Part I</a>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">Vol. II · Figs. 7–9</span>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">State trajectories</span>
+      </div>
+
+      <hr class="rule double" />
+
+      <header class="masthead">
+        <div class="masthead-copy">
+          <p class="kicker">Part the Second</p>
+          <h1 class="title">
+            <span class="title-en">The Big</span>
+            <span class="title-en-b">Eighteen</span>
+            <span class="title-hi">अठारह&nbsp;बड़े&nbsp;राज्य</span>
+          </h1>
+          <p class="lede">
+            India has <b>28 states and 8 union territories</b>. This page
+            follows the <em>eighteen largest</em> — the two of the East, two of
+            the West, ten of the North (the Hindi belt, with Delhi) and four
+            of the South. Together they contain roughly <b>93%</b> of the
+            country's population. The remainder — the North-East, J&amp;K,
+            Ladakh, Punjab, Goa and the smaller UTs — sits in the <em>Other</em>
+            bucket of Part I and is not plotted here individually.
+          </p>
+        </div>
+        <div class="masthead-figure" aria-hidden="true">
+          <div class="glyph">¶</div>
+          <div class="figure-no">No.<br /><b>2</b></div>
+        </div>
+      </header>
+
+      <hr class="rule" />
+
+      <SmallMultiples />
+
+      <hr class="rule" />
+
+      <Dumbbell />
+
+      <hr class="rule" />
+
+      <BumpChart />
+
+      <hr class="rule double" />
+
+      <aside class="next-step">
+        <span class="smallcaps">close the volume</span>
+        <a href="/" class="next-link">
+          <span class="next-arrow">←</span>
+          <span class="next-title">Return to Part I</span>
+          <span class="next-subtitle hi">भाग एक पर लौटें</span>
+        </a>
+        <p class="next-blurb">
+          Or begin again — the regional view is in Part I, with the representation
+          argument that follows from it.
+        </p>
+      </aside>
+
+      <footer class="colophon">
+        <div class="colophon-col">
+          <span class="smallcaps">§ source</span>
+          <p>
+            All state-level figures are taken directly from the Census of
+            India, Table A-02 — same file as Part I. Values already backfilled
+            to post-2000 state boundaries; Telangana merged with Andhra Pradesh.
+            <a
+              href="https://censusindia.gov.in/nada/index.php/catalog/43333"
+              target="_blank"
+              rel="noopener noreferrer"
+            >— NADA 43333 →</a>
+          </p>
+        </div>
+        <div class="colophon-col">
+          <span class="smallcaps">† on the cartographic absence</span>
+          <p>
+            This page tracks <b>eighteen</b> modern states: the two of the
+            East, two of the West, ten of the North (Hindi belt) and four of
+            the South. The North-East, Jammu &amp; Kashmir, Ladakh, Punjab,
+            Goa, and the smaller Union Territories account for the residual
+            and are not plotted individually here.
+          </p>
+        </div>
+      </footer>
+
+      <div class="running-foot">
+        <span class="eyebrow">Set in Fraunces &amp; Tiro Devanagari Hindi</span>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">Composed on cream</span>
+      </div>
+    </div>
+
+    <script>
+      requestAnimationFrame(() => {
+        document.body.classList.add('ready');
+      });
+    </script>
+  </body>
+</html>
