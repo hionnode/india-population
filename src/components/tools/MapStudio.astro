@@ -1,0 +1,407 @@
+---
+import type { Preset } from '../../scripts/studio';
+export interface Props { initialPreset: Preset }
+const { initialPreset } = Astro.props;
+---
+
+<article class="chart-panel" data-panel="map" style={initialPreset !== 'map' ? 'display:none' : ''}>
+  <div class="worksheet" aria-label="Figure M-01">
+    <span class="reg tl" aria-hidden="true"></span>
+    <span class="reg tr" aria-hidden="true"></span>
+    <span class="reg bl" aria-hidden="true"></span>
+    <span class="reg br" aria-hidden="true"></span>
+    <span class="worksheet-stamp">Fig. M-01</span>
+
+    <header class="worksheet-head">
+      <div>
+        <div class="title" data-map-title>Map Studio</div>
+        <div class="subtitle">मानचित्र</div>
+      </div>
+      <div class="right">
+        <div><b>Projection</b> equirectangular</div>
+        <div><b>Year</b> <span data-map-year>2011</span></div>
+      </div>
+    </header>
+
+    <div class="chart-body">
+      <div id="map-canvas" class="ws-map-canvas">
+        <svg id="map-svg" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet" aria-label="India states choropleth">
+          <!-- paths injected by MapStudio.ts -->
+        </svg>
+        <div id="map-legend" class="map-legend" aria-label="Legend"></div>
+        <div id="map-tooltip" class="map-tooltip" role="tooltip" hidden></div>
+      </div>
+    </div>
+
+    <footer class="worksheet-caption">
+      <div class="cap-left">
+        <span><span class="mark">Fig. M-01</span> <span class="dim">▸</span> <span data-map-caption>Population × State × 2011</span></span>
+      </div>
+      <div class="cap-hand">drafted on the 16pt grid</div>
+      <div><span><span class="dim">Sheet</span> 01 · 01</span></div>
+    </footer>
+  </div>
+</article>
+
+<style>
+  body.workshop .ws-map-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 520px;
+  }
+  body.workshop .ws-map-canvas #map-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    font-family: var(--mono);
+  }
+  body.workshop .map-path {
+    stroke: var(--ink);
+    stroke-width: 0.9;
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+    transition: filter 120ms ease-out, stroke-width 120ms ease-out;
+  }
+  body.workshop .map-path:hover {
+    filter: brightness(0.92);
+    stroke-width: 2;
+  }
+  body.workshop .map-path.selected {
+    stroke: var(--accent);
+    stroke-width: 2.4;
+  }
+  body.workshop .map-legend {
+    position: absolute;
+    bottom: 8px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    gap: 0;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--measure);
+    border-top: 1px solid var(--measure-soft);
+    padding-top: 10px;
+  }
+  body.workshop .map-legend .bin {
+    height: 10px;
+    flex: 1;
+    border-right: 1px solid var(--paper);
+  }
+  body.workshop .map-legend .bin:last-child { border-right: none; }
+  body.workshop .map-legend .ticks {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--measure);
+    letter-spacing: 0.12em;
+    padding: 4px 0 0;
+  }
+  body.workshop .map-legend .legend-strip {
+    display: flex;
+    width: 100%;
+    height: 10px;
+    border: 1px solid var(--ink);
+  }
+  body.workshop .map-legend .legend-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ink);
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    text-transform: uppercase;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  body.workshop .map-legend-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  body.workshop .map-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--paper-2);
+    border: 1px solid var(--ink);
+    box-shadow: 3px 3px 0 0 var(--ink);
+    padding: 10px 12px;
+    min-width: 180px;
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: 12px;
+    z-index: 10;
+  }
+  body.workshop .map-tooltip[hidden] { display: none; }
+  body.workshop .map-tooltip .tt-name {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.1;
+  }
+  body.workshop .map-tooltip .tt-hi {
+    font-family: var(--deva);
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  body.workshop .map-tooltip .tt-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--ink);
+    letter-spacing: 0.02em;
+  }
+  body.workshop .map-tooltip .tt-unit {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--measure);
+    margin-left: 6px;
+  }
+</style>
+
+<script>
+  import type { StudioState } from '../../scripts/studio';
+  import { getStore, filenameFor, svgToPng } from '../../scripts/studio';
+  import { mapValues, metricLabel, unitFor } from '../../scripts/metrics';
+  import { GEO_NAME_TO_CODE, GEOJSON_URL, type IndiaGeo, type IndiaGeoFeature } from '../../data/india-geo';
+
+  const svg = document.getElementById('map-svg') as SVGSVGElement | null;
+  const tooltip = document.getElementById('map-tooltip') as HTMLElement | null;
+  const legend = document.getElementById('map-legend') as HTMLElement | null;
+  if (!svg || !tooltip || !legend) { /* no-op */ }
+  else {
+    const W = 960;
+    const H = 620;
+
+    type Paths = Map<string, SVGPathElement>;
+    const pathsByCode: Paths = new Map();
+
+    // ─── 1. Fetch GeoJSON, project, build paths ────────────────────────────
+    (async () => {
+      let geo: IndiaGeo;
+      try {
+        const r = await fetch(GEOJSON_URL);
+        geo = await r.json();
+      } catch (e) {
+        console.error('[MapStudio] GeoJSON fetch failed', e);
+        svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#6b5d4f" font-family="Fraunces" font-size="14" font-style="italic">India boundary data could not load.</text>`;
+        return;
+      }
+
+      const bounds = computeBounds(geo);
+      const padding = 24;
+      const scale = Math.min(
+        (W - padding * 2) / (bounds.maxLng - bounds.minLng),
+        (H - padding * 2) / (bounds.maxLat - bounds.minLat),
+      );
+      const offsetX = (W - (bounds.maxLng - bounds.minLng) * scale) / 2;
+      const offsetY = (H - (bounds.maxLat - bounds.minLat) * scale) / 2;
+
+      const project = (lng: number, lat: number): [number, number] => [
+        offsetX + (lng - bounds.minLng) * scale,
+        offsetY + (bounds.maxLat - lat) * scale,
+      ];
+
+      for (const feature of geo.features) {
+        const name = feature.properties.st_nm;
+        const code = GEO_NAME_TO_CODE[name] ?? 'XX';
+        const d = featurePath(feature, project);
+        if (!d) continue;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', 'map-path');
+        path.setAttribute('data-code', code);
+        path.setAttribute('data-name', name);
+        svg.appendChild(path);
+        pathsByCode.set(code, path);
+
+        path.addEventListener('mousemove', (e) => showTooltip(path, e as MouseEvent));
+        path.addEventListener('mouseleave', hideTooltip);
+        path.addEventListener('click', () => toggleEntity(code));
+      }
+
+      // Once paths exist, the store's first snapshot will have already fired.
+      // We re-apply whichever state is current to seed the fills.
+      paintFromState(getStore().snapshot);
+    })();
+
+    // ─── 2. Paint paths + legend from state ────────────────────────────────
+    getStore().onChange((state) => {
+      if (state.preset !== 'map') return;
+      paintFromState(state);
+    });
+
+    document.addEventListener('studio:export-png', async () => {
+      if (getStore().snapshot.preset !== 'map') return;
+      await svgToPng(svg, filenameFor('png'));
+    });
+
+    function paintFromState(state: StudioState) {
+      if (!pathsByCode.size) return; // GeoJSON not yet loaded
+
+      document.querySelector<HTMLElement>('[data-map-year]')!.textContent = String(state.to);
+      document.querySelector<HTMLElement>('[data-map-caption]')!.textContent =
+        `${metricLabel(state.metric)} × State × ${state.to}`;
+      document.querySelector<HTMLElement>('[data-map-title]')!.textContent =
+        `${metricLabel(state.metric)} across India`;
+
+      const values = mapValues(state);
+      const numeric = [...values.values()].map((v) => v.value).filter((n) => Number.isFinite(n));
+      const isDiverging = state.metric === 'scenario2Delta' || state.metric === 'growthPct';
+
+      // Ramps per /frontend-design skill output. Default sequential = "Graphite Rub"
+      // (luminance-only, prints in greyscale, doesn't collide with region colors).
+      // Diverging = "Plumb Line" (slate ↔ paper ↔ sienna, zero-anchored on cream).
+      const GRAPHITE_RUB = ['#ece1c9', '#c4b69a', '#8c7a5e', '#4d3f2e', '#1a1510'];
+      const PLUMB_LINE   = ['#3a3d42', '#b4b9bf', '#ece1c9', '#c9a377', '#6b4019'];
+
+      let binsInfo: { bins: number[]; pick: (v: number) => string; labels: (number | string)[] };
+      if (isDiverging) {
+        const maxAbs = Math.max(Math.abs(Math.min(...numeric)), Math.abs(Math.max(...numeric)), 1);
+        // bin edges: [-max*0.5, -max*0.1, +max*0.1, +max*0.5]  — symmetric around zero
+        const bins = [-maxAbs * 0.5, -maxAbs * 0.1, maxAbs * 0.1, maxAbs * 0.5];
+        binsInfo = {
+          bins,
+          pick: (v) => PLUMB_LINE[binIndex(v, bins)],
+          labels: [-maxAbs, -maxAbs * 0.3, 0, maxAbs * 0.3, maxAbs].map((n) => Math.round(n)),
+        };
+      } else {
+        const bins = quantileBins(numeric, 5);
+        const min = Math.min(...numeric);
+        const max = Math.max(...numeric);
+        binsInfo = {
+          bins,
+          pick: (v) => GRAPHITE_RUB[binIndex(v, bins)],
+          labels: [min, ...bins, max].map((n) => fmt(n, state)),
+        };
+      }
+
+      pathsByCode.forEach((path, code) => {
+        const v = values.get(code);
+        if (!v || !Number.isFinite(v.value)) {
+          path.setAttribute('fill', '#d7cdb5');
+          return;
+        }
+        path.setAttribute('fill', binsInfo.pick(v.value));
+        path.classList.toggle('selected', state.entities.includes(code));
+      });
+
+      renderLegend(binsInfo.labels, isDiverging ? PLUMB_LINE : GRAPHITE_RUB, state);
+    }
+
+    function renderLegend(labels: (number | string)[], ramp: string[], state: StudioState) {
+      const rows = ramp.map((c) => `<span class="bin" style="background:${c}"></span>`).join('');
+      const fmtLabel = (l: number | string) => typeof l === 'number' ? fmt(l, state) : l;
+      legend!.innerHTML = `
+        <span class="legend-label">${metricLabel(state.metric).toUpperCase()} · ${unitFor(state.metric).toUpperCase()}</span>
+        <div class="map-legend-group">
+          <div class="legend-strip">${rows}</div>
+          <div class="ticks">${labels.map((l) => `<span>${fmtLabel(l)}</span>`).join('')}</div>
+        </div>
+      `;
+    }
+
+    // ─── 3. Tooltip ───────────────────────────────────────────────────────
+    function showTooltip(path: SVGPathElement, e: MouseEvent) {
+      const code = path.dataset.code ?? '';
+      const s = getStore().snapshot;
+      const v = mapValues(s).get(code);
+      if (!v) { tooltip!.hidden = true; return; }
+      tooltip!.hidden = false;
+      tooltip!.innerHTML = `
+        <div class="tt-name">${v.name}</div>
+        <div class="tt-hi">${v.nameHi}</div>
+        <div class="tt-value">${fmt(v.value, s)}<span class="tt-unit">${unitFor(s.metric)}</span></div>
+      `;
+      const canvas = tooltip!.parentElement as HTMLElement;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.min(e.clientX - rect.left + 14, rect.width - 220);
+      const y = Math.min(e.clientY - rect.top + 14, rect.height - 120);
+      tooltip!.style.left = `${x}px`;
+      tooltip!.style.top = `${y}px`;
+    }
+    function hideTooltip() { tooltip!.hidden = true; }
+
+    function toggleEntity(code: string) {
+      const s = getStore();
+      const entities = s.snapshot.entities;
+      const next = entities.includes(code)
+        ? entities.filter((c) => c !== code)
+        : [...entities, code];
+      s.patch({ entities: next });
+    }
+
+    // ─── Helpers ───────────────────────────────────────────────────────────
+    function computeBounds(geo: IndiaGeo) {
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      const scan = (coords: number[]) => {
+        const [lng, lat] = coords;
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      };
+      for (const f of geo.features) walkCoordinates(f.geometry, scan);
+      return { minLng, maxLng, minLat, maxLat };
+    }
+    function walkCoordinates(geometry: IndiaGeoFeature['geometry'], visit: (c: number[]) => void) {
+      if (geometry.type === 'Polygon') {
+        for (const ring of geometry.coordinates as number[][][]) for (const pt of ring) visit(pt);
+      } else {
+        for (const poly of geometry.coordinates as number[][][][]) {
+          for (const ring of poly) for (const pt of ring) visit(pt);
+        }
+      }
+    }
+    function featurePath(f: IndiaGeoFeature, project: (lng: number, lat: number) => [number, number]): string {
+      const parts: string[] = [];
+      const ringToPath = (ring: number[][]) => {
+        if (!ring.length) return '';
+        const [x0, y0] = project(ring[0][0], ring[0][1]);
+        let d = `M${x0.toFixed(1)},${y0.toFixed(1)}`;
+        for (let i = 1; i < ring.length; i++) {
+          const [x, y] = project(ring[i][0], ring[i][1]);
+          d += `L${x.toFixed(1)},${y.toFixed(1)}`;
+        }
+        return d + 'Z';
+      };
+      if (f.geometry.type === 'Polygon') {
+        for (const ring of f.geometry.coordinates as number[][][]) parts.push(ringToPath(ring));
+      } else {
+        for (const poly of f.geometry.coordinates as number[][][][]) {
+          for (const ring of poly) parts.push(ringToPath(ring));
+        }
+      }
+      return parts.join(' ');
+    }
+    function quantileBins(values: number[], n: number): number[] {
+      const sorted = [...values].sort((a, b) => a - b);
+      const bins: number[] = [];
+      for (let i = 1; i < n; i++) bins.push(sorted[Math.floor((i / n) * sorted.length)]);
+      return bins;
+    }
+    function binIndex(v: number, bins: number[]): number {
+      for (let i = 0; i < bins.length; i++) if (v <= bins[i]) return i;
+      return bins.length;
+    }
+    function fmt(v: number, state: StudioState): string {
+      if (!Number.isFinite(v)) return '—';
+      if (state.metric === 'population' || state.metric === 'popPerSeat')
+        return v.toFixed(v >= 100 ? 0 : 1);
+      if (state.metric === 'seats' || state.metric === 'scenario2Delta')
+        return String(Math.round(v));
+      return v.toFixed(1);
+    }
+  }
+</script>

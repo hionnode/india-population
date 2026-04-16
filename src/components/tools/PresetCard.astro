@@ -1,0 +1,38 @@
+---
+import type { Preset } from '../../scripts/studio';
+
+export interface Props {
+  preset: Preset;
+  figure: string;
+  title: string;
+  titleEmphasis: string;
+  hindi: string;
+  description: string;
+  href: string;
+}
+
+const { figure, title, titleEmphasis, hindi, description, href } = Astro.props;
+---
+
+<a class="placard" href={href}>
+  <span class="reg-tl" aria-hidden="true"></span>
+  <span class="reg-br" aria-hidden="true"></span>
+
+  <div class="placard-tag">
+    <span>{figure}</span>
+    <span class="pin" aria-hidden="true"></span>
+  </div>
+
+  <div>
+    <h2 class="placard-title">{title} <em>{titleEmphasis}</em></h2>
+    <span class="placard-hi">{hindi}</span>
+    <div class="placard-preview" aria-hidden="true">
+      <slot name="preview" />
+    </div>
+  </div>
+
+  <div class="placard-meta">
+    <p class="placard-desc">{description}</p>
+    <span class="placard-cta">OPEN ▸</span>
+  </div>
+</a>

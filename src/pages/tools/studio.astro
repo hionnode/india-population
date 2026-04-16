@@ -1,0 +1,85 @@
+---
+import WorkshopLayout from '../../layouts/WorkshopLayout.astro';
+import ExportBar from '../../components/tools/ExportBar.astro';
+import ConfigRail from '../../components/tools/ConfigRail.astro';
+import BarStudio from '../../components/tools/BarStudio.astro';
+import LineStudio from '../../components/tools/LineStudio.astro';
+import MapStudio from '../../components/tools/MapStudio.astro';
+import CompareStudio from '../../components/tools/CompareStudio.astro';
+import { defaultsFor, type Preset, type StudioState } from '../../scripts/studio';
+
+// Server-side: parse preset from query for the initial SSR state.
+// All other state is hydrated client-side from the full URL on mount.
+const presetParam = Astro.url.searchParams.get('preset') ?? 'bar';
+const preset: Preset = (['bar', 'line', 'map', 'compare'] as Preset[]).includes(presetParam as Preset)
+  ? (presetParam as Preset)
+  : 'bar';
+
+const initial: StudioState = defaultsFor(preset);
+
+const panelTitles: Record<Preset, { title: string; subtitle: string; fig: string; caption: string }> = {
+  bar:     { title: 'Bar Studio',     subtitle: 'स्तंभ',    fig: 'Fig. B-01', caption: 'Bar · studio' },
+  line:    { title: 'Line Studio',    subtitle: 'रेखा',     fig: 'Fig. L-01', caption: 'Line · studio' },
+  map:     { title: 'Map Studio',     subtitle: 'मानचित्र', fig: 'Fig. M-01', caption: 'Map · studio' },
+  compare: { title: 'Compare Studio', subtitle: 'तुलना',    fig: 'Fig. C-01', caption: 'Compare · studio' },
+};
+---
+
+<WorkshopLayout title={`${panelTitles[preset].title} · The Workshop`}>
+
+  <ExportBar initialPreset={preset} />
+
+  <div class="workspace">
+
+    <ConfigRail initial={initial} />
+
+    <main class="ws-canvas">
+
+      <!-- Four mutually-exclusive chart panels. Client swaps display based on state.preset. -->
+
+      <BarStudio initialPreset={preset} />
+      <LineStudio initialPreset={preset} />
+      <MapStudio initialPreset={preset} />
+      <CompareStudio initialPreset={preset} />
+
+      <p class="worksheet-note">
+        Flip between <em>Bar</em>, <em>Line</em>, <em>Map</em>, and <em>Compare</em> from the chart-type rack on the rail.
+        Your selection is encoded in the URL — copy the address bar to share a view.
+      </p>
+
+    </main>
+
+  </div>
+
+</WorkshopLayout>
+
+<style>
+  body.workshop .placeholder-hint {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    padding: 120px 20px;
+    border: 1px dashed var(--measure-soft);
+    background:
+      repeating-linear-gradient(
+        45deg,
+        transparent 0 12px,
+        rgba(42, 58, 85, 0.03) 12px 13px
+      );
+  }
+</style>
+
+<script>
+  import { initStudio, requestExportPng, printReport } from '../../scripts/studio';
+
+  initStudio();
+
+  document.querySelector('[data-action="download-png"]')?.addEventListener('click', () => {
+    requestExportPng();
+  });
+  document.querySelector('[data-action="print"]')?.addEventListener('click', () => {
+    printReport();
+  });
+</script>

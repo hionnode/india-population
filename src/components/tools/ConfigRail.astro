@@ -1,0 +1,185 @@
+---
+import type { StudioState } from '../../scripts/studio';
+
+export interface Props { initial: StudioState }
+const { initial } = Astro.props;
+
+const DATASET_OPTIONS = [
+  { value: 'region',   label: 'Region',    hint: '5 rows'  },
+  { value: 'state',    label: 'State',     hint: '18 rows' },
+  { value: 'loksabha', label: 'Lok Sabha', hint: '36 rows' },
+] as const;
+
+const METRIC_OPTIONS = [
+  { value: 'population',     label: 'Population',           hint: 'mn'   },
+  { value: 'growthPct',      label: 'Growth · decadal',     hint: '%'    },
+  { value: 'indexed1901',    label: 'Indexed · 1901 = 100', hint: 'idx'  },
+  { value: 'popPerSeat',     label: 'Pop · per seat',       hint: 'lakh' },
+  { value: 'seats',          label: 'Lok Sabha seats',      hint: 'ls'   },
+  { value: 'scenario2Delta', label: 'Scenario 2 · Δ seats', hint: '±'    },
+] as const;
+
+const fromIdx = Math.max(0, [1901, 1911, 1921, 1931, 1941, 1951, 1961, 1971, 1981, 1991, 2001, 2011].indexOf(initial.from));
+const toIdx = Math.max(0, [1901, 1911, 1921, 1931, 1941, 1951, 1961, 1971, 1981, 1991, 2001, 2011].indexOf(initial.to));
+const span = 11;
+const fromPct = (fromIdx / span) * 100;
+const toPct = (toIdx / span) * 100;
+---
+
+<aside class="studio-rail" aria-label="Studio configuration">
+
+  <!-- § 01 · DATASET -->
+  <section class="rail-section">
+    <header class="rail-label">
+      <b>§ 01 · Dataset</b>
+      <span class="index">pick one</span>
+    </header>
+    <div class="plates" role="radiogroup" aria-label="Dataset">
+      {DATASET_OPTIONS.map((o, i) => (
+        <button
+          class={`plate${initial.dataset === o.value ? ' active' : ''}`}
+          role="radio"
+          aria-checked={initial.dataset === o.value}
+          data-field="dataset"
+          data-value={o.value}
+          type="button"
+        >
+          <span class="pin-no">{String(i + 1).padStart(2, '0')}</span>
+          <span>{o.label}</span>
+          <span class="pin-hint">{o.hint}</span>
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <!-- § 02 · METRIC -->
+  <section class="rail-section">
+    <header class="rail-label">
+      <b>§ 02 · Metric</b>
+      <span class="index">y-axis</span>
+    </header>
+    <div class="plates" role="radiogroup" aria-label="Metric">
+      {METRIC_OPTIONS.map((o, i) => (
+        <button
+          class={`plate${initial.metric === o.value ? ' active' : ''}`}
+          role="radio"
+          aria-checked={initial.metric === o.value}
+          data-field="metric"
+          data-value={o.value}
+          type="button"
+        >
+          <span class="pin-no">{String(i + 1).padStart(2, '0')}</span>
+          <span>{o.label}</span>
+          <span class="pin-hint">{o.hint}</span>
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <!-- § 03 · ENTITIES -->
+  <section class="rail-section">
+    <header class="rail-label">
+      <b>§ 03 · Entities</b>
+      <span class="index"><span data-chip-count>{initial.entities.length}</span> selected</span>
+    </header>
+    <div class="chip-field">
+      <div class="chips" data-chip-host>
+        <!-- chips are rendered dynamically in studio.ts based on state.entities -->
+        <button class="chip-add" type="button" data-action="open-picker">+ add</button>
+      </div>
+      <div class="chip-counter">
+        <span>Selected · <span data-chip-count>{initial.entities.length}</span></span>
+        <span>Max · 18</span>
+      </div>
+      <div class="chip-picker" data-chip-picker hidden>
+        <div class="chip-picker-head">
+          <span>Available · <span data-picker-dataset>state</span></span>
+          <button class="chip-picker-close" type="button" data-action="close-picker" aria-label="Close picker">×</button>
+        </div>
+        <div class="chip-picker-grid" data-picker-grid></div>
+        <div class="chip-picker-empty" data-picker-empty hidden>All available entities are already selected.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 04 · TIME RANGE (visual only in the shell; interaction wired in later tasks) -->
+  <section class="rail-section">
+    <header class="rail-label">
+      <b>§ 04 · Time range</b>
+      <span class="index">{initial.from} – {initial.to}</span>
+    </header>
+    <div class="ts-slider" role="group" aria-label="Time range slider">
+      <div class="ts-slider-rail">
+        <div class="ts-slider-fill" style={`left:${fromPct}%; right:${100 - toPct}%`}></div>
+
+        <span class="ts-slider-tick major" style="left: 0%"></span>
+        <span class="ts-slider-tick-label major" style="left: 0%">1901</span>
+        <span class="ts-slider-tick"       style="left: 9.09%"></span>
+        <span class="ts-slider-tick"       style="left: 18.18%"></span>
+        <span class="ts-slider-tick major" style="left: 27.27%"></span>
+        <span class="ts-slider-tick-label" style="left: 27.27%">31</span>
+        <span class="ts-slider-tick"       style="left: 36.36%"></span>
+        <span class="ts-slider-tick"       style="left: 45.45%"></span>
+        <span class="ts-slider-tick major" style="left: 54.54%"></span>
+        <span class="ts-slider-tick-label" style="left: 54.54%">61</span>
+        <span class="ts-slider-tick"       style="left: 63.63%"></span>
+        <span class="ts-slider-tick"       style="left: 72.72%"></span>
+        <span class="ts-slider-tick major" style="left: 81.81%"></span>
+        <span class="ts-slider-tick-label" style="left: 81.81%">91</span>
+        <span class="ts-slider-tick"       style="left: 90.90%"></span>
+        <span class="ts-slider-tick major" style="left: 100%"></span>
+        <span class="ts-slider-tick-label major" style="left: 100%">2011</span>
+
+        <span class="ts-slider-thumb left"  data-year={initial.from} style={`left:${fromPct}%`}></span>
+        <span class="ts-slider-thumb right" data-year={initial.to}   style={`left:${toPct}%`}></span>
+      </div>
+      <div class="ts-slider-readout">
+        <span><b>From</b> {initial.from}</span>
+        <span><b>To</b> {initial.to}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 05 · CHART TYPE -->
+  <section class="rail-section">
+    <header class="rail-label">
+      <b>§ 05 · Chart type</b>
+      <span class="index">flip freely</span>
+    </header>
+    <div class="seg" role="radiogroup" aria-label="Chart type">
+      <button class={`seg-opt${initial.preset === 'bar' ? ' active' : ''}`} type="button" role="radio" aria-checked={initial.preset === 'bar'} data-type="bar">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="10" width="3" height="10"></rect>
+          <rect x="7" y="6" width="3" height="14"></rect>
+          <rect x="12" y="3" width="3" height="17"></rect>
+          <rect x="17" y="8" width="3" height="12"></rect>
+        </svg>
+        <span class="seg-opt-label">Bar</span>
+      </button>
+      <button class={`seg-opt${initial.preset === 'line' ? ' active' : ''}`} type="button" role="radio" aria-checked={initial.preset === 'line'} data-type="line">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+          <polyline points="2,18 7,13 12,15 17,6 20,9"></polyline>
+        </svg>
+        <span class="seg-opt-label">Line</span>
+      </button>
+      <button class={`seg-opt${initial.preset === 'map' ? ' active' : ''}`} type="button" role="radio" aria-checked={initial.preset === 'map'} data-type="map">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+          <path d="M11 2 L17 4 L19 9 L15 14 L17 19 L11 20 L6 17 L3 12 L4 7 L8 5 Z"></path>
+          <line x1="11" y1="2" x2="11" y2="20"></line>
+          <line x1="3" y1="12" x2="19" y2="9"></line>
+        </svg>
+        <span class="seg-opt-label">Map</span>
+      </button>
+      <button class={`seg-opt${initial.preset === 'compare' ? ' active' : ''}`} type="button" role="radio" aria-checked={initial.preset === 'compare'} data-type="compare">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2"  y="3"  width="8" height="7"></rect>
+          <rect x="12" y="3"  width="8" height="7"></rect>
+          <rect x="2"  y="12" width="8" height="7"></rect>
+          <rect x="12" y="12" width="8" height="7"></rect>
+        </svg>
+        <span class="seg-opt-label">Compare</span>
+      </button>
+    </div>
+  </section>
+
+</aside>
