@@ -1,0 +1,39 @@
+---
+// Page 3 · Fig. 7 — Who gains most, in percentage terms.
+// Horizontal bars of (scenario2Delta / currentSeats) × 100.
+// Twin of the absolute-gain chart (Fig. 6). The rank ORDER changes:
+// Bihar was the #2 winner in absolute seats but becomes #1 in percentage.
+// That rank shift IS the chart's point — place adjacent to Fig. 6, not as a toggle.
+import { LOKSABHA_DATA, scenarioGainPct } from '../data/loksabha';
+import { REGION_COLORS } from '../data/census';
+
+// Only include non-zero gainers — zero-delta states would just be flat lines.
+const rows = LOKSABHA_DATA
+  .filter((r) => r.scenario2Delta !== 0)
+  .map((r) => ({
+    ...r,
+    pct: scenarioGainPct(r, 2),
+  }))
+  .sort((a, b) => b.pct - a.pct);
+
+const topGainer = rows[0];
+---
+
+<figure class="chart-figure pct-gain-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 7</span>
+    <span class="fig-title">Who gains most — in <em>relative</em> terms</span>
+    <span class="fig-unit">— % change in seats under Scenario 2 —</span>
+  </figcaption>
+
+  <div id="pct-gain-chart" class="chart pct-gain-chart"></div>
+
+  <p class="fig-note">
+    <span class="hi">प्रतिशत वृद्धि</span> ·
+    Bars sorted by <b>percentage</b>, not seats. <b>{topGainer.name}</b>
+    tops this chart at <b>+{topGainer.pct.toFixed(1)}%</b> — the state most
+    under-represented relative to its own current count, not the one with
+    the largest absolute gain. Compare with Fig. 6 above: the rank order
+    changes.
+  </p>
+</figure>

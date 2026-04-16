@@ -1,11 +1,10 @@
 ---
 import '../styles/global.css';
 import { CENSUS, REGION_ORDER, REGION_LABELS, REGION_COLORS } from '../data/census';
+import PageNav from '../components/PageNav.astro';
 import GrowthLines from '../components/GrowthLines.astro';
 import PopPerSeat from '../components/PopPerSeat.astro';
-import RepresentationSlope from '../components/RepresentationSlope.astro';
-import WinnersLosers from '../components/WinnersLosers.astro';
-import ScenarioStacks from '../components/ScenarioStacks.astro';
+import FreezePenalty from '../components/FreezePenalty.astro';
 
 const firstYear = CENSUS[0].year;
 const lastYear = CENSUS[CENSUS.length - 1].year;
@@ -28,41 +27,35 @@ const ordinals = [
     />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>The Indian Census, 1881–2011 · भारत की जनसंख्या</title>
+    <title>The Present · वर्तमान · The Indian Census, {firstYear}–{lastYear}</title>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <div class="page">
 
-      <!-- Running header -->
-      <div class="running-head">
-        <span class="eyebrow">Vol. I · Fig. 1</span>
-        <span class="eyebrow dot">◇</span>
-        <span class="eyebrow">Regional Share of Population</span>
-        <span class="eyebrow dot">◇</span>
-        <span class="eyebrow">{firstYear} → {lastYear}</span>
-      </div>
+      <PageNav current={1} />
 
       <hr class="rule double" />
 
       <!-- Masthead -->
       <header class="masthead">
         <div class="masthead-copy">
-          <p class="kicker">A fourteen-census study</p>
+          <p class="kicker">Part the First · Vol. I</p>
           <h1 class="title">
-            <span class="title-en">The Indian</span>
-            <span class="title-en-b">Census</span>
-            <span class="title-hi">भारत&nbsp;की&nbsp;जनगणना</span>
+            <span class="title-en">The</span>
+            <span class="title-en-b">Present</span>
+            <span class="title-hi">वर्तमान</span>
           </h1>
           <p class="lede">
-            One hundred and thirty years of demographic gravity, traced across four
-            geographies — <em>East, West, the Hindi belt, and the South</em> — as a share
-            of the all-India total. Drag the year. Watch the balance shift.
+            One billion people, five hundred and forty-three seats, and a
+            map drawn in <em>1971</em>. A fourteen-census study of the
+            regional shift that made the current allocation indefensible —
+            and the state-level penalty the freeze now extracts.
           </p>
         </div>
         <div class="masthead-figure" aria-hidden="true">
           <div class="glyph">§</div>
-          <div class="figure-no">No.<br /><b>1</b></div>
+          <div class="figure-no">No.<br /><b>I</b></div>
         </div>
       </header>
 
@@ -87,7 +80,7 @@ const ordinals = [
         </div>
       </section>
 
-      <!-- Figure -->
+      <!-- Fig. 1 — regional shares -->
       <figure class="chart-figure">
         <figcaption class="fig-head">
           <span class="fig-label">Fig. 1</span>
@@ -99,7 +92,7 @@ const ordinals = [
 
       <hr class="rule" />
 
-      <!-- Timeline slider -->
+      <!-- Timeline slider for Fig. 1 -->
       <section class="timeline">
         <div class="timeline-head">
           <span class="smallcaps">drag the census year</span>
@@ -131,22 +124,52 @@ const ordinals = [
         </div>
       </section>
 
+      <hr class="rule" />
+
+      <!-- The constitutional bargain, and the freeze -->
+      <aside class="bargain">
+        <div class="bargain-mark" aria-hidden="true">§</div>
+        <div class="bargain-body">
+          <span class="smallcaps">A bargain, and its expiry date</span>
+          <h3 class="bargain-title">
+            The Constitution promised a redraw every ten years.
+            <span class="bargain-hi hi">हर दशक का वादा</span>
+          </h3>
+          <p class="bargain-text">
+            <b>Articles 81 &amp; 82</b> instructed Parliament to re-allot
+            Lok Sabha seats after each census, so that no vote weighed more
+            than another. In <b>1976</b>, mid-Emergency, with the South's
+            family-planning drive working and the North's faltering,
+            Mrs Gandhi's government passed the <b>42nd Amendment</b> and
+            froze the allocation at 1971 figures. In <b>2001</b>, the Vajpayee
+            NDA passed the <b>84th Amendment</b> and extended the freeze to
+            the first census taken after <b>2026</b>. The decadal promise is
+            now half a century overdue.
+          </p>
+          <div class="bargain-meta">
+            <span><b>1976</b> · 42nd Amdt. · freeze begins</span>
+            <span class="bargain-sep">◇</span>
+            <span><b>2001</b> · 84th Amdt. · extended to 2026</span>
+            <span class="bargain-sep">◇</span>
+            <a class="bargain-link" href="/history/">read the full history →</a>
+          </div>
+        </div>
+      </aside>
+
       <hr class="rule double" />
 
-      <!-- Chapter-II opener -->
+      <!-- Chapter II opener -->
       <section class="chapter-opener">
         <span class="smallcaps">Part the Second</span>
         <h2 class="chapter-title">
           <span class="chapter-numeral">ii.</span>
-          The Consequence
-          <span class="chapter-hi hi">परिणाम</span>
+          Why redraw
+          <span class="chapter-hi hi">क्यों पुनर्रचना</span>
         </h2>
         <p class="chapter-lede">
-          Three figures follow. The first shows when each region's growth rate
-          peaked — and why the South and the North now point in different
-          directions. The next two show what that shift has done to political
-          weight: how many people each Lok Sabha seat now answers to, and how
-          far the seat count has drifted from the population it represents.
+          Three figures follow. When each region's growth peaked, how many
+          people now answer to a single Lok Sabha seat, and how far each
+          state now sits from the population behind it.
         </p>
       </section>
 
@@ -156,38 +179,27 @@ const ordinals = [
 
       <hr class="rule" />
 
+      <!-- Fig. 3 lede — the 14.24L number with a political face -->
+      <aside class="fig-lede">
+        <p>
+          On the 2011 count, each Lok Sabha seat ought to answer to roughly
+          <b>14.24 lakh Indians</b>. A voter in Kerala sends one MP for every
+          <b>16.7 lakh</b> neighbours; a voter in Rajasthan, one for every
+          <b>27.4 lakh</b>; a voter in Bihar, one for every
+          <b>26.0 lakh</b>. The gap is not arithmetic. It is the 1976 freeze,
+          compounding for half a century.
+        </p>
+      </aside>
+
       <PopPerSeat />
 
       <hr class="rule" />
 
-      <RepresentationSlope />
-
-      <hr class="rule" />
-
-      <WinnersLosers />
-
-      <hr class="rule" />
-
-      <ScenarioStacks />
-
-      <!-- Next → Part 2 -->
-      <aside class="next-step">
-        <span class="smallcaps">continue reading</span>
-        <a href="/part-two/" class="next-link">
-          <span class="next-arrow">→</span>
-          <span class="next-title">The Big Eighteen</span>
-          <span class="next-subtitle hi">अठारह बड़े राज्य</span>
-        </a>
-        <p class="next-blurb">
-          Part II follows the same data down to the state level — the eighteen
-          largest states (out of 28 states + 8 UTs) across 110 years, plus a
-          bump chart of who has led the country.
-        </p>
-      </aside>
+      <FreezePenalty />
 
       <hr class="rule double" />
 
-      <!-- Legend / Dramatis personae -->
+      <!-- Dramatis personae (region legend) -->
       <section class="dramatis">
         <h2 class="section-heading">
           <span class="section-no">iii.</span>
@@ -211,9 +223,24 @@ const ordinals = [
         </div>
       </section>
 
+      <hr class="rule double" />
+
+      <!-- Transition to Page 2 -->
+      <aside class="next-step">
+        <span class="smallcaps">continue reading</span>
+        <a href="/history/" class="next-link">
+          <span class="next-arrow">→</span>
+          <span class="next-title">Seven Dates</span>
+          <span class="next-subtitle hi">सात तिथियाँ</span>
+        </a>
+        <p class="next-blurb">
+          The map is frozen to 1971. That is a fact, not an accident.
+          Read how it came to be frozen — and by whom.
+        </p>
+      </aside>
+
       <hr class="rule" />
 
-      <!-- Footer / Colophon -->
       <footer class="colophon">
         <div class="colophon-col">
           <span class="smallcaps">§ source</span>
@@ -247,7 +274,6 @@ const ordinals = [
         <span class="eyebrow dot">◇</span>
         <span class="eyebrow">Composed on cream</span>
       </div>
-
     </div>
 
     <script>
@@ -259,16 +285,9 @@ const ordinals = [
         REGION_COLORS,
         percentShare,
         decadalGrowth,
-        decadalGrowthIndia,
         type Region,
       } from '../data/census';
-      import {
-        sortedByPopPerSeat,
-        LOKSABHA_META,
-        LOKSABHA_DATA,
-        byRegion,
-        totalSeats,
-      } from '../data/loksabha';
+      import { sortedByPopPerSeat, LOKSABHA_META, shareRows } from '../data/loksabha';
 
       const sliderEl = document.getElementById('year-slider') as HTMLInputElement;
       const yearLabelEl = document.getElementById('year-label')!;
@@ -284,6 +303,9 @@ const ordinals = [
       const seriesFor = (idx: number) =>
         REGION_ORDER.map((r) => +percentShare(CENSUS[idx], r).toFixed(2));
 
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 1 — Interactive share-by-region bars
+         ───────────────────────────────────────────────────────────── */
       const options: ApexCharts.ApexOptions = {
         chart: {
           type: 'bar',
@@ -337,11 +359,7 @@ const ordinals = [
           tickAmount: 6,
           labels: {
             formatter: (val: number) => `${val.toFixed(0)}%`,
-            style: {
-              fontSize: '11px',
-              fontFamily: '"Jost", sans-serif',
-              colors: '#6b5d4f',
-            },
+            style: { fontSize: '11px', fontFamily: '"Jost", sans-serif', colors: '#6b5d4f' },
           },
           axisBorder: { show: false },
         },
@@ -401,7 +419,7 @@ const ordinals = [
       chart.render();
 
       /* ─────────────────────────────────────────────────────────────
-         Fig. 2 — Decadal growth rate lines
+         Fig. 2 — Decadal growth-rate lines by region
          ───────────────────────────────────────────────────────────── */
       const growthSeries = REGION_ORDER.map((r) => ({
         name: REGION_LABELS[r].en,
@@ -421,18 +439,11 @@ const ordinals = [
         series: growthSeries,
         colors: REGION_ORDER.map((r) => REGION_COLORS[r]),
         stroke: { width: [2.5, 2.5, 3.5, 2.5, 1.5], curve: 'straight', dashArray: [0, 0, 0, 0, 4] },
-        markers: {
-          size: 4,
-          strokeWidth: 1,
-          strokeColors: '#1a1510',
-          hover: { size: 7 },
-        },
+        markers: { size: 4, strokeWidth: 1, strokeColors: '#1a1510', hover: { size: 7 } },
         dataLabels: { enabled: false },
         xaxis: {
           type: 'category',
-          labels: {
-            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' },
-          },
+          labels: { style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' } },
           axisBorder: { show: true, color: '#1a1510' },
           axisTicks: { show: false },
           title: { text: 'CENSUS YEAR', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
@@ -468,15 +479,8 @@ const ordinals = [
               marker: { size: 0 },
               label: {
                 text: "South's peak",
-                borderWidth: 0,
-                offsetY: -10,
-                style: {
-                  color: '#3d5c3d',
-                  background: 'transparent',
-                  fontFamily: '"Fraunces",serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                },
+                borderWidth: 0, offsetY: -10,
+                style: { color: '#3d5c3d', background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 },
               },
             },
             {
@@ -485,22 +489,14 @@ const ordinals = [
               marker: { size: 0 },
               label: {
                 text: "North's peak",
-                borderWidth: 0,
-                offsetY: -10,
-                style: {
-                  color: '#8c2e1a',
-                  background: 'transparent',
-                  fontFamily: '"Fraunces",serif',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                },
+                borderWidth: 0, offsetY: -10,
+                style: { color: '#8c2e1a', background: 'transparent', fontFamily: '"Fraunces",serif', fontSize: '12px', fontWeight: 600 },
               },
             },
           ],
         },
         tooltip: {
-          shared: true,
-          intersect: false,
+          shared: true, intersect: false,
           custom: ({ dataPointIndex, w }) => {
             const year = String(w.globals.categoryLabels[dataPointIndex]);
             const rows = w.globals.series
@@ -571,9 +567,7 @@ const ordinals = [
           title: { text: 'LAKH OF PEOPLE PER SEAT', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
         },
         yaxis: {
-          labels: {
-            style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' },
-          },
+          labels: { style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' } },
         },
         legend: { show: false },
         grid: {
@@ -592,18 +586,8 @@ const ordinals = [
               borderWidth: 1.5,
               label: {
                 text: `ideal · ${idealLakh.toFixed(2)}L`,
-                orientation: 'horizontal',
-                position: 'top',
-                offsetY: -6,
-                borderWidth: 0,
-                style: {
-                  color: '#8c2e1a',
-                  background: '#f5efe3',
-                  fontFamily: '"Fraunces",serif',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  padding: { left: 6, right: 6, top: 2, bottom: 2 },
-                },
+                orientation: 'horizontal', position: 'top', offsetY: -6, borderWidth: 0,
+                style: { color: '#8c2e1a', background: '#f5efe3', fontFamily: '"Fraunces",serif', fontSize: '11px', fontWeight: 600, padding: { left: 6, right: 6, top: 2, bottom: 2 } },
               },
             },
           ],
@@ -631,50 +615,12 @@ const ordinals = [
       popSeatChart.render();
 
       /* ─────────────────────────────────────────────────────────────
-         Fig. 4 — Slope chart scenario toggle
+         Fig. 4 — The Freeze Penalty (diverging bars)
          ───────────────────────────────────────────────────────────── */
-      const slopeSvg = document.getElementById('slope-svg');
-      const scenarioBtns = document.querySelectorAll<HTMLButtonElement>('.scenario-btn');
+      const freezeSorted = [...shareRows()].sort((a, b) => b.gapCurrent - a.gapCurrent);
+      const freezeColors = freezeSorted.map((r) => REGION_COLORS[r.region]);
 
-      function applySlopeScenario(scenario: 'current' | 'scenario2') {
-        if (!slopeSvg) return;
-        const lines = slopeSvg.querySelectorAll<SVGLineElement>('.slope-line');
-        const dots = slopeSvg.querySelectorAll<SVGCircleElement>('.slope-dot-right');
-        const rightLabels = slopeSvg.querySelectorAll<SVGTextElement>('.slope-label-right');
-
-        lines.forEach((line) => {
-          const y = line.dataset[scenario === 'current' ? 'y2Current' : 'y2Scenario'];
-          if (y) line.setAttribute('y2', y);
-        });
-        dots.forEach((dot) => {
-          const cy = dot.dataset[scenario === 'current' ? 'cyCurrent' : 'cyScenario'];
-          if (cy) dot.setAttribute('cy', cy);
-        });
-        rightLabels.forEach((label) => {
-          const y = label.dataset[scenario === 'current' ? 'yCurrent' : 'yScenario'];
-          if (y) label.setAttribute('y', y);
-        });
-        scenarioBtns.forEach((btn) => {
-          const active = btn.dataset.scenario === scenario;
-          btn.classList.toggle('is-active', active);
-          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-      }
-
-      scenarioBtns.forEach((btn) =>
-        btn.addEventListener('click', () => {
-          const s = btn.dataset.scenario as 'current' | 'scenario2';
-          applySlopeScenario(s);
-        }),
-      );
-
-      /* ─────────────────────────────────────────────────────────────
-         Fig. 5 — Winners & losers (diverging bars, Scenario 2 delta)
-         ───────────────────────────────────────────────────────────── */
-      const winnersSorted = [...LOKSABHA_DATA].sort((a, b) => b.scenario2Delta - a.scenario2Delta);
-      const winnersColors = winnersSorted.map((r) => REGION_COLORS[r.region]);
-
-      const winnersChart = new ApexCharts(document.querySelector('#winners-chart')!, {
+      const freezeChart = new ApexCharts(document.querySelector('#freeze-penalty-chart')!, {
         chart: {
           type: 'bar',
           height: 820,
@@ -683,15 +629,15 @@ const ordinals = [
           background: 'transparent',
           parentHeightOffset: 0,
         },
-        colors: winnersColors,
+        colors: freezeColors,
         series: [{
-          name: 'Δ seats',
-          data: winnersSorted.map((r) => ({ x: r.name, y: r.scenario2Delta })),
+          name: 'Δ pp',
+          data: freezeSorted.map((r) => ({ x: r.name, y: +r.gapCurrent.toFixed(2) })),
         }],
         plotOptions: {
           bar: {
             horizontal: true,
-            barHeight: '70%',
+            barHeight: '72%',
             borderRadius: 0,
             distributed: true,
             dataLabels: { position: 'top' },
@@ -700,25 +646,21 @@ const ordinals = [
         stroke: { show: true, width: 0.5, colors: ['#1a1510'] },
         dataLabels: {
           enabled: true,
-          formatter: (v: number) => (v > 0 ? `+${v}` : v < 0 ? `${v}` : ''),
-          offsetX: 22,
-          style: { fontSize: '11px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#1a1510'] },
+          formatter: (v: number) => (v > 0 ? `+${v.toFixed(2)}` : v.toFixed(2)),
+          offsetX: 26,
+          style: { fontSize: '11px', fontFamily: '"Fraunces",serif', fontWeight: 600, colors: ['#1a1510'] },
         },
         xaxis: {
           labels: {
-            formatter: (v: string) => {
-              const n = Number(v);
-              return n > 0 ? `+${n}` : `${n}`;
-            },
+            formatter: (v: string) => `${Number(v) > 0 ? '+' : ''}${Number(v).toFixed(1)}`,
             style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
           },
           axisBorder: { show: true, color: '#1a1510' },
           axisTicks: { show: false },
+          title: { text: 'POPULATION SHARE MINUS SEAT SHARE (pp)', style: { fontSize: '10px', color: '#6b5d4f', fontWeight: 500 }, offsetY: 4 },
         },
         yaxis: {
-          labels: {
-            style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' },
-          },
+          labels: { style: { fontSize: '10.5px', fontFamily: '"Jost",sans-serif', colors: '#1a1510' } },
         },
         legend: { show: false },
         grid: {
@@ -730,111 +672,34 @@ const ordinals = [
         },
         annotations: {
           xaxis: [
-            {
-              x: 0,
-              borderColor: '#1a1510',
-              strokeDashArray: 0,
-              borderWidth: 1.5,
-            },
+            { x: 0, borderColor: '#1a1510', strokeDashArray: 0, borderWidth: 1.5 },
           ],
         },
         tooltip: {
           custom: ({ dataPointIndex }: any) => {
-            const r = winnersSorted[dataPointIndex];
+            const r = freezeSorted[dataPointIndex];
             const color = REGION_COLORS[r.region];
-            const sign = r.scenario2Delta > 0 ? '+' : r.scenario2Delta < 0 ? '' : '±';
-            return `<div style="padding:12px 14px;min-width:220px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
+            const sign = r.gapCurrent > 0 ? '+' : '';
+            const direction = r.gapCurrent > 0 ? 'under-seated' : r.gapCurrent < 0 ? 'over-seated' : 'at parity';
+            return `<div style="padding:12px 14px;min-width:230px;background:#f5efe3;border:1px solid #1a1510;box-shadow:4px 4px 0 0 #1a1510;font-family:'Jost',sans-serif;color:#1a1510">
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
                 <span style="width:10px;height:10px;background:${color};border:1px solid #1a1510;display:inline-block"></span>
                 <span style="font-family:'Fraunces',serif;font-weight:700;font-size:15px">${r.name}</span>
               </div>
-              <div style="font-size:10.5px;color:#6b5d4f;margin-bottom:8px;letter-spacing:0.02em">Current: ${r.currentSeats} · Scenario 2: ${r.scenario2Seats}</div>
+              <div style="font-size:10.5px;color:#6b5d4f;margin-bottom:8px;letter-spacing:0.02em">Population: ${r.popShare.toFixed(2)}% · Seats: ${r.seatShareCurrent.toFixed(2)}%</div>
               <div style="border-top:1px solid #1a1510;padding-top:8px">
-                <div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">delta</div>
-                <b style="font-family:'Fraunces',serif;font-size:26px;color:${r.scenario2Delta > 0 ? '#8c2e1a' : r.scenario2Delta < 0 ? '#1f4d54' : '#6b5d4f'}">${sign}${r.scenario2Delta}</b>
+                <div style="font-size:10px;color:#6b5d4f;text-transform:uppercase;letter-spacing:0.14em">${direction}</div>
+                <b style="font-family:'Fraunces',serif;font-size:22px;color:${r.gapCurrent > 0 ? '#8c2e1a' : r.gapCurrent < 0 ? '#1f4d54' : '#6b5d4f'}">${sign}${r.gapCurrent.toFixed(2)}<span style="font-size:13px;color:#6b5d4f;font-weight:500">&nbsp;pp</span></b>
               </div>
             </div>`;
           },
         },
       });
-      winnersChart.render();
+      freezeChart.render();
 
       /* ─────────────────────────────────────────────────────────────
-         Fig. 6 — Three-scenario stacked bars
+         Staggered entrance + slider wiring
          ───────────────────────────────────────────────────────────── */
-      const curByRegion = byRegion('currentSeats');
-      const s1ByRegion = byRegion('scenario1Seats');
-      const s2ByRegion = byRegion('scenario2Seats');
-      const stackedSeries = REGION_ORDER.map((r) => ({
-        name: REGION_LABELS[r].en,
-        data: [curByRegion[r], s1ByRegion[r], s2ByRegion[r]],
-      }));
-
-      const stacksChart = new ApexCharts(document.querySelector('#stacks-chart')!, {
-        chart: {
-          type: 'bar',
-          stacked: true,
-          stackType: '100%',
-          height: 420,
-          fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
-          toolbar: { show: false },
-          background: 'transparent',
-          parentHeightOffset: 0,
-        },
-        colors: REGION_ORDER.map((r) => REGION_COLORS[r]),
-        series: stackedSeries,
-        plotOptions: {
-          bar: {
-            horizontal: false,
-            columnWidth: '50%',
-            borderRadius: 0,
-            dataLabels: { position: 'center' },
-          },
-        },
-        stroke: { show: true, width: 1, colors: ['#1a1510'] },
-        dataLabels: {
-          enabled: true,
-          formatter: (v: number, opts: any) => {
-            const total = opts.w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
-            const pct = (opts.w.globals.series[opts.seriesIndex][opts.dataPointIndex] / total) * 100;
-            return pct >= 6 ? `${pct.toFixed(0)}%` : '';
-          },
-          style: { fontSize: '12px', fontFamily: '"Fraunces",serif', fontWeight: 700, colors: ['#f5efe3'] },
-        },
-        xaxis: {
-          categories: ['Current · 543', 'Scenario 1 · 824', 'Scenario 2 · 854'],
-          labels: {
-            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#1a1510', fontWeight: 500 },
-          },
-          axisBorder: { show: true, color: '#1a1510' },
-          axisTicks: { show: false },
-        },
-        yaxis: {
-          labels: {
-            formatter: (v: number) => `${v.toFixed(0)}%`,
-            style: { fontSize: '11px', fontFamily: '"Jost",sans-serif', colors: '#6b5d4f' },
-          },
-        },
-        legend: {
-          position: 'top',
-          horizontalAlign: 'left',
-          fontFamily: '"Jost",sans-serif',
-          fontSize: '12px',
-          labels: { colors: '#1a1510' },
-          markers: { size: 8, strokeWidth: 1, shape: 'square' },
-          itemMargin: { horizontal: 14, vertical: 4 },
-          offsetY: -4,
-        },
-        grid: {
-          borderColor: '#d8cdb8',
-          strokeDashArray: 2,
-          padding: { top: 6, right: 12, bottom: 0, left: 8 },
-        },
-        tooltip: { enabled: false },
-      });
-      stacksChart.render();
-
-      // Staggered entrance — trigger after first paint
       requestAnimationFrame(() => {
         document.body.classList.add('ready');
       });
@@ -847,7 +712,6 @@ const ordinals = [
         totalPopEl.textContent = row.totalIndiaMillions.toFixed(1);
         chart.updateSeries([{ name: 'Share of India', data: seriesFor(idx) }]);
 
-        // Ink-stroke flash on year change
         yearLabelEl.classList.remove('year-flash');
         void (yearLabelEl as HTMLElement).offsetWidth;
         yearLabelEl.classList.add('year-flash');

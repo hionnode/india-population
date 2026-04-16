@@ -1,0 +1,339 @@
+---
+// Page 3 · Fig. 8 — The gentle vs the arithmetic option.
+// Slope chart. Left column: Scenario 1 (×1.5) seats. Right column: Scenario 2 (equal-pop).
+// Broken Y-axis: UP sits in a top panel (110-145), everyone else in the main
+// panel (0-80) — so UP's outlier magnitude doesn't flatten the rest.
+// Emphasis tiers: movers |Δ| >= 3 are coloured and labelled; minor movers are
+// grey and unlabelled; flat states render as faint ticks only.
+import { LOKSABHA_DATA } from '../data/loksabha';
+
+type Row = {
+  code: string;
+  name: string;
+  s1: number;
+  s2: number;
+  delta: number;
+};
+
+const rows: Row[] = LOKSABHA_DATA.map((r) => ({
+  code: r.code,
+  name: r.name,
+  s1: r.scenario1Seats,
+  s2: r.scenario2Seats,
+  delta: r.scenario2Seats - r.scenario1Seats,
+}));
+
+// Viewbox
+const W = 960;
+const H = 640;
+const MARGIN = { top: 88, right: 190, bottom: 46, left: 210 };
+const LEFT_X = MARGIN.left;
+const PLOT_W = W - MARGIN.left - MARGIN.right;
+const RIGHT_X = LEFT_X + PLOT_W;
+
+// Broken Y-axis
+const PANEL_TOP_H = 62;
+const BREAK_GAP = 24;
+const PANEL_TOP_Y0 = MARGIN.top;
+const PANEL_MAIN_Y0 = PANEL_TOP_Y0 + PANEL_TOP_H + BREAK_GAP;
+const PANEL_MAIN_H = H - MARGIN.bottom - PANEL_MAIN_Y0;
+
+const TOP_MIN = 110;
+const TOP_MAX = 145;
+const MAIN_MIN = 0;
+const MAIN_MAX = 80;
+
+const yTop = (v: number) =>
+  PANEL_TOP_Y0 + ((TOP_MAX - v) / (TOP_MAX - TOP_MIN)) * PANEL_TOP_H;
+const yMain = (v: number) =>
+  PANEL_MAIN_Y0 + ((MAIN_MAX - v) / (MAIN_MAX - MAIN_MIN)) * PANEL_MAIN_H;
+
+// Classify
+const EMPH_MIN = 3; // |Δ| >= 3 → emphasized
+const MINOR_MIN = 1; // 1 <= |Δ| < 3 → minor
+function tierOf(d: number): 'emph-up' | 'emph-down' | 'minor-up' | 'minor-down' | 'flat' {
+  if (d >= EMPH_MIN) return 'emph-up';
+  if (d <= -EMPH_MIN) return 'emph-down';
+  if (d >= MINOR_MIN) return 'minor-up';
+  if (d <= -MINOR_MIN) return 'minor-down';
+  return 'flat';
+}
+function panelOf(r: Row): 'top' | 'main' {
+  return r.s1 > MAIN_MAX || r.s2 > MAIN_MAX ? 'top' : 'main';
+}
+
+type Geom = Row & {
+  yL: number;
+  yR: number;
+  tier: ReturnType<typeof tierOf>;
+  panel: 'top' | 'main';
+};
+
+const geom: Geom[] = rows.map((r) => {
+  const panel = panelOf(r);
+  const y = panel === 'top' ? yTop : yMain;
+  return { ...r, yL: y(r.s1), yR: y(r.s2), tier: tierOf(r.delta), panel };
+});
+
+// Sort so emph renders on top of minor renders on top of flat
+const rank = (t: Geom['tier']) =>
+  t.startsWith('emph') ? 2 : t.startsWith('minor') ? 1 : 0;
+geom.sort((a, b) => rank(a.tier) - rank(b.tier));
+
+// Labels: only emphasized rows get labels
+type Lab = Geom & { yLL: number; yRL: number };
+const labs: Lab[] = geom
+  .filter((g) => g.tier.startsWith('emph'))
+  .map((g) => ({ ...g, yLL: g.yL, yRL: g.yR }));
+
+function deconflict<T>(arr: T[], key: keyof T & string, gap: number) {
+  arr.sort((a, b) => (a[key] as unknown as number) - (b[key] as unknown as number));
+  let prev = -Infinity;
+  for (const r of arr) {
+    if ((r[key] as unknown as number) < prev + gap) {
+      (r[key] as unknown as number) = prev + gap;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r as any)[key] = prev + gap;
+    }
+    prev = r[key] as unknown as number;
+  }
+}
+
+const labsTop = labs.filter((l) => l.panel === 'top');
+const labsMain = labs.filter((l) => l.panel === 'main');
+deconflict(labsTop, 'yLL', 14);
+deconflict(labsTop, 'yRL', 14);
+deconflict(labsMain, 'yLL', 14);
+deconflict(labsMain, 'yRL', 14);
+
+// Grid values
+const mainGrid = [0, 20, 40, 60, 80];
+const topGrid = [120, 140];
+
+// Break-mark geometry (small zigzag on each axis line, centered in the gap)
+const BREAK_Y = PANEL_TOP_Y0 + PANEL_TOP_H + BREAK_GAP / 2;
+const BREAK_H = 6;
+function breakMark(x: number) {
+  return `M ${x - 5} ${BREAK_Y - BREAK_H} L ${x + 5} ${BREAK_Y - BREAK_H / 2} L ${x - 5} ${BREAK_Y + BREAK_H / 2} L ${x + 5} ${BREAK_Y + BREAK_H}`;
+}
+
+const S1_TOTAL = rows.reduce((a, r) => a + r.s1, 0);
+const S2_TOTAL = rows.reduce((a, r) => a + r.s2, 0);
+---
+
+<figure class="chart-figure scenslope-figure">
+  <figcaption class="fig-head">
+    <span class="fig-label">Fig. 8</span>
+    <span class="fig-title">The gentle vs the arithmetic option</span>
+    <span class="fig-unit">— each state, Scenario 1 → Scenario 2 seats —</span>
+  </figcaption>
+
+  <div class="scenslope-legend" aria-hidden="true">
+    <span class="sl-leg-item sl-leg-up">
+      <span class="sl-leg-dash"></span> Strict proportionality gains seats
+      <span class="sl-leg-meta">|Δ| ≥ 3</span>
+    </span>
+    <span class="sl-leg-item sl-leg-down">
+      <span class="sl-leg-dash"></span> Gentle scaling protects the state
+      <span class="sl-leg-meta">|Δ| ≥ 3</span>
+    </span>
+    <span class="sl-leg-item sl-leg-minor">
+      <span class="sl-leg-dash"></span> Minor movers
+      <span class="sl-leg-meta">|Δ| 1–2</span>
+    </span>
+  </div>
+
+  <div class="scenslope-wrap">
+    <svg
+      id="scenslope-svg"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Slope chart — each state's seat count under Scenario 1 versus Scenario 2, with UP broken out"
+    >
+      <!-- Column heads -->
+      <text
+        class="scenslope-col-head"
+        x={LEFT_X}
+        y={MARGIN.top - 48}
+        text-anchor="middle"
+      >
+        SCENARIO 1
+      </text>
+      <text
+        class="scenslope-col-sub"
+        x={LEFT_X}
+        y={MARGIN.top - 32}
+        text-anchor="middle"
+      >
+        × 1.5 uplift · {S1_TOTAL} seats
+      </text>
+      <text
+        class="scenslope-col-head"
+        x={RIGHT_X}
+        y={MARGIN.top - 48}
+        text-anchor="middle"
+      >
+        SCENARIO 2
+      </text>
+      <text
+        class="scenslope-col-sub"
+        x={RIGHT_X}
+        y={MARGIN.top - 32}
+        text-anchor="middle"
+      >
+        equal-pop · {S2_TOTAL} seats
+      </text>
+
+      <!-- Top panel: grid -->
+      {topGrid.map((v) => (
+        <g class="scenslope-grid">
+          <line x1={LEFT_X} y1={yTop(v)} x2={RIGHT_X} y2={yTop(v)} />
+          <text class="scenslope-grid-label" x={LEFT_X - 8} y={yTop(v)} text-anchor="end" dy="0.32em">{v}</text>
+          <text class="scenslope-grid-label" x={RIGHT_X + 8} y={yTop(v)} text-anchor="start" dy="0.32em">{v}</text>
+        </g>
+      ))}
+
+      <!-- Main panel: grid -->
+      {mainGrid.map((v) => (
+        <g class="scenslope-grid">
+          <line x1={LEFT_X} y1={yMain(v)} x2={RIGHT_X} y2={yMain(v)} />
+          <text class="scenslope-grid-label" x={LEFT_X - 8} y={yMain(v)} text-anchor="end" dy="0.32em">{v}</text>
+          <text class="scenslope-grid-label" x={RIGHT_X + 8} y={yMain(v)} text-anchor="start" dy="0.32em">{v}</text>
+        </g>
+      ))}
+
+      <!-- Axis columns: top panel -->
+      <line
+        class="scenslope-axis"
+        x1={LEFT_X}
+        y1={PANEL_TOP_Y0}
+        x2={LEFT_X}
+        y2={PANEL_TOP_Y0 + PANEL_TOP_H}
+      />
+      <line
+        class="scenslope-axis"
+        x1={RIGHT_X}
+        y1={PANEL_TOP_Y0}
+        x2={RIGHT_X}
+        y2={PANEL_TOP_Y0 + PANEL_TOP_H}
+      />
+
+      <!-- Axis columns: main panel -->
+      <line
+        class="scenslope-axis"
+        x1={LEFT_X}
+        y1={PANEL_MAIN_Y0}
+        x2={LEFT_X}
+        y2={PANEL_MAIN_Y0 + PANEL_MAIN_H}
+      />
+      <line
+        class="scenslope-axis"
+        x1={RIGHT_X}
+        y1={PANEL_MAIN_Y0}
+        x2={RIGHT_X}
+        y2={PANEL_MAIN_Y0 + PANEL_MAIN_H}
+      />
+
+      <!-- Break marks (zigzag) -->
+      <path class="scenslope-break" d={breakMark(LEFT_X)} />
+      <path class="scenslope-break" d={breakMark(RIGHT_X)} />
+
+      <!-- Lines + dots -->
+      {geom.map((g) => (
+        <g class={`scenslope-group scenslope-${g.tier}`} data-code={g.code}>
+          <line
+            class="scenslope-line"
+            x1={LEFT_X}
+            y1={g.yL}
+            x2={RIGHT_X}
+            y2={g.yR}
+          />
+          <circle class="scenslope-dot" cx={LEFT_X} cy={g.yL} r="3" />
+          <circle class="scenslope-dot" cx={RIGHT_X} cy={g.yR} r="3" />
+        </g>
+      ))}
+
+      <!-- Labels + leader lines (emphasised only) -->
+      {labs.map((g) => (
+        <g class={`scenslope-labels scenslope-${g.tier}`} data-code={g.code}>
+          {Math.abs(g.yLL - g.yL) > 0.5 && (
+            <line
+              class="scenslope-leader"
+              x1={LEFT_X - 24}
+              y1={g.yL}
+              x2={LEFT_X - 40}
+              y2={g.yLL}
+            />
+          )}
+          <text
+            class="scenslope-label-name"
+            x={LEFT_X - 46}
+            y={g.yLL}
+            text-anchor="end"
+            dy="0.32em"
+          >
+            {g.name}
+          </text>
+          <text
+            class="scenslope-label-val"
+            x={LEFT_X - 44}
+            y={g.yLL + 12}
+            text-anchor="end"
+          >
+            {g.s1}
+          </text>
+          {Math.abs(g.yRL - g.yR) > 0.5 && (
+            <line
+              class="scenslope-leader"
+              x1={RIGHT_X + 24}
+              y1={g.yR}
+              x2={RIGHT_X + 40}
+              y2={g.yRL}
+            />
+          )}
+          <text
+            class="scenslope-label-code"
+            x={RIGHT_X + 46}
+            y={g.yRL}
+            text-anchor="start"
+            dy="0.32em"
+          >
+            {g.code}
+          </text>
+          <text
+            class="scenslope-label-val"
+            x={RIGHT_X + 46}
+            y={g.yRL + 12}
+            text-anchor="start"
+          >
+            {g.s2}
+            <tspan class="scenslope-delta-tag">
+              {' '}({g.delta > 0 ? '+' : ''}{g.delta})
+            </tspan>
+          </text>
+        </g>
+      ))}
+
+      <!-- Centred annotation band -->
+      <text
+        class="scenslope-annot"
+        x={(LEFT_X + RIGHT_X) / 2}
+        y={PANEL_MAIN_Y0 + PANEL_MAIN_H + 32}
+        text-anchor="middle"
+      >
+        S1 protects the South · S2 rewards the North
+      </text>
+    </svg>
+  </div>
+
+  <p class="fig-note">
+    <span class="hi">सौम्य बनाम सख़्त</span> ·
+    Lines sloping <b>up</b> (vermilion) are states that gain <em>more</em>
+    under strict population-proportionality than under the gentle ×1.5 —
+    UP alone adds 21 seats between the two rules. Lines sloping <b>down</b>
+    (teal) are states <em>protected</em> by the gentle option — Tamil Nadu,
+    Kerala, and Andhra Pradesh, mostly. S1 is, in this sense, the South's
+    insurance policy.
+  </p>
+</figure>

@@ -1,0 +1,396 @@
+---
+import '../styles/global.css';
+import PageNav from '../components/PageNav.astro';
+import Dumbbell from '../components/Dumbbell.astro';
+import BumpChart from '../components/BumpChart.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Seven Dates · सात तिथियाँ · The Indian Census, Part II</title>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page">
+
+      <PageNav current={2} />
+
+      <hr class="rule double" />
+
+      <header class="masthead">
+        <div class="masthead-copy">
+          <p class="kicker">Part the Second · Vol. II</p>
+          <h1 class="title">
+            <span class="title-en">Seven</span>
+            <span class="title-en-b">Dates</span>
+            <span class="title-hi">सात&nbsp;तिथियाँ</span>
+          </h1>
+          <p class="lede">
+            How the Republic learned to postpone itself. Seventy-five years
+            of Lok Sabha arithmetic, told through the seven acts of Parliament
+            and the two Presidential orders that make today's map. The freeze
+            began in <em>1976</em>, was extended in <em>2001</em>, and is
+            set to expire after <em>2026</em>.
+          </p>
+        </div>
+        <div class="masthead-figure" aria-hidden="true">
+          <div class="glyph">¶</div>
+          <div class="figure-no">No.<br /><b>II</b></div>
+        </div>
+      </header>
+
+      <hr class="rule" />
+
+      <!-- Chapter-style TOC — the strip doubles as navigation. -->
+      <section class="seven-dates seven-dates-toc">
+        <ol class="seven-dates-strip">
+          <li class="sd-node"><a href="#d-1951">
+            <span class="sd-year">1951</span>
+            <span class="sd-kicker">First election</span>
+          </a></li>
+          <li class="sd-node"><a href="#d-1962">
+            <span class="sd-year">1962</span>
+            <span class="sd-kicker">Two-member seats end</span>
+          </a></li>
+          <li class="sd-node sd-node-accent"><a href="#d-1976">
+            <span class="sd-year">1976</span>
+            <span class="sd-kicker">The freeze</span>
+          </a></li>
+          <li class="sd-node sd-node-accent"><a href="#d-2001">
+            <span class="sd-year">2001</span>
+            <span class="sd-kicker">The extension</span>
+          </a></li>
+          <li class="sd-node"><a href="#d-2008">
+            <span class="sd-year">2008</span>
+            <span class="sd-kicker">Boundaries, not totals</span>
+          </a></li>
+          <li class="sd-node"><a href="#d-2019">
+            <span class="sd-year">2019</span>
+            <span class="sd-kicker">J&amp;K reorganised</span>
+          </a></li>
+          <li class="sd-node sd-node-accent"><a href="#d-2026">
+            <span class="sd-year">2026</span>
+            <span class="sd-kicker">The trigger</span>
+          </a></li>
+        </ol>
+      </section>
+
+      <hr class="rule" />
+
+      <!-- Seven chapters, one per date -->
+      <article class="sd-chapter" id="d-1951">
+        <header class="sdc-head">
+          <span class="sdc-year">1951</span>
+          <h2 class="sdc-title">
+            The first general election
+            <span class="sdc-hi hi">प्रथम आम चुनाव</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            India went to the polls for the first time in the winter of
+            <b>1951-52</b>, four years after Independence — an exercise that
+            had never been tried anywhere on anything close to its scale.
+            <b>17.3 crore</b> voters were registered across <b>489</b> Lok
+            Sabha seats; turnout came in at <b>45.7%</b>. The First
+            Delimitation Commission, set up under the Delimitation Commission
+            Act 1952 and chaired by <em>Justice&nbsp;N.&nbsp;Chandrasekhara&nbsp;Aiyar</em>,
+            drew the constituency map from the 1951 Census.
+          </p>
+          <p>
+            The House of 1952 looked strange to modern eyes: a mix of
+            <b>single-member and double-member constituencies</b>, the latter
+            electing one general candidate and one Scheduled Caste or Scheduled
+            Tribe candidate from the same seat. This was the cheap-and-fast
+            arrangement by which reserved representation was preserved without
+            drawing separate communal constituencies — a compromise hammered
+            out in the Constituent Assembly over Ambedkar's objections to PR.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter" id="d-1962">
+        <header class="sdc-head">
+          <span class="sdc-year">1962</span>
+          <h2 class="sdc-title">
+            Double-member constituencies, abolished
+            <span class="sdc-hi hi">द्विसदस्य सीटों का अंत</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            The <b>Two-Member Constituencies (Abolition) Act, 1961</b> ended
+            the double-member scheme. In its place came single-member
+            constituencies, with SC/ST representation preserved through
+            <em>reserved seats</em>: a seat would be designated reserved for
+            an SC or ST candidate, but only one member would be elected from
+            it. This is the system we still use.
+          </p>
+          <p>
+            The <b>Second Delimitation Commission</b>, constituted under the
+            Delimitation Act of 1962 and chaired by
+            <em>Justice&nbsp;P.&nbsp;B.&nbsp;Gajendragadkar</em>, redrew the map
+            using the 1961 Census. The Lok Sabha settled at <b>494</b> elected
+            seats after the commission's report was implemented ahead of the
+            1967 election. The 1960s are in many ways the last decade in which
+            the decadal-redrawing principle of Article 82 worked as the
+            Constitution promised it would.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter sd-chapter-accent" id="d-1976">
+        <header class="sdc-head">
+          <span class="sdc-year">1976</span>
+          <h2 class="sdc-title">
+            The freeze begins <span class="sdc-sub">· 42nd Amendment</span>
+            <span class="sdc-hi hi">ठहराव का प्रारंभ</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            The <b>42nd Amendment</b>, passed in November 1976 during the
+            Emergency, is the single most consequential constitutional change
+            of the post-Nehru era. It rewrote Articles 82 and 170 to
+            <em>freeze</em> the allocation of Lok Sabha seats to states, and
+            Assembly-seat totals within each state, at <b>1971 Census</b>
+            figures — until after the 2001 Census.
+          </p>
+          <p>
+            The stated rationale was demographic: states which had succeeded
+            at the family-planning programme should not be <em>punished</em>
+            by losing political weight to states that had not. The unstated
+            context was <b>Sanjay&nbsp;Gandhi's sterilisation drive</b> — at its
+            peak in 1976-77, roughly <b>6.2 million</b> forced or coerced
+            sterilisations were recorded in a single year, concentrated
+            disproportionately in the Hindi belt. The 1977 election would
+            route the Congress out of power in precisely the states where the
+            drive had been most aggressive.
+          </p>
+          <p>
+            The freeze survived the 1977 rout. Neither Morarji Desai nor
+            Indira-returned-in-1980 undid it. What began as an Emergency
+            measure had, within a decade, become bipartisan constitutional
+            furniture.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter sd-chapter-accent" id="d-2001">
+        <header class="sdc-head">
+          <span class="sdc-year">2001</span>
+          <h2 class="sdc-title">
+            The extension <span class="sdc-sub">· 84th Amendment</span>
+            <span class="sdc-hi hi">ठहराव का विस्तार</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            By 2001 the original freeze was due to lapse. The Vajpayee-led
+            <b>NDA government</b> passed the <b>84th Amendment</b> to carry it
+            forward to the first census taken after <b>2026</b> — pushing any
+            actual readjustment of allocations out to the 2031 Census, or
+            whenever the next decadal enumeration is completed. The rationale
+            was the same as in 1976, with the family-planning language
+            translated into the softer vocabulary of
+            <em>demographic stabilisation incentives</em>.
+          </p>
+          <p>
+            The <b>87th Amendment</b> followed in 2003, permitting the next
+            delimitation exercise to use <b>2001 Census</b> data for
+            <em>intra-state</em> boundary readjustment — but without disturbing
+            the allocation of total seats per state, which remained pinned to
+            1971. Boundaries could be redrawn. The ceilings could not.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter" id="d-2008">
+        <header class="sdc-head">
+          <span class="sdc-year">2008</span>
+          <h2 class="sdc-title">
+            Boundaries redrawn, totals untouched
+            <span class="sdc-hi hi">सीमाएँ पुनर्रचित</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            The <b>Delimitation Commission of 2002</b>, chaired by
+            <em>Justice&nbsp;Kuldip&nbsp;Singh</em>, completed its work in
+            February 2008. Its orders took effect for the 2008 round of
+            Assembly elections and the <b>2009 general election</b> — the
+            first national poll fought on a map meaningfully different from
+            the one drawn in 1972.
+          </p>
+          <p>
+            The commission's mandate was narrow: redraw constituencies within
+            each state using 2001 population data, but hold the total number
+            of seats per state at 1971 levels. The Lok Sabha settled, and has
+            remained, at <b>543 elected seats</b>. Four North-Eastern states —
+            <b>Arunachal&nbsp;Pradesh, Assam, Manipur and Nagaland</b> — were
+            excluded from the 2002 round on security and census-reliability
+            grounds, and continued to use the 1972 constituency map.
+            Assam's delimitation was finally completed by the Election
+            Commission in <b>2023</b>. The other three remain outstanding.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter" id="d-2019">
+        <header class="sdc-head">
+          <span class="sdc-year">2019</span>
+          <h2 class="sdc-title">
+            Jammu &amp; Kashmir reorganised
+            <span class="sdc-hi hi">जम्मू-कश्मीर का पुनर्गठन</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            On 5 August 2019 the Government of India issued two Presidential
+            orders under <b>Article 370</b>, effectively abrogating the
+            article's substantive content. The <b>Jammu and Kashmir
+            Reorganisation Act, 2019</b> then split the former state into
+            two Union Territories: <b>Jammu&nbsp;&amp;&nbsp;Kashmir</b> (with
+            its own Legislative Assembly) and <b>Ladakh</b> (without).
+          </p>
+          <p>
+            The Lok Sabha arithmetic settled at <b>5 + 1 = 6</b> seats for
+            the reorganised region. A delimitation commission under
+            <em>Justice&nbsp;Ranjana&nbsp;Prakash&nbsp;Desai</em> re-drew the
+            J&amp;K UT's Assembly constituencies in 2022. The next general
+            election, in 2024, was fought on the new map.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule" />
+
+      <article class="sd-chapter sd-chapter-accent" id="d-2026">
+        <header class="sdc-head">
+          <span class="sdc-year">2026</span>
+          <h2 class="sdc-title">
+            The trigger
+            <span class="sdc-hi hi">घंटी बजने वाली है</span>
+          </h2>
+        </header>
+        <div class="sdc-body">
+          <p>
+            The <b>2001 extension expires</b> after 2026. By operation of
+            Article 82 and the 84th Amendment, the <em>first census taken
+            after that year</em> — whenever it is taken — will trigger a
+            readjustment of seats per state, by population. This is not a
+            policy choice; it is the Constitution's default setting, now
+            re-armed.
+          </p>
+          <p>
+            Best available estimates, from Milan Vaishnav &amp; Jamie Hintson
+            (Carnegie, 2019) and subsequent PRS work, put the northern
+            gain at <b>roughly 30+ seats</b> in relative share. The South
+            would not lose seats absolutely under most proposals, but would
+            lose ground relatively — shrinking as a fraction of a larger
+            House. That arithmetic, and the political fight it has
+            already started, is the subject of the next chapter.
+          </p>
+        </div>
+      </article>
+
+      <hr class="rule double" />
+
+      <!-- Historical state-level charts (moved from the old /part-two/) -->
+      <section class="chapter-opener">
+        <span class="smallcaps">§ state-level</span>
+        <h2 class="chapter-title">
+          <span class="chapter-numeral">ii.</span>
+          The states behind the dates
+          <span class="chapter-hi hi">राज्यों की कहानी</span>
+        </h2>
+        <p class="chapter-lede">
+          Two historical charts. The first shows which states changed
+          their own growth rate across the seventy years of canonical Census
+          data; the second shows which states led the country by population
+          at each census from 1901 on.
+        </p>
+      </section>
+
+      <hr class="rule" />
+
+      <Dumbbell />
+
+      <hr class="rule" />
+
+      <BumpChart />
+
+      <hr class="rule double" />
+
+      <!-- Transition to Page 3 -->
+      <aside class="next-step">
+        <span class="smallcaps">continue reading</span>
+        <a href="/scenarios/" class="next-link">
+          <span class="next-arrow">→</span>
+          <span class="next-title">Three Parliaments</span>
+          <span class="next-subtitle hi">तीन संसदें</span>
+        </a>
+        <p class="next-blurb">
+          Fifty years of deferral leave a single arithmetic question. If we
+          apply the Constitution as written, what does the House look like?
+        </p>
+      </aside>
+
+      <hr class="rule" />
+
+      <footer class="colophon">
+        <div class="colophon-col">
+          <span class="smallcaps">§ sources</span>
+          <p>
+            Amendment texts from the Gazette of India. Delimitation
+            Commission reports via the Election Commission's archive.
+            Seat-count estimates for post-2026 from
+            <a href="https://carnegieendowment.org/" target="_blank" rel="noopener noreferrer">Milan Vaishnav &amp; Jamie Hintson, Carnegie 2019</a>,
+            and PRS Legislative Research.
+          </p>
+        </div>
+        <div class="colophon-col">
+          <span class="smallcaps">† on the 104th Amendment</span>
+          <p>
+            Separate from the freeze story, the <b>104th Amendment</b>
+            (January 2020) abolished the two nominated Anglo-Indian Lok
+            Sabha seats under Article 331. Elected strength — the 543
+            — is unchanged; total House strength is now 543.
+          </p>
+        </div>
+      </footer>
+
+      <div class="running-foot">
+        <span class="eyebrow">Set in Fraunces &amp; Tiro Devanagari Hindi</span>
+        <span class="eyebrow dot">◇</span>
+        <span class="eyebrow">Composed on cream</span>
+      </div>
+    </div>
+
+    <script>
+      requestAnimationFrame(() => {
+        document.body.classList.add('ready');
+      });
+    </script>
+  </body>
+</html>

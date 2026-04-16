@@ -1,20 +1,65 @@
 ---
 // Fig. 5 — Scenario 2 winners & losers (diverging bar chart).
-// Sorted by scenario2Delta. Bars colored by region. Highlights:
-// UP +60, Bihar +33, MH +31, Rajasthan +23, WB +22 · losers: Goa/AR/Kerala
+// Sorted by scenario2Delta. Bars colored by region.
+// UP +60, Bihar +33, MH +31, Rajasthan +23, WB +22 · losers: Goa, Arunachal.
+// Rows with Δ = 0 are filtered out of the chart and noted separately below.
+import { LOKSABHA_DATA } from '../data/loksabha';
+
+const winners = LOKSABHA_DATA.filter((r) => r.scenario2Delta > 0).length;
+const losers = LOKSABHA_DATA.filter((r) => r.scenario2Delta < 0).length;
+const unchanged = LOKSABHA_DATA.filter((r) => r.scenario2Delta === 0);
+const unchangedNames = unchanged
+  .map((r) => r.name
+    .replace(' Islands', '')
+    .replace('NCT of ', '')
+    .replace(' & Nicobar', '')
+    .replace(' & Nagar Haveli', '')
+  )
+  .join(', ');
 ---
 
 <figure class="chart-figure winners-figure">
   <figcaption class="fig-head">
     <span class="fig-label">Fig. 5</span>
-    <span class="fig-title">Winners &amp; losers, were the freeze lifted</span>
-    <span class="fig-unit">— change in Lok Sabha seats under Scenario 2 —</span>
+    <span class="fig-title">
+      Were the freeze lifted tomorrow
+    </span>
+    <span class="fig-unit">— change in Lok Sabha seats under <b>Scenario 2</b> —</span>
   </figcaption>
+
+  <!-- Three-stat mini-table: the story in numerals -->
+  <div class="winners-stats" aria-label="Summary of Scenario 2 outcome">
+    <div class="ws-cell ws-gain">
+      <span class="ws-num">{winners}</span>
+      <span class="ws-lbl">states gain</span>
+    </div>
+    <div class="ws-sep" aria-hidden="true">◇</div>
+    <div class="ws-cell ws-lose">
+      <span class="ws-num">{losers}</span>
+      <span class="ws-lbl">states lose</span>
+    </div>
+    <div class="ws-sep" aria-hidden="true">◇</div>
+    <div class="ws-cell ws-nochange">
+      <span class="ws-num">{unchanged.length}</span>
+      <span class="ws-lbl">no change</span>
+    </div>
+  </div>
+
   <div id="winners-chart" class="chart winners-chart"></div>
+
+  <!-- Folded "no change" row -->
+  <p class="winners-nochange">
+    <span class="smallcaps">§ unchanged ·</span>
+    {unchanged.length} states &amp; UTs hold their current count: <em>{unchangedNames}</em>.
+    Most are already at the one-seat floor.
+  </p>
+
   <p class="fig-note">
-    Every state's seat count if allocation were pinned to 2011 population
-    (14,24,535 people per seat). Positive bars = under-represented today;
-    negative bars = over-represented. The Hindi belt's quietest political
-    fact is that it has been the <em>loser</em> of the 1976 freeze.
+    <span class="hi">विजयी व वंचित</span> ·
+    Every state's seat count if allocation were redrawn to <b>14,24,535</b>
+    people per seat — <em>Scenario&nbsp;2</em>, defined in the inset above.
+    No state loses a member unless it is already smaller than a single
+    average constituency; the north simply stops being owed the seats it
+    has been owed, on paper, for fifty years.
   </p>
 </figure>

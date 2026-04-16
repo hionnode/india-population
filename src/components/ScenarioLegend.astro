@@ -1,0 +1,144 @@
+---
+// "The Three Parliaments" — a gazette-inset that defines the three scenarios
+// (Today / Scenario 1 / Scenario 2) once. Every figure that follows references
+// back to this block. Placed before Fig. 4 so that the slope-chart's scenario
+// toggle does not arrive as a proper noun the reader has never been introduced to.
+import { LOKSABHA_META, totalSeats } from '../data/loksabha';
+
+const currentTotal = totalSeats('currentSeats');       // 543
+const s1Total = totalSeats('scenario1Seats');          // 824
+const s2Total = totalSeats('scenario2Seats');          // 854
+const perSeat = LOKSABHA_META.delimitationAvgConstituency; // 14,24,535
+
+// Geometry for the seat ladder — three horizontal bars scaled against the max.
+const maxSeats = Math.max(currentTotal, s1Total, s2Total);
+const ladderW = 720;
+const barH = 26;
+const barGap = 14;
+const leftPadX = 72;    // room for the "TODAY" label on the left
+const rightPadX = 120;  // room for the "+311 vs today" delta on the right
+
+const barW = (seats: number) => ((seats / maxSeats) * (ladderW - leftPadX - rightPadX));
+---
+
+<section class="scenario-legend" id="scenario-legend">
+  <header class="sl-head">
+    <span class="smallcaps">§ the three parliaments</span>
+    <h3 class="sl-title">
+      Three rules.
+      <em>Three houses.</em>
+      <span class="sl-hi hi">तीन&nbsp;संसदें</span>
+    </h3>
+    <p class="sl-lede">
+      Every figure that follows refers back to one of these.
+    </p>
+  </header>
+
+  <dl class="sl-grid">
+    <div class="sl-row sl-row-current">
+      <dt class="sl-name">
+        <span class="sl-name-en">Today</span>
+        <span class="sl-name-hi hi">आज</span>
+      </dt>
+      <dd class="sl-total" aria-label={`${currentTotal} seats`}>
+        <span class="sl-total-num">{currentTotal}</span>
+        <span class="sl-total-unit">seats</span>
+      </dd>
+      <dd class="sl-rule">
+        Frozen at 1971 populations. The 42nd&nbsp;Amendment (1976) paused the
+        allocation; the 84th (2001) extended it to 2026.
+        <code class="sl-formula">seats₁₉₇₁ · held fixed</code>
+      </dd>
+    </div>
+
+    <div class="sl-row sl-row-s1">
+      <dt class="sl-name">
+        <span class="sl-name-en">Scenario&nbsp;1</span>
+        <span class="sl-name-hi hi">परिदृश्य&nbsp;१</span>
+      </dt>
+      <dd class="sl-total" aria-label={`${s1Total} seats`}>
+        <span class="sl-total-num">{s1Total}</span>
+        <span class="sl-total-unit">seats</span>
+      </dd>
+      <dd class="sl-rule">
+        Today's allocation, scaled up by half. Every state grows
+        proportionally; no state loses a member.
+        <em>The gentle option.</em>
+        <code class="sl-formula">⌈seats<sub>s</sub> · 1.5⌉ &nbsp;per state</code>
+      </dd>
+    </div>
+
+    <div class="sl-row sl-row-s2">
+      <dt class="sl-name">
+        <span class="sl-name-en">Scenario&nbsp;2</span>
+        <span class="sl-name-hi hi">परिदृश्य&nbsp;२</span>
+      </dt>
+      <dd class="sl-total" aria-label={`${s2Total} seats`}>
+        <span class="sl-total-num">{s2Total}</span>
+        <span class="sl-total-unit">seats</span>
+      </dd>
+      <dd class="sl-rule">
+        One seat per <b>14,24,535</b> people, redrawn from scratch.
+        <em>The arithmetic option</em> — and the one the Constitution
+        originally promised.
+        <code class="sl-formula">⌈pop<sub>s</sub> ÷ {perSeat.toLocaleString('en-IN')}⌉ &nbsp;per state</code>
+      </dd>
+    </div>
+  </dl>
+
+  <div class="seat-ladder" aria-hidden="true">
+    <span class="sl-ladder-caption smallcaps">the house, at three widths</span>
+    <svg
+      viewBox={`0 0 ${ladderW} ${(barH + barGap) * 3 + 24}`}
+      preserveAspectRatio="xMidYMid meet"
+      class="seat-ladder-svg"
+    >
+      {[
+        { label: 'Today', total: currentTotal, delta: 0, className: 'ladder-current' },
+        { label: 'Sc.\u00A01', total: s1Total, delta: s1Total - currentTotal, className: 'ladder-s1' },
+        { label: 'Sc.\u00A02', total: s2Total, delta: s2Total - currentTotal, className: 'ladder-s2' },
+      ].map((r, i) => {
+        const y = 14 + i * (barH + barGap);
+        const w = barW(r.total);
+        return (
+          <g class={`ladder-row ${r.className}`}>
+            <text
+              class="ladder-row-label"
+              x={leftPadX - 10}
+              y={y + barH / 2}
+              text-anchor="end"
+              dy="0.34em"
+            >
+              {r.label}
+            </text>
+            <rect
+              class="ladder-bar"
+              x={leftPadX}
+              y={y}
+              width={w}
+              height={barH}
+            />
+            <text
+              class="ladder-bar-num"
+              x={leftPadX + 10}
+              y={y + barH / 2}
+              dy="0.34em"
+            >
+              {r.total}
+            </text>
+            {r.delta !== 0 && (
+              <text
+                class="ladder-delta"
+                x={leftPadX + w + 10}
+                y={y + barH / 2}
+                dy="0.34em"
+              >
+                {r.delta > 0 ? '+' : ''}{r.delta} vs today
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+</section>
