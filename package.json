@@ -11,6 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "astro build && wrangler pages deploy ./dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "cf:login": "wrangler login",
     "cf:whoami": "wrangler whoami"
   },
@@ -19,6 +21,7 @@
     "astro": "^6.1.7"
   },
   "devDependencies": {
+    "vitest": "^4.1.4",
     "wrangler": "^4.83.0"
   }
 }
