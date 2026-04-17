@@ -145,3 +145,95 @@ done
 
 Run this same script after any refactor to the studios and diff the output against the
 table above.
+
+---
+
+## Pre-pivot bundle baseline (2026-04-17, commit 1c85653)
+
+This section is the **static bundle-size baseline** captured before any Phase-1
+data-first pivot work lands. The 10% bundle-size CI gate in Phase 1 compares
+against these numbers. Regenerate with `npm run build` and re-measure `dist/`.
+
+### Totals
+
+| Category | Bytes | KB |
+|---------:|------:|---:|
+| JS       | 607,492 | 593.3 |
+| CSS      | 85,017 | 83.0 |
+| HTML     | 180,930 | 176.7 |
+| GeoJSON  | 37,982 | 37.1 |
+| **Total dist/** | **~940 KB** | — |
+
+### Per-route HTML
+
+| Route | Bytes | KB |
+|-------|------:|---:|
+| `/` (homepage) | 15,896 | 15.5 |
+| `/tools` | 8,754 | 8.5 |
+| `/tools/studio` | 26,790 | **26.2** |
+| `/editorial` | 10,178 | 9.9 |
+| `/history` | 44,287 | 43.2 |
+| `/scenarios` | 75,025 | 73.3 |
+
+### JS chunks (sorted by size)
+
+| Chunk | Bytes | KB |
+|-------|------:|---:|
+| `apexcharts.esm.*.js` | 522,678 | **510.4** |
+| `studio.*.js` | 15,844 | 15.5 |
+| `index.astro_astro_type_script_*.js` | 12,467 | 12.2 |
+| `editorial.astro_astro_type_script_*.js` | 9,544 | 9.3 |
+| `loksabha.*.js` | 8,184 | 8.0 |
+| `scenarios.astro_astro_type_script_*.js` | 6,787 | 6.6 |
+| `CompareStudio.astro_astro_type_script_*.js` | 6,318 | 6.2 |
+| `MapStudio.astro_astro_type_script_*.js` | 4,736 | 4.6 |
+| `state-census.*.js` | 4,079 | 4.0 |
+| `metrics.*.js` | 3,802 | 3.7 |
+
+### CSS chunks
+
+| Chunk | Bytes | KB |
+|-------|------:|---:|
+| `global.*.css` | 51,445 | 50.2 |
+| `WorkshopLayout.*.css` | 26,182 | 25.6 |
+| `studio.*.css` | 7,390 | 7.2 |
+
+### Static assets
+
+| Asset | Bytes | KB |
+|-------|------:|---:|
+| `india-states.geojson` | 37,982 | 37.1 |
+
+### CI-gate targets for Phase 1+
+
+The plan's rev 2b decision (#37) commits to a **10% CI gate on the `/tools/studio`
+initial bundle.** Baseline sum: HTML (26.2 KB) + studio.js (15.5 KB) + apexcharts.js
+(510.4 KB) + relevant CSS (~32 KB) ≈ **584 KB initial shell**.
+
+- **10% headroom:** +58 KB before CI fails.
+- **What's tracked:** synchronous JS + CSS + HTML for `/tools/studio` on first paint.
+- **What's NOT tracked:** lazy-loaded GeoJSON (district + LS 2024), optional dataset
+  bodies (`.values.ts` split from `.meta.ts`), Playhead animation assets (Phase 3).
+
+### Known bloat
+
+- **ApexCharts alone is 510 KB** (~87% of the studio-page initial JS). The plan's
+  Phase 3 animation work considers custom CSS-transform bar rendering as the Bar
+  race strategy (Decision #9). A side benefit of going custom: chance to tree-shake
+  unused ApexCharts features or swap to a lighter chart lib.
+- **`/scenarios` is 75 KB of HTML** — heaviest non-studio page. Unrelated to the
+  Workshop pivot; noted for the record.
+- **Chunk-size warning from vite**: "Some chunks are larger than 500 kB after
+  minification" — triggered by ApexCharts. Expected.
+
+### Reproducing this baseline
+
+```bash
+npm run build
+du -sh dist/
+find dist -name "*.html" -type f -exec ls -la {} \; | awk '{printf "%8d  %s\n", $5, $NF}'
+find dist/_astro -name "*.js" | xargs ls -la | awk '{printf "%8d  %s\n", $5, $NF}' | sort -rn | head -10
+find dist/_astro -name "*.css" | xargs ls -la | awk '{printf "%8d  %s\n", $5, $NF}'
+```
+
+Save the output diff against this section as evidence in Phase 1 PRs.
