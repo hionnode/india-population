@@ -16,6 +16,7 @@ import { stateCensusMeta } from './state-census.meta';
 import { loksabhaMeta } from './loksabha.meta';
 import { gdpMeta } from './gdp.meta';
 import { electricityMeta } from './electricity.meta';
+import { waterMeta } from './water.meta';
 
 const registry = new Map<DatasetId, DatasetMeta>();
 
@@ -49,6 +50,7 @@ registerDataset(stateCensusMeta);
 registerDataset(loksabhaMeta);
 registerDataset(gdpMeta);
 registerDataset(electricityMeta);
+registerDataset(waterMeta);
 
 // ——————————————————————————————————————————————
 // Validator (Decision #19 error format)
