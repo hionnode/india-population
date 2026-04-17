@@ -45,14 +45,15 @@ describe('Workshop compatibility matrix — smoke', () => {
     }
   });
 
-  it('barSeries(region + seats) leaks NaN values — motivates Phase-1 Commit 2 audit', () => {
-    // Documents an asymmetry the Phase-1 NaN-throw-audit must fix:
-    // - barSeries(state + seats)    → .filter(Number.isFinite) drops NaN silently (empty array).
-    // - barSeries(loksabha + growthPct) → same filter.
-    // - barSeries(region + seats)   → NO filter; returns bar points WITH NaN values that reach the canvas.
+  it('barSeries(region + incompatible metric) drops NaN bars — all three dataset branches filter consistently', () => {
+    // Post-Commit-2: all three barSeries branches (region/state/loksabha)
+    // apply .filter(Number.isFinite). Before Commit 2 the region branch
+    // skipped the filter and leaked NaN bars to the canvas.
     //
-    // After Commit 2 lands (try/catch + error worksheet), this test should flip to
-    // expect either a thrown error OR a shaped empty-with-warning result.
+    // Phase 2 will replace NaN returns from *MetricValue with throws
+    // pre-checked by isMetricAvailable(dataset, metric). When that lands,
+    // this test should flip to expect a thrown error OR a shaped
+    // empty-with-warning result.
     const regionState: StudioState = {
       ...base,
       dataset: 'region',
@@ -60,9 +61,6 @@ describe('Workshop compatibility matrix — smoke', () => {
       entities: ['East', 'West', 'North', 'South'],
     };
     const out = barSeries(regionState);
-    expect(out.length).toBe(4);
-    for (const p of out) {
-      expect(Number.isNaN(p.value)).toBe(true);
-    }
+    expect(out.length).toBe(0);
   });
 });

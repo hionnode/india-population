@@ -46,20 +46,33 @@ export interface LineSeries {
 // ——————————————————————————————————————————————
 // BAR — one value per selected entity at state.to
 // ——————————————————————————————————————————————
+//
+// NaN-throw audit (Phase 1 Commit 2 of the rev-2b plan):
+// The three private *MetricValue dispatchers currently return NaN for invalid
+// (dataset × metric) combos. All three barSeries branches filter via
+// Number.isFinite to prevent NaN bars from reaching the canvas. Phase 2 will
+// replace NaN returns with throws + a compatibility-matrix pre-check; when
+// that lands, wrap these dispatchers in try/catch and emit an error worksheet
+// instead of silently filtering.
+//   see: /Users/chinmay/.claude/plans/i-have-answered-the-stateful-hennessy.md
+//        Decisions #4 (vitest), #5 (caller audit), Phase 2 compatibility.ts
 
 export function barSeries(state: StudioState): BarPoint[] {
   const year = state.to;
   const metric = state.metric;
 
   if (state.dataset === 'region') {
-    return REGION_ORDER.filter((r) => state.entities.includes(r)).map((r) => ({
-      code: r,
-      label: REGION_LABELS[r].en,
-      labelHi: REGION_LABELS[r].hi,
-      value: regionMetricValue(r, state),
-      color: REGION_COLORS[r],
-      unit: unitFor(metric),
-    }));
+    return REGION_ORDER.filter((r) => state.entities.includes(r))
+      .map((r) => ({
+        code: r,
+        label: REGION_LABELS[r].en,
+        labelHi: REGION_LABELS[r].hi,
+        value: regionMetricValue(r, state),
+        color: REGION_COLORS[r],
+        unit: unitFor(metric),
+      }))
+      .filter((p) => Number.isFinite(p.value))
+      .sort((a, b) => b.value - a.value);
   }
 
   if (state.dataset === 'state') {
@@ -96,6 +109,12 @@ export function barSeries(state: StudioState): BarPoint[] {
 // LINE — one series per entity across [state.from, state.to]
 // ——————————————————————————————————————————————
 
+// Line series are NaN-tolerant by renderer contract: ApexCharts draws gaps for
+// null/NaN values and the per-point helpers (region/stateLinePoints) already
+// only emit points for years that exist in the underlying dataset. The
+// loksabha branch below passes through loksabhaMetricValue's NaN for
+// growthPct/indexed1901 (no time series); ApexCharts renders that as no point.
+// Phase 2 NaN-throw audit wraps the private dispatcher calls in try/catch.
 export function lineSeries(state: StudioState): LineSeries[] {
   if (state.dataset === 'region') {
     return REGION_ORDER.filter((r) => state.entities.includes(r)).map((r) => ({
@@ -138,10 +157,15 @@ export function lineSeries(state: StudioState): LineSeries[] {
 // MAP — one value per loksabha state code at state.to
 // ——————————————————————————————————————————————
 
+// Map values skip entries with non-finite values so the choropleth doesn't
+// inherit NaN-tinted fills. Phase 2 NaN-throw audit will pre-check via
+// isMetricAvailable(dataset, metric) before calling into the dispatcher;
+// the filter here becomes belt-and-suspenders once that lands.
 export function mapValues(state: StudioState): Map<string, { value: number; color: string; name: string; nameHi: string; region: Region }> {
   const out = new Map<string, { value: number; color: string; name: string; nameHi: string; region: Region }>();
   for (const r of LOKSABHA_DATA) {
     const v = loksabhaMetricValue(r, state.metric);
+    if (!Number.isFinite(v)) continue;
     out.set(r.code, {
       value: v,
       color: REGION_COLORS[r.region],
