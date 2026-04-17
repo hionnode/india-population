@@ -14,6 +14,7 @@ import type { DatasetId, DatasetMeta } from '../scripts/registry-types';
 import { censusMeta } from './census.meta';
 import { stateCensusMeta } from './state-census.meta';
 import { loksabhaMeta } from './loksabha.meta';
+import { gdpMeta } from './gdp.meta';
 
 const registry = new Map<DatasetId, DatasetMeta>();
 
@@ -45,6 +46,7 @@ export function listDatasets(): readonly DatasetMeta[] {
 registerDataset(censusMeta);
 registerDataset(stateCensusMeta);
 registerDataset(loksabhaMeta);
+registerDataset(gdpMeta);
 
 // ——————————————————————————————————————————————
 // Validator (Decision #19 error format)
