@@ -3,6 +3,7 @@
 // Purpose: shows that South's growth rate peaked in the 1961-71 decade and has
 // declined every census since, while North's peaked 20 years later — a textbook
 // demographic transition offset between the two halves of the country.
+import OpenInWorkshop from './OpenInWorkshop.astro';
 ---
 
 <figure class="chart-figure growth-figure">
@@ -17,4 +18,12 @@
     Growth per decade, calculated against the previous census. South's S-curve
     bends downward a full <b>twenty years</b> before North's does.
   </p>
+  <OpenInWorkshop
+    preset="line"
+    dataset="region"
+    metric="growthPct"
+    entities={['East', 'West', 'North', 'South']}
+    from={1901}
+    to={2011}
+  />
 </figure>

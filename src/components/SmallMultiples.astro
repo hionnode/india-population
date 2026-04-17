@@ -2,6 +2,7 @@
 // Fig. 7 — State trajectory small multiples, 1901-2011, indexed to 1901=100.
 import { STATE_CENSUS, STATE_CENSUS_YEARS, indexedAt1901 } from '../data/state-census';
 import { REGION_COLORS } from '../data/census';
+import OpenInWorkshop from './OpenInWorkshop.astro';
 
 // Group states by region for a sensible reading order.
 const ORDER_BY_REGION: string[] = [
@@ -86,4 +87,12 @@ function areaFor(row: (typeof STATE_CENSUS)[number]) {
     and Kerala's curves bend earliest — the South was already decelerating
     when the North was still steepening.
   </p>
+  <OpenInWorkshop
+    preset="line"
+    dataset="state"
+    metric="indexed1901"
+    entities={ORDER_BY_REGION}
+    from={1901}
+    to={2011}
+  />
 </figure>

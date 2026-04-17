@@ -2,8 +2,11 @@
 // Fig. 3 — Population each Lok Sabha seat represents, by state, sorted.
 // Purpose: the representation-inequality punchline. A vertical reference line
 // at 14,24,535 marks the "if every seat held the same number of people" target.
-import { sortedByPopPerSeat, LOKSABHA_META } from '../data/loksabha';
+import { sortedByPopPerSeat, LOKSABHA_META, LOKSABHA_DATA } from '../data/loksabha';
 import { REGION_COLORS } from '../data/census';
+import OpenInWorkshop from './OpenInWorkshop.astro';
+
+const ALL_LS = LOKSABHA_DATA.map((r) => r.code);
 
 const sorted = sortedByPopPerSeat();
 const top = sorted[0];
@@ -46,4 +49,12 @@ const idealLakh = (LOKSABHA_META.delimitationAvgConstituency / 100_000).toFixed(
     India's 2011 population divided by a hypothetical 850 seats, i.e. the
     one-seat-one-size ideal.
   </p>
+  <OpenInWorkshop
+    preset="bar"
+    dataset="loksabha"
+    metric="popPerSeat"
+    entities={ALL_LS}
+    from={2011}
+    to={2011}
+  />
 </figure>

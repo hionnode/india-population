@@ -822,6 +822,52 @@ input[type='range']::-moz-range-thumb {
 }
 
 /* ────────────────────────────────────────
+   OpenInWorkshop pill — essay → Workshop on-ramp
+   ──────────────────────────────────────── */
+
+.open-in-workshop {
+  margin: 4px 12px 10px;
+  max-width: 62ch;
+}
+.oiw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 0 var(--ink);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.oiw-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 var(--accent);
+  background: var(--paper-2, #f5efe3);
+}
+.oiw-pill:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 var(--ink);
+}
+.oiw-dingbat {
+  color: var(--accent);
+  font-weight: 700;
+}
+.oiw-arrow {
+  color: var(--accent);
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: 0;
+  margin-left: 2px;
+}
+@media print { .open-in-workshop { display: none; } }
+
+/* ────────────────────────────────────────
    FIGURE: pop per seat (Fig. 3)
    ──────────────────────────────────────── */
 

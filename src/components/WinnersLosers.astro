@@ -4,6 +4,9 @@
 // UP +60, Bihar +33, MH +31, Rajasthan +23, WB +22 · losers: Goa, Arunachal.
 // Rows with Δ = 0 are filtered out of the chart and noted separately below.
 import { LOKSABHA_DATA } from '../data/loksabha';
+import OpenInWorkshop from './OpenInWorkshop.astro';
+
+const ALL_LS = LOKSABHA_DATA.map((r) => r.code);
 
 const winners = LOKSABHA_DATA.filter((r) => r.scenario2Delta > 0).length;
 const losers = LOKSABHA_DATA.filter((r) => r.scenario2Delta < 0).length;
@@ -62,4 +65,12 @@ const unchangedNames = unchanged
     average constituency; the north simply stops being owed the seats it
     has been owed, on paper, for fifty years.
   </p>
+  <OpenInWorkshop
+    preset="bar"
+    dataset="loksabha"
+    metric="scenario2Delta"
+    entities={ALL_LS}
+    from={2011}
+    to={2011}
+  />
 </figure>

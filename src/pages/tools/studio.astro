@@ -33,7 +33,7 @@ const panelTitles: Record<Preset, { title: string; subtitle: string; fig: string
 
     <ConfigRail initial={initial} />
 
-    <main class="ws-canvas">
+    <main class="ws-canvas" id="ws-main">
 
       <!-- Four mutually-exclusive chart panels. Client swaps display based on state.preset. -->
 
@@ -72,14 +72,79 @@ const panelTitles: Record<Preset, { title: string; subtitle: string; fig: string
 </style>
 
 <script>
-  import { initStudio, requestExportPng, printReport } from '../../scripts/studio';
+  import {
+    initStudio,
+    requestExportPng,
+    printReport,
+    copyText,
+    showToast,
+    citationFor,
+    exportDataCsv,
+    getStore,
+  } from '../../scripts/studio';
 
   initStudio();
 
   document.querySelector('[data-action="download-png"]')?.addEventListener('click', () => {
     requestExportPng();
   });
+  document.querySelector('[data-action="download-csv"]')?.addEventListener('click', async () => {
+    try {
+      await exportDataCsv();
+      showToast('CSV downloaded');
+    } catch (e) {
+      console.error('[studio] csv export failed', e);
+      showToast('CSV export failed', 'warn');
+    }
+  });
   document.querySelector('[data-action="print"]')?.addEventListener('click', () => {
     printReport();
+  });
+  document.querySelector('[data-action="copy-link"]')?.addEventListener('click', async () => {
+    const ok = await copyText(window.location.href);
+    showToast(ok ? 'Link copied to clipboard' : 'Copy failed — select the address bar instead', ok ? 'info' : 'warn');
+  });
+  document.querySelector('[data-action="cite"]')?.addEventListener('click', async () => {
+    const snippet = citationFor(getStore().snapshot, window.location.href, new Date());
+    const ok = await copyText(snippet);
+    showToast(ok ? 'Citation copied to clipboard' : 'Copy failed — try again or pick the text manually', ok ? 'info' : 'warn');
+  });
+
+  // Sources drawer toggle
+  const srcToggle = document.querySelector<HTMLButtonElement>('[data-action="toggle-sources"]');
+  const srcDrawer = document.getElementById('ws-sources-drawer');
+  const srcClose = document.querySelector<HTMLButtonElement>('[data-action="close-sources"]');
+  const openSources = () => {
+    if (!srcDrawer || !srcToggle) return;
+    srcDrawer.hidden = false;
+    srcDrawer.setAttribute('aria-hidden', 'false');
+    srcDrawer.classList.add('open');
+    srcToggle.setAttribute('aria-expanded', 'true');
+    srcClose?.focus();
+  };
+  const closeSources = () => {
+    if (!srcDrawer || !srcToggle) return;
+    srcDrawer.classList.remove('open');
+    srcDrawer.setAttribute('aria-hidden', 'true');
+    srcToggle.setAttribute('aria-expanded', 'false');
+    // keep hidden=false during the fade-out, then hide to remove from a11y tree
+    window.setTimeout(() => {
+      if (!srcDrawer.classList.contains('open')) srcDrawer.hidden = true;
+    }, 220);
+    srcToggle.focus();
+  };
+  srcToggle?.addEventListener('click', () => {
+    if (srcDrawer?.classList.contains('open')) closeSources();
+    else openSources();
+  });
+  srcClose?.addEventListener('click', closeSources);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && srcDrawer?.classList.contains('open')) closeSources();
+  });
+  document.addEventListener('click', (e) => {
+    if (!srcDrawer?.classList.contains('open')) return;
+    const t = e.target as Node;
+    if (srcDrawer.contains(t) || srcToggle?.contains(t)) return;
+    closeSources();
   });
 </script>
