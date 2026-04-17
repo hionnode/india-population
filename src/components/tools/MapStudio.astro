@@ -25,7 +25,16 @@ const { initialPreset } = Astro.props;
 
     <div class="chart-body">
       <div id="map-canvas" class="ws-map-canvas">
-        <svg id="map-svg" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet" aria-label="India states choropleth">
+        <!--
+          fill="#d7cdb5" defends against ISSUE-009 (see plan Phase 1.5):
+          GEO_NAME_TO_CODE has 'Andhra Pradesh' and 'Telangana' both → 'AP',
+          so MapStudio's pathsByCode Map<code,SVGPath> collides on 'AP' and
+          one path ends up without a fill attribute. SVG default for unset
+          fill is black. Setting fill on the parent svg means every orphaned
+          path inherits the gray default instead of black. Remove once
+          Commit 12 (Telangana split to 'TS') makes the collision impossible.
+        -->
+        <svg id="map-svg" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet" fill="#d7cdb5" aria-label="India states choropleth">
           <!-- paths injected by MapStudio.ts -->
         </svg>
         <div id="map-legend" class="map-legend" aria-label="Legend"></div>
