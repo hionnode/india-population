@@ -1,4 +1,5 @@
 ---
+import { CENSUS_YEARS } from '../../scripts/studio';
 import type { StudioState } from '../../scripts/studio';
 
 export interface Props { initial: StudioState }
@@ -19,21 +20,30 @@ const METRIC_OPTIONS = [
   { value: 'scenario2Delta', label: 'Scenario 2 · Δ seats', hint: '±'    },
 ] as const;
 
-const fromIdx = Math.max(0, [1901, 1911, 1921, 1931, 1941, 1951, 1961, 1971, 1981, 1991, 2001, 2011].indexOf(initial.from));
-const toIdx = Math.max(0, [1901, 1911, 1921, 1931, 1941, 1951, 1961, 1971, 1981, 1991, 2001, 2011].indexOf(initial.to));
-const span = 11;
-const fromPct = (fromIdx / span) * 100;
-const toPct = (toIdx / span) * 100;
+const YEARS = [...CENSUS_YEARS]; // 1881 … 2011, 14 points
+const SPAN = YEARS.length - 1;   // 13 intervals
+const MAJOR = new Set([1881, 1931, 1961, 1991, 2011]);
+const pct = (i: number) => (i / SPAN) * 100;
+
+const fromIdx = Math.max(0, YEARS.indexOf(initial.from));
+const toIdx = Math.max(0, YEARS.indexOf(initial.to));
+const fromPct = pct(fromIdx);
+const toPct = pct(toIdx);
+const Y_MIN = YEARS[0];
+const Y_MAX = YEARS[YEARS.length - 1];
 ---
 
 <aside class="studio-rail" aria-label="Studio configuration">
 
   <!-- § 01 · DATASET -->
-  <section class="rail-section">
+  <section class="rail-section" data-rail-section="dataset">
     <header class="rail-label">
       <b>§ 01 · Dataset</b>
-      <span class="index">pick one</span>
+      <span class="index" data-lock-index="dataset">pick one</span>
     </header>
+    <p class="rail-lock-note" data-lock-note="dataset" hidden>
+      Locked · Compare reports are authored around the <em>state</em> dataset.
+    </p>
     <div class="plates" role="radiogroup" aria-label="Dataset">
       {DATASET_OPTIONS.map((o, i) => (
         <button
@@ -53,11 +63,14 @@ const toPct = (toIdx / span) * 100;
   </section>
 
   <!-- § 02 · METRIC -->
-  <section class="rail-section">
+  <section class="rail-section" data-rail-section="metric">
     <header class="rail-label">
       <b>§ 02 · Metric</b>
-      <span class="index">y-axis</span>
+      <span class="index" data-lock-index="metric">y-axis</span>
     </header>
+    <p class="rail-lock-note" data-lock-note="metric" hidden>
+      Locked · Compare plots <em>population</em> in millions; other metrics are available in Bar, Line, and Map.
+    </p>
     <div class="plates" role="radiogroup" aria-label="Metric">
       {METRIC_OPTIONS.map((o, i) => (
         <button
@@ -80,7 +93,7 @@ const toPct = (toIdx / span) * 100;
   <section class="rail-section">
     <header class="rail-label">
       <b>§ 03 · Entities</b>
-      <span class="index"><span data-chip-count>{initial.entities.length}</span> selected</span>
+      <span class="index" aria-live="polite"><span data-chip-count>{initial.entities.length}</span> selected</span>
     </header>
     <div class="chip-field">
       <div class="chips" data-chip-host>
@@ -102,40 +115,62 @@ const toPct = (toIdx / span) * 100;
     </div>
   </section>
 
-  <!-- § 04 · TIME RANGE (visual only in the shell; interaction wired in later tasks) -->
+  <!-- § 04 · TIME RANGE -->
   <section class="rail-section">
     <header class="rail-label">
       <b>§ 04 · Time range</b>
-      <span class="index">{initial.from} – {initial.to}</span>
+      <span class="index" data-ts-header>{initial.from} – {initial.to}</span>
     </header>
     <div class="ts-slider" role="group" aria-label="Time range slider">
-      <div class="ts-slider-rail">
-        <div class="ts-slider-fill" style={`left:${fromPct}%; right:${100 - toPct}%`}></div>
+      <div class="ts-slider-rail" data-ts-rail>
+        <div class="ts-slider-fill" data-ts-fill style={`left:${fromPct}%; right:${100 - toPct}%`}></div>
 
-        <span class="ts-slider-tick major" style="left: 0%"></span>
-        <span class="ts-slider-tick-label major" style="left: 0%">1901</span>
-        <span class="ts-slider-tick"       style="left: 9.09%"></span>
-        <span class="ts-slider-tick"       style="left: 18.18%"></span>
-        <span class="ts-slider-tick major" style="left: 27.27%"></span>
-        <span class="ts-slider-tick-label" style="left: 27.27%">31</span>
-        <span class="ts-slider-tick"       style="left: 36.36%"></span>
-        <span class="ts-slider-tick"       style="left: 45.45%"></span>
-        <span class="ts-slider-tick major" style="left: 54.54%"></span>
-        <span class="ts-slider-tick-label" style="left: 54.54%">61</span>
-        <span class="ts-slider-tick"       style="left: 63.63%"></span>
-        <span class="ts-slider-tick"       style="left: 72.72%"></span>
-        <span class="ts-slider-tick major" style="left: 81.81%"></span>
-        <span class="ts-slider-tick-label" style="left: 81.81%">91</span>
-        <span class="ts-slider-tick"       style="left: 90.90%"></span>
-        <span class="ts-slider-tick major" style="left: 100%"></span>
-        <span class="ts-slider-tick-label major" style="left: 100%">2011</span>
+        {YEARS.map((y, i) => {
+          const p = pct(i);
+          const isMajor = MAJOR.has(y);
+          return (
+            <>
+              <span class={`ts-slider-tick${isMajor ? ' major' : ''}`} style={`left: ${p}%`}></span>
+              {isMajor && (
+                <span
+                  class={`ts-slider-tick-label${y === 1881 || y === 2011 ? ' major' : ''}`}
+                  style={`left: ${p}%`}
+                >
+                  {y === 1881 || y === 2011 ? String(y) : String(y).slice(2)}
+                </span>
+              )}
+            </>
+          );
+        })}
 
-        <span class="ts-slider-thumb left"  data-year={initial.from} style={`left:${fromPct}%`}></span>
-        <span class="ts-slider-thumb right" data-year={initial.to}   style={`left:${toPct}%`}></span>
+        <span
+          class="ts-slider-thumb left"
+          data-ts-thumb="from"
+          data-year={initial.from}
+          tabindex="0"
+          role="slider"
+          aria-label="From year"
+          aria-valuemin={Y_MIN}
+          aria-valuemax={Y_MAX}
+          aria-valuenow={initial.from}
+          style={`left:${fromPct}%`}
+        ></span>
+        <span
+          class="ts-slider-thumb right"
+          data-ts-thumb="to"
+          data-year={initial.to}
+          tabindex="0"
+          role="slider"
+          aria-label="To year"
+          aria-valuemin={Y_MIN}
+          aria-valuemax={Y_MAX}
+          aria-valuenow={initial.to}
+          style={`left:${toPct}%`}
+        ></span>
       </div>
       <div class="ts-slider-readout">
-        <span><b>From</b> {initial.from}</span>
-        <span><b>To</b> {initial.to}</span>
+        <span><b>From</b> <span data-ts-readout-from>{initial.from}</span></span>
+        <span><b>To</b> <span data-ts-readout-to>{initial.to}</span></span>
       </div>
     </div>
   </section>

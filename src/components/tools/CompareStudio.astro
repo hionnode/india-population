@@ -15,9 +15,28 @@ const { initialPreset } = Astro.props;
     <span class="worksheet-stamp">Fig. C-01</span>
 
     <header class="worksheet-head">
-      <div>
-        <div class="title">State comparison report</div>
-        <div class="subtitle">राज्य तुलना</div>
+      <div class="lh-stack">
+        <input
+          class="title lh-input lh-title"
+          data-lh-field="title"
+          placeholder="State comparison report"
+          aria-label="Report title"
+          maxlength="80"
+        />
+        <input
+          class="subtitle lh-input lh-subtitle"
+          data-lh-field="subtitle"
+          placeholder="राज्य तुलना"
+          aria-label="Report subtitle"
+          maxlength="80"
+        />
+        <input
+          class="lh-input lh-byline"
+          data-lh-field="byline"
+          placeholder="drafted by —"
+          aria-label="Byline"
+          maxlength="80"
+        />
       </div>
       <div class="right">
         <div><b>States</b> <span data-cmp-n>—</span> / 6</div>
@@ -26,6 +45,14 @@ const { initialPreset } = Astro.props;
     </header>
 
     <div class="cmp-chips" data-cmp-chips></div>
+    <textarea
+      class="lh-input lh-note-input"
+      data-lh-field="note"
+      placeholder="Add a free-form note · annotation · abstract…"
+      aria-label="Report note"
+      rows="2"
+      maxlength="480"
+    ></textarea>
 
     <p class="cmp-note" data-cmp-summary>
       Select 2 – 6 states from the rail to build the report. Each section below is page-break aware;
@@ -192,6 +219,64 @@ const { initialPreset } = Astro.props;
     line-height: 1.5;
   }
   body.workshop .cmp-note em { color: var(--accent); }
+
+  /* Letterhead inputs — flat, chrome-free, discover the affordance on hover/focus. */
+  body.workshop .lh-stack { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  body.workshop .lh-input {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px dashed transparent;
+    padding: 2px 2px 3px;
+    margin: 0;
+    width: 100%;
+    outline: none;
+    transition: border-color 140ms ease, background 140ms ease;
+  }
+  body.workshop .lh-input::placeholder { color: var(--muted); opacity: 0.62; font-style: italic; }
+  body.workshop .lh-input:hover { border-bottom-color: var(--measure-soft); }
+  body.workshop .lh-input:focus { border-bottom-color: var(--accent); background: var(--paper-2); }
+  body.workshop .lh-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+  }
+  body.workshop .lh-subtitle {
+    font-family: var(--deva);
+    font-size: 14px;
+    color: var(--muted);
+  }
+  body.workshop .lh-byline {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--measure);
+    margin-top: 2px;
+  }
+  body.workshop .lh-note-input {
+    display: block;
+    resize: vertical;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft, var(--ink));
+    min-height: 40px;
+    margin-top: 8px;
+  }
+
+  @media print {
+    body.workshop .lh-input { border-bottom: 0 !important; background: transparent !important; }
+    body.workshop .lh-input::placeholder { color: transparent !important; }
+    body.workshop .lh-input:focus { background: transparent !important; }
+  }
   body.workshop .cmp-warning {
     font-family: var(--mono);
     font-size: 11px;
@@ -231,6 +316,25 @@ const { initialPreset } = Astro.props;
   const barTarget  = document.getElementById('cmp-bar-canvas');
   const mapSvg     = document.getElementById('cmp-map-svg') as unknown as SVGSVGElement | null;
   const chipsEl    = document.querySelector<HTMLElement>('[data-cmp-chips]');
+
+  // Letterhead — 4 editable inputs persisted in localStorage.
+  const LH_KEY = 'workshop.letterhead.v1';
+  type LhStore = Partial<Record<'title' | 'subtitle' | 'byline' | 'note', string>>;
+  const loadLh = (): LhStore => {
+    try { return JSON.parse(localStorage.getItem(LH_KEY) ?? '{}'); } catch { return {}; }
+  };
+  const saveLh = (v: LhStore) => {
+    try { localStorage.setItem(LH_KEY, JSON.stringify(v)); } catch { /* ignore quota */ }
+  };
+  const lh: LhStore = loadLh();
+  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-lh-field]').forEach((el) => {
+    const field = el.dataset.lhField as keyof LhStore;
+    if (lh[field]) el.value = lh[field]!;
+    el.addEventListener('input', () => {
+      lh[field] = el.value;
+      saveLh(lh);
+    });
+  });
 
   let lineChart: ApexCharts | null = null;
   let barChart:  ApexCharts | null = null;

@@ -8,6 +8,9 @@ export interface Props {
 }
 
 const { title, description = 'A drafting table for the Indian census.' } = Astro.props;
+
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : Astro.url.href;
+const siteName = 'India Population · The Workshop';
 ---
 
 <html lang="en">
@@ -23,9 +26,19 @@ const { title, description = 'A drafting table for the Indian census.' } = Astro
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <title>{title}</title>
   </head>
   <body class="workshop">
+    <a class="skip-link" href="#ws-main">Skip to chart</a>
     <div class="grain" aria-hidden="true"></div>
     <slot />
   </body>

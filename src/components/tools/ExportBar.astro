@@ -13,6 +13,52 @@ const label: Record<Preset, string> = {
 };
 ---
 
+<aside
+  id="ws-sources-drawer"
+  class="ws-drawer"
+  role="dialog"
+  aria-modal="false"
+  aria-labelledby="ws-sources-title"
+  aria-hidden="true"
+  hidden
+>
+  <header class="ws-drawer-head">
+    <h2 id="ws-sources-title">§ Sources &amp; caveats</h2>
+    <button class="ws-drawer-close" type="button" data-action="close-sources" aria-label="Close sources panel">×</button>
+  </header>
+  <div class="ws-drawer-body">
+    <p class="ws-drawer-lede">
+      The Workshop draws on the same three datasets as the essay. What follows
+      are the caveats worth carrying with any chart you print.
+    </p>
+    <dl class="ws-source-list">
+      <dt>1881 &amp; 1891 are reconstructed</dt>
+      <dd>
+        Decadal regional shares from 1901 scaled back against British-India-Empire totals
+        and adjusted to modern boundaries. Directional, not precise.
+      </dd>
+      <dt>Telangana is merged into Andhra Pradesh</dt>
+      <dd>For time-series consistency across the 1901–2011 span. The post-2014 split is not represented.</dd>
+      <dt>Dadra-Nagar-Haveli &amp; Daman-Diu shown as one unit</dt>
+      <dd>Merged by the Union in January 2020; the GeoJSON reflects the combined UT.</dd>
+      <dt>J&amp;K reflects India's official boundary claim</dt>
+      <dd>
+        Includes PoK within J&amp;K and Aksai Chin within Ladakh. The 2019 reorganization
+        into two UTs is represented.
+      </dd>
+      <dt>Latest census: 2011</dt>
+      <dd>
+        The 2021 census was postponed. The next enumeration is currently signalled for
+        around 2027. Everything on this drafting table is at least <b>fifteen years old</b>.
+      </dd>
+    </dl>
+    <footer class="ws-drawer-foot">
+      <span><b>Primary source</b> · Census of India, Table A-02 (NADA 43333)</span>
+      <span><b>Boundaries</b> · udit-001/india-maps-data (dissolved, simplified)</span>
+    </footer>
+  </div>
+</aside>
+
 <div class="ws-toolbar">
   <nav class="breadcrumb" aria-label="breadcrumb">
     <a href="/tools">The Workshop</a>
@@ -20,10 +66,29 @@ const label: Record<Preset, string> = {
     <span class="current" data-current-preset>{label[initialPreset]}</span>
   </nav>
   <div class="actions">
-    <button class="btn" type="button" data-action="download-png">
-      <span class="mark">⬇</span> Download PNG
+    <button class="btn" type="button" data-action="copy-link" aria-label="Copy link to this view">
+      <span class="mark">∞</span> Copy Link
     </button>
-    <button class="btn primary" type="button" data-action="print">
+    <button class="btn" type="button" data-action="cite" aria-label="Copy a citation for this view">
+      <span class="mark">❝</span> Cite
+    </button>
+    <button
+      class="btn"
+      type="button"
+      data-action="toggle-sources"
+      aria-controls="ws-sources-drawer"
+      aria-expanded="false"
+      aria-label="Show sources and methodology notes"
+    >
+      <span class="mark">§</span> Sources
+    </button>
+    <button class="btn" type="button" data-action="download-csv" aria-label="Download underlying data as CSV">
+      <span class="mark">⤓</span> CSV
+    </button>
+    <button class="btn" type="button" data-action="download-png" aria-label="Download chart as PNG">
+      <span class="mark">⬇</span> PNG
+    </button>
+    <button class="btn primary" type="button" data-action="print" aria-label="Print or save as PDF">
       <span class="mark">⎙</span> Print Report
     </button>
   </div>

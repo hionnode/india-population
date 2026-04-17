@@ -1,0 +1,35 @@
+---
+import type { Preset, Dataset, Metric } from '../scripts/studio';
+
+export interface Props {
+  preset: Preset;
+  dataset: Dataset;
+  metric: Metric;
+  entities: string[];
+  from: number;
+  to: number;
+  /** Optional lead-in label, e.g. "play with this chart". Defaults to "explore in The Workshop". */
+  label?: string;
+}
+
+const { preset, dataset, metric, entities, from, to, label } = Astro.props;
+
+const params = new URLSearchParams({
+  preset,
+  dataset,
+  metric,
+  entities: entities.join(','),
+  from: String(from),
+  to: String(to),
+}).toString();
+const href = `/tools/studio?${params}`;
+const text = label ?? 'explore in The Workshop';
+---
+
+<p class="open-in-workshop">
+  <a class="oiw-pill" href={href}>
+    <span class="oiw-dingbat" aria-hidden="true">§</span>
+    <span class="oiw-text">{text}</span>
+    <span class="oiw-arrow" aria-hidden="true">→</span>
+  </a>
+</p>
