@@ -5,6 +5,7 @@ import PageNav from '../components/PageNav.astro';
 import GrowthLines from '../components/GrowthLines.astro';
 import PopPerSeat from '../components/PopPerSeat.astro';
 import FreezePenalty from '../components/FreezePenalty.astro';
+import { sortedByPopPerSeat, LOKSABHA_META } from '../data/loksabha';
 
 const firstYear = CENSUS[0].year;
 const lastYear = CENSUS[CENSUS.length - 1].year;
@@ -13,6 +14,30 @@ const ordinals = [
   'the first','the second','the third','the fourth','the fifth','the sixth','the seventh',
   'the eighth','the ninth','the tenth','the eleventh','the twelfth','the thirteenth','the fourteenth',
 ];
+
+// Vote-value (Fig. 5): one row per state/UT, sorted descending by popPerSeat
+// (= ascending by vote value). ₹1 = the average Indian vote (currentAvgConstituency).
+const VV_AVG = LOKSABHA_META.currentAvgConstituency;
+const VV_ROWS = sortedByPopPerSeat().map((row) => ({
+  ...row,
+  voteValue: VV_AVG / row.popPerSeat,
+}));
+const VV_CAP = 2.0; // bar caps at ₹2.00; UTs with higher values show an arrow tip
+const vvFirst = VV_ROWS[0];
+const vvLast = VV_ROWS[VV_ROWS.length - 1];
+const vvRatio = vvLast.voteValue / vvFirst.voteValue;
+
+const formatRupees = (v: number) => v.toFixed(2);
+const formatBlurb = (v: number, name: string): string => {
+  if (v < 0.97) {
+    const paise = Math.round(v * 100);
+    return `worth ${paise} paise of an average Indian's vote`;
+  }
+  if (v <= 1.03) {
+    return `at par with the average Indian's vote`;
+  }
+  return `worth ₹${v.toFixed(2)} for every ₹1 of an average Indian's vote`;
+};
 ---
 
 <html lang="en">
@@ -207,6 +232,81 @@ const ordinals = [
       <hr class="rule" />
 
       <FreezePenalty />
+
+      <hr class="rule" />
+
+      <!-- Vote-value lede + scrollytell (Fig. 5) -->
+      <aside class="vv-lede">
+        <p>
+          And so, depending on where you live, this is what your single
+          ballot weighs against an average Indian's. <b>One rupee</b> is the
+          mean weight; the closer to par, the closer your state sits to the
+          constitutional promise of <em>one person, one vote</em>.
+        </p>
+      </aside>
+
+      <section class="vote-value" id="vote-value" aria-label="Vote value across states">
+        <div class="vote-value-inner">
+          <figcaption class="fig-head vv-fig-head">
+            <span class="fig-label">Fig. 5</span>
+            <span class="fig-title">What is your vote worth?</span>
+            <span class="fig-unit">— in rupees, where ₹1 = the average Indian vote —</span>
+          </figcaption>
+
+          <div class="vv-stage">
+            <div class="vv-readout">
+              <div class="vv-readout-state" aria-live="polite">
+                <span class="vv-state-name" id="vv-state-name">{vvFirst.name}{' '}</span>
+                <span class="vv-state-hi hi" id="vv-state-hi">{vvFirst.nameHi}{' '}</span>
+              </div>
+              <div class="vv-readout-value">
+                <span class="vv-rupee">₹</span><span class="vv-amount" id="vv-amount">{formatRupees(vvFirst.voteValue)}{' '}</span>
+              </div>
+              <div class="vv-readout-blurb" id="vv-blurb">{formatBlurb(vvFirst.voteValue, vvFirst.name)}<span aria-hidden="true" class="vv-blurb-end"></span></div>
+            </div>
+
+            <div class="vv-listwrap">
+              <ol class="vv-list" id="vv-list">
+                {VV_ROWS.map((row, i) => {
+                  const v = row.voteValue;
+                  const cappedPct = Math.min(v, VV_CAP) / VV_CAP * 100;
+                  const overflow = v > VV_CAP;
+                  return (
+                    <li
+                      class={`vv-row ${i === 0 ? 'vv-current' : ''}${overflow ? ' vv-overflow' : ''}`}
+                      data-idx={i}
+                      style={`--vv-bar-pct: ${cappedPct.toFixed(2)}%; --region-color: ${REGION_COLORS[row.region]}`}
+                    >
+                      <span class="vv-row-name">{row.name}{' '}</span>
+                      <div class="vv-bar-wrap">
+                        <span class="vv-bar"></span>
+                        {overflow && <span class="vv-bar-tip">→</span>}
+                      </div>
+                      <span class="vv-row-value">₹{v.toFixed(2)}{' '}</span>
+                    </li>
+                  );
+                })}
+                <span class="vv-list-end" aria-hidden="true"></span>
+              </ol>
+              <span class="vv-par" aria-hidden="true">
+                <span class="vv-par-label">par · ₹1</span>
+              </span>
+            </div>
+          </div>
+
+          <input
+            type="range"
+            id="vv-slider"
+            class="sr-only"
+            min="0"
+            max={VV_ROWS.length - 1}
+            step="1"
+            value="0"
+            aria-label="Vote value by state"
+          />
+          <span aria-hidden="true" class="vv-shell-end"></span>
+        </div>
+      </section>
 
       <hr class="rule double" />
 
@@ -865,6 +965,168 @@ const ordinals = [
       // CSS reacts (slider becomes visible, sticky disengages) but the JS
       // mode was bound on load. Reload so the right listener path runs.
       reducedMotion.addEventListener('change', () => location.reload());
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 5 — Vote-value across states (scrollytell)
+         ─ Same pin / IO / rAF pattern as Fig. 1, 35 beats instead of 14.
+         ─ Reduced-motion: no pin, no scroll listener; readout stays
+           on the first state and the visible list speaks for itself.
+         ───────────────────────────────────────────────────────────── */
+      const vvSection = document.getElementById('vote-value');
+      const vvList = document.getElementById('vv-list');
+      const vvSlider = document.getElementById('vv-slider') as HTMLInputElement | null;
+      const vvStateName = document.getElementById('vv-state-name');
+      const vvStateHi = document.getElementById('vv-state-hi');
+      const vvAmount = document.getElementById('vv-amount');
+      const vvBlurb = document.getElementById('vv-blurb');
+
+      if (vvSection && vvList && vvSlider && vvStateName && vvStateHi && vvAmount && vvBlurb) {
+        const vvAvg = LOKSABHA_META.currentAvgConstituency;
+        const vvRows = sortedByPopPerSeat().map((row) => ({
+          name: row.name,
+          nameHi: row.nameHi,
+          voteValue: vvAvg / row.popPerSeat,
+        }));
+        const vvLastIdx = vvRows.length - 1;
+        const vvRowEls = Array.from(vvList.querySelectorAll<HTMLElement>('.vv-row'));
+        const vvRupeeEl = vvAmount.previousElementSibling as HTMLElement | null;
+        let vvCurrentIdx = -1;
+
+        const vvBlurbFor = (v: number): string => {
+          if (v < 0.97) {
+            return `worth ${Math.round(v * 100)} paise of an average Indian's vote`;
+          }
+          if (v <= 1.03) {
+            return `at par with the average Indian's vote`;
+          }
+          return `worth ₹${v.toFixed(2)} for every ₹1 of an average Indian's vote`;
+        };
+
+        const vvUpdate = (idx: number) => {
+          if (idx === vvCurrentIdx) return;
+          vvCurrentIdx = idx;
+          const row = vvRows[idx];
+
+          if (idx === vvLastIdx) {
+            // Final beat: collapse to the comparison punchline.
+            const ratio = vvRows[vvLastIdx].voteValue / vvRows[0].voteValue;
+            vvStateName.textContent = `${row.name} vs ${vvRows[0].name}`;
+            vvStateHi.textContent = '';
+            vvAmount.textContent = `${ratio.toFixed(0)}×`;
+            vvBlurb.textContent = `A vote in ${row.name} is worth ${ratio.toFixed(0)}× a vote in ${vvRows[0].name}.`;
+            if (vvRupeeEl) vvRupeeEl.style.opacity = '0';
+          } else {
+            vvStateName.textContent = row.name;
+            vvStateHi.textContent = row.nameHi;
+            vvAmount.textContent = row.voteValue.toFixed(2);
+            vvBlurb.textContent = vvBlurbFor(row.voteValue);
+            if (vvRupeeEl) vvRupeeEl.style.opacity = '';
+          }
+
+          if (vvSlider.value !== String(idx)) vvSlider.value = String(idx);
+
+          for (let i = 0; i < vvRowEls.length; i++) {
+            vvRowEls[i].classList.toggle('vv-current', i === idx);
+          }
+
+          // Ticker: keep the active row centred in the clipped leaderboard.
+          // Manually setting scrollTop (vs scrollIntoView) prevents any
+          // ancestor — including window — from being scrolled during page
+          // scroll. Otherwise we'd fight the user's wheel input.
+          const activeEl = vvRowEls[idx];
+          if (activeEl) {
+            const target = activeEl.offsetTop - vvList.clientHeight / 2 + activeEl.offsetHeight / 2;
+            vvList.scrollTop = Math.max(0, target);
+          }
+
+          // Reuse the year-flash micro-animation as a value-flip cue.
+          vvAmount.classList.remove('year-flash');
+          void (vvAmount as HTMLElement).offsetWidth;
+          vvAmount.classList.add('year-flash');
+        };
+
+        const setupVvScrollMode = () => {
+          let inZone = false;
+          let ticking = false;
+          let trackTop = 0;
+          let trackHeight = 0;
+          let viewportH = 0;
+
+          const measure = () => {
+            const rect = vvSection.getBoundingClientRect();
+            trackTop = rect.top + window.scrollY;
+            trackHeight = vvSection.offsetHeight;
+            viewportH = window.innerHeight;
+          };
+
+          const tick = () => {
+            ticking = false;
+            const scrollable = trackHeight - viewportH;
+            if (scrollable <= 0) return;
+            const raw = (window.scrollY - trackTop) / scrollable;
+            const progress = Math.max(0, Math.min(1, (raw - 0.02) / 0.96));
+            const idx = Math.max(0, Math.min(vvLastIdx, Math.floor(progress * vvRows.length)));
+            vvUpdate(idx);
+          };
+
+          const onScroll = () => {
+            if (!inZone || ticking) return;
+            ticking = true;
+            requestAnimationFrame(tick);
+          };
+
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                inZone = entry.isIntersecting;
+                if (inZone) tick();
+              }
+            },
+            { rootMargin: '0px 0px 0px 0px', threshold: 0 },
+          );
+          io.observe(vvSection);
+
+          let resizeT: number | undefined;
+          const onResize = () => {
+            if (resizeT) window.clearTimeout(resizeT);
+            resizeT = window.setTimeout(() => { measure(); tick(); }, 120);
+          };
+
+          vvSlider.addEventListener('keydown', (ev) => {
+            let next: number | null = null;
+            let behavior: ScrollBehavior = 'smooth';
+            switch (ev.key) {
+              case 'ArrowRight':
+              case 'ArrowUp':
+                next = Math.min(vvLastIdx, vvCurrentIdx + 1); break;
+              case 'ArrowLeft':
+              case 'ArrowDown':
+                next = Math.max(0, vvCurrentIdx - 1); break;
+              case 'Home': next = 0; behavior = 'auto'; break;
+              case 'End':  next = vvLastIdx; behavior = 'auto'; break;
+            }
+            if (next === null) return;
+            ev.preventDefault();
+            const scrollable = trackHeight - viewportH;
+            const targetProgress = next / vvRows.length + 0.5 / vvRows.length;
+            const targetRaw = targetProgress * 0.96 + 0.02;
+            window.scrollTo({ top: trackTop + targetRaw * scrollable, behavior });
+          });
+
+          measure();
+          tick();
+          window.addEventListener('scroll', onScroll, { passive: true });
+          window.addEventListener('resize', onResize);
+        };
+
+        if (reducedMotion.matches) {
+          // Static mode: leave the readout on the first row; the full
+          // labelled leaderboard speaks for itself.
+          vvUpdate(0);
+        } else {
+          setupVvScrollMode();
+        }
+      }
     </script>
   </body>
 </html>
