@@ -71,6 +71,21 @@ export function defaultsFor(preset: Preset): StudioState {
 // ——————————————————————————————————————————————
 // URL ⟷ state
 // ——————————————————————————————————————————————
+//
+// The shareable URL is the canonical representation of a Workshop view.
+// Two URLs that express the same state should be byte-identical, which means:
+//   1. Params are always written in the same (canonical) order.
+//   2. A `v` version param travels with every URL. Unknown v values are
+//      tolerated silently (v=0 URLs from before this param existed still
+//      parse); future schema changes bump URL_VERSION and, if needed, add
+//      a migration path in parseFromUrl.
+// The canonical param order is the same order the reader would set the
+// values in the rail (chart type → dataset → metric → years → entities),
+// with `v` last so it's the tail of the URL rather than interrupting the
+// semantic params.
+
+const URL_VERSION = 1;
+const URL_PARAM_ORDER = ['preset', 'dataset', 'metric', 'from', 'to', 'entities', 'v'] as const;
 
 export function parseFromUrl(url: URL): StudioState {
   const preset = (url.searchParams.get('preset') ?? 'bar') as Preset;
@@ -80,6 +95,9 @@ export function parseFromUrl(url: URL): StudioState {
   const entities = url.searchParams.get('entities');
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
+  // `v` is read for future migration use; for v=1 we accept the URL as-is.
+  // Unknown/missing v values fall through to the base-defaults path, which
+  // means legacy (pre-v=1) URLs continue to work untouched.
   return {
     preset: base.preset,
     dataset: (ds as Dataset) ?? base.dataset,
@@ -90,14 +108,28 @@ export function parseFromUrl(url: URL): StudioState {
   };
 }
 
+// Pure helper — applies the canonical (preset,dataset,metric,from,to,entities,v)
+// ordering to an existing URLSearchParams by deleting our known keys then
+// re-setting them in order. Preserves any unrelated params the host page may
+// have attached. Extracted so it can be unit-tested without needing a DOM.
+export function canonicalizeUrlParams(params: URLSearchParams, state: StudioState): URLSearchParams {
+  const values: Record<string, string> = {
+    preset: state.preset,
+    dataset: state.dataset,
+    metric: state.metric,
+    from: String(state.from),
+    to: String(state.to),
+    entities: state.entities.join(','),
+    v: String(URL_VERSION),
+  };
+  for (const key of URL_PARAM_ORDER) params.delete(key);
+  for (const key of URL_PARAM_ORDER) params.set(key, values[key]);
+  return params;
+}
+
 export function writeToUrl(state: StudioState) {
   const url = new URL(window.location.href);
-  url.searchParams.set('preset', state.preset);
-  url.searchParams.set('dataset', state.dataset);
-  url.searchParams.set('metric', state.metric);
-  url.searchParams.set('entities', state.entities.join(','));
-  url.searchParams.set('from', String(state.from));
-  url.searchParams.set('to', String(state.to));
+  canonicalizeUrlParams(url.searchParams, state);
   window.history.replaceState({}, '', url);
 }
 
