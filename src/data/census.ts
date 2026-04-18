@@ -24,7 +24,7 @@ export const REGION_LABELS: Record<Region, { en: string; hi: string; states: str
   South: {
     en: 'South',
     hi: 'दक्षिण',
-    states: 'Kerala, Karnataka, Tamil Nadu, Andhra Pradesh (incl. Telangana)',
+    states: 'Kerala, Karnataka, Tamil Nadu, Andhra Pradesh, Telangana',
   },
   Other: {
     en: 'Other',

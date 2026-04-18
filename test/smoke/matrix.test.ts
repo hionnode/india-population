@@ -21,11 +21,18 @@ describe('Workshop compatibility matrix — smoke', () => {
     }
   });
 
-  it('entityCatalog(state) returns the pre-pivot 18 major-state rows', () => {
+  it('entityCatalog(state) returns all 36 states + UTs (post-Commit-12 backfill)', () => {
     const rows = entityCatalog('state');
-    expect(rows.length).toBe(18);
+    expect(rows.length).toBe(36);
     const codes = rows.map((r) => r.code);
-    for (const expected of ['UP', 'MH', 'BR', 'WB', 'TN', 'KL']) {
+    // 18 majors (pre-pivot) still present:
+    for (const expected of ['UP', 'MH', 'BR', 'WB', 'TN', 'KL', 'AP']) {
+      expect(codes).toContain(expected);
+    }
+    // Telangana split off from AP in Commit 12:
+    expect(codes).toContain('TS');
+    // A few representatives from the 17 newly added rows:
+    for (const expected of ['AS', 'PB', 'JK', 'LA', 'GA', 'MN', 'SK']) {
       expect(codes).toContain(expected);
     }
   });
