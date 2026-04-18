@@ -251,9 +251,17 @@ body {
 @media (max-width: 760px) {
   .year-section {
     grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 24px 0 10px;
+    gap: 4px;
+    padding: 8px 0 4px;
   }
+  .year-label-col { padding-bottom: 0; }
+  .year-total-col { padding-bottom: 0; }
+  /* The clamp upper bound (260px) is for desktop; on a phone the giant
+     year would dominate the whole frame. Cap it so chart + rail can fit. */
+  .year-big { font-size: clamp(72px, 18vw, 120px); line-height: 0.9; }
+  .total-num { font-size: 36px; }
+  .total-unit { font-size: 14px; margin-top: 2px; }
+  .year-ord { font-size: 16px; }
 }
 
 .smallcaps {
@@ -467,9 +475,17 @@ body {
   will-change: transform;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   /* Touch scrolls travel less per swipe — shorten the track. */
   .scrollytell { --beat-h: 45vh; }
+  /* On phones the inner is taller than the viewport (large year + chart +
+     rail + stacked year-section). Centre-pin would push the giant year
+     off the top. Switch to top-pin so the year stays the first thing the
+     reader sees as it flips. */
+  .scrollytell-inner {
+    top: 12px;
+    transform: none;
+  }
 }
 
 /* ────────────────────────────────────────

@@ -329,6 +329,11 @@ const ordinals = [
           background: 'transparent',
           parentHeightOffset: 0,
         },
+        // On phones the pinned frame is short. A 440px chart plus the giant
+        // year + rail overflows. Shrink so all three stay on-screen.
+        responsive: [
+          { breakpoint: 760, options: { chart: { height: 220 } } },
+        ],
         series: [{ name: 'Share of India', data: seriesFor(0) }],
         plotOptions: {
           bar: {
