@@ -308,7 +308,16 @@ const { initialPreset } = Astro.props;
 <script>
   import ApexCharts from 'apexcharts';
   import type { StudioState } from '../../scripts/studio';
-  import { getStore, filenameFor, svgToPng } from '../../scripts/studio';
+  import {
+    getStore,
+    filenameFor,
+    svgToPng,
+    parseLetterheadFromUrl,
+    writeLetterheadToUrl,
+    LETTERHEAD_MAX_LEN,
+    type Letterhead,
+    type LetterheadField,
+  } from '../../scripts/studio';
   import { lineSeries, barSeries, mapValues, metricLabel, unitFor } from '../../scripts/metrics';
   import { GEO_NAME_TO_CODE, GEOJSON_URL, type IndiaGeo, type IndiaGeoFeature } from '../../data/india-geo';
 
@@ -317,22 +326,30 @@ const { initialPreset } = Astro.props;
   const mapSvg     = document.getElementById('cmp-map-svg') as unknown as SVGSVGElement | null;
   const chipsEl    = document.querySelector<HTMLElement>('[data-cmp-chips]');
 
-  // Letterhead — 4 editable inputs persisted in localStorage.
+  // Letterhead — 4 editable inputs persisted in the URL (shareable) with
+  // a localStorage fallback. URL wins if present; otherwise we migrate
+  // any previously-stored localStorage copy up into the URL on first
+  // render so the reader's old notes aren't stranded. Every parse +
+  // write clamps to LETTERHEAD_MAX_LEN — the URL bypasses the input's
+  // DOM maxlength and a hand-edited shared URL could carry a multi-KB
+  // note without this guard.
   const LH_KEY = 'workshop.letterhead.v1';
-  type LhStore = Partial<Record<'title' | 'subtitle' | 'byline' | 'note', string>>;
-  const loadLh = (): LhStore => {
+  const lh: Letterhead = parseLetterheadFromUrl(new URL(window.location.href));
+  const lhFromStorage = ((): Partial<Letterhead> => {
     try { return JSON.parse(localStorage.getItem(LH_KEY) ?? '{}'); } catch { return {}; }
-  };
-  const saveLh = (v: LhStore) => {
-    try { localStorage.setItem(LH_KEY, JSON.stringify(v)); } catch { /* ignore quota */ }
-  };
-  const lh: LhStore = loadLh();
+  })();
+  for (const field of ['title', 'subtitle', 'byline', 'note'] as LetterheadField[]) {
+    if (!lh[field] && lhFromStorage[field]) lh[field] = lhFromStorage[field]!.slice(0, LETTERHEAD_MAX_LEN[field]);
+  }
+  writeLetterheadToUrl(lh);
+
   document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-lh-field]').forEach((el) => {
-    const field = el.dataset.lhField as keyof LhStore;
-    if (lh[field]) el.value = lh[field]!;
+    const field = el.dataset.lhField as LetterheadField;
+    if (lh[field]) el.value = lh[field];
     el.addEventListener('input', () => {
-      lh[field] = el.value;
-      saveLh(lh);
+      lh[field] = el.value.slice(0, LETTERHEAD_MAX_LEN[field]);
+      writeLetterheadToUrl(lh);
+      try { localStorage.setItem(LH_KEY, JSON.stringify(lh)); } catch { /* ignore quota */ }
     });
   });
 
@@ -401,33 +418,67 @@ const { initialPreset } = Astro.props;
     renderBar(state);
     paintMap(state);
 
+    // Summary copy — rebuilt from DOM API (not innerHTML) so entity names,
+    // state counts, and year labels can never reintroduce markup through
+    // the interpolation path. ISSUE-006 defense-in-depth.
     const summary = document.querySelector<HTMLElement>('[data-cmp-summary]')!;
+    summary.replaceChildren(...buildSummaryNodes(state, n));
+  }
+
+  function buildSummaryNodes(state: StudioState, n: number): Node[] {
     if (n < 2) {
-      summary.innerHTML = `<span class="cmp-warning">Pick at least 2 states in the rail to build the report.</span>`;
-    } else if (n > 6) {
-      summary.innerHTML = `<span class="cmp-warning">Too many states (${n}). The report reads best with 2–6. Remove a chip to continue.</span>`;
-    } else {
-      const names = state.entities.join(', ');
-      summary.innerHTML = `Comparing <em>${names}</em> across <em>${state.from} – ${state.to}</em>. Each section below is page-break aware; use <em>Print Report</em> in the toolbar to export a PDF.`;
+      const warn = document.createElement('span');
+      warn.className = 'cmp-warning';
+      warn.textContent = 'Pick at least 2 states in the rail to build the report.';
+      return [warn];
     }
+    if (n > 6) {
+      const warn = document.createElement('span');
+      warn.className = 'cmp-warning';
+      warn.textContent = `Too many states (${n}). The report reads best with 2–6. Remove a chip to continue.`;
+      return [warn];
+    }
+    const frag: Node[] = [];
+    frag.push(document.createTextNode('Comparing '));
+    const names = document.createElement('em');
+    names.textContent = state.entities.join(', ');
+    frag.push(names);
+    frag.push(document.createTextNode(' across '));
+    const span = document.createElement('em');
+    span.textContent = `${state.from} – ${state.to}`;
+    frag.push(span);
+    frag.push(document.createTextNode('. Each section below is page-break aware; use '));
+    const pr = document.createElement('em');
+    pr.textContent = 'Print Report';
+    frag.push(pr);
+    frag.push(document.createTextNode(' in the toolbar to export a PDF.'));
+    return frag;
   }
 
   function renderChips(state: StudioState) {
     if (!chipsEl) return;
     const vals = mapValues(state);
-    chipsEl.innerHTML = state.entities
-      .map((code) => {
-        const v = vals.get(code);
-        if (!v) return '';
-        return `
-          <span class="cmp-chip">
-            <span class="dot" style="background:${v.color}"></span>
-            <span class="nm">${v.name}</span>
-            <span class="hi">${v.nameHi}</span>
-          </span>
-        `;
-      })
-      .join('');
+    // DOM API rather than innerHTML string concat — entity names (English +
+    // Hindi) flow through textContent so a dataset row that happens to
+    // contain `<` can't escape the chip markup.
+    chipsEl.replaceChildren();
+    for (const code of state.entities) {
+      const v = vals.get(code);
+      if (!v) continue;
+      const chip = document.createElement('span');
+      chip.className = 'cmp-chip';
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = v.color;
+      const nm = document.createElement('span');
+      nm.className = 'nm';
+      nm.textContent = v.name;
+      const hi = document.createElement('span');
+      hi.className = 'hi';
+      hi.textContent = v.nameHi;
+      chip.append(dot, nm, hi);
+      chipsEl.appendChild(chip);
+    }
   }
 
   function renderLine(state: StudioState) {

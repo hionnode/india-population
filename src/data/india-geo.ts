@@ -6,11 +6,13 @@
 // PoK; Aksai Chin included in Ladakh). Post-2019 J&K/Ladakh split is present.
 //
 // Special cases:
-// - Telangana is a separate feature in the GeoJSON but state-census.ts
-//   merges it into Andhra Pradesh. We map Telangana → AP so both features
-//   paint with the same value.
 // - Dadra & Nagar Haveli and Daman & Diu merged into one UT in 2020. The
-//   GeoJSON reflects the merger; we map it to DN (the larger predecessor).
+//   GeoJSON reflects the merger; we map it to DN (the combined UT code).
+// - Every value in this map is unique — the bijection is enforced by a
+//   vitest assertion in test/smoke/map.test.ts. A duplicate code would
+//   cause MapStudio's pathsByCode Map to collide and leave a path without
+//   a fill (see ISSUE-009 in docs/plan — the pre-split AP/Telangana
+//   collision that rendered one state black on every map view).
 
 export const GEO_NAME_TO_CODE: Record<string, string> = {
   'Andaman and Nicobar Islands':               'AN',
@@ -44,7 +46,7 @@ export const GEO_NAME_TO_CODE: Record<string, string> = {
   'Rajasthan':                                 'RJ',
   'Sikkim':                                    'SK',
   'Tamil Nadu':                                'TN',
-  'Telangana':                                 'AP',  // merged into AP in our dataset
+  'Telangana':                                 'TS',
   'Tripura':                                   'TR',
   'Uttar Pradesh':                             'UP',
   'Uttarakhand':                               'UK',

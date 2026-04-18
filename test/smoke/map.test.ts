@@ -6,8 +6,7 @@ import { resolve } from 'node:path';
 //   1. The Map SVG has a root fill attribute so orphaned paths inherit gray
 //      instead of the black SVG default.
 //   2. GEO_NAME_TO_CODE values are unique — no two feature names map to the
-//      same entity code. (Currently SKIPPED until Commit 12 splits Telangana
-//      off AP. Flip the .skip to active once the backfill lands.)
+//      same entity code. (Flipped on in Commit 12 after Telangana split.)
 
 const repoRoot = resolve(__dirname, '../..');
 
@@ -28,12 +27,8 @@ describe('MapStudio.astro — SVG root fill defense (Commit 11)', () => {
   });
 });
 
-describe('GEO_NAME_TO_CODE — uniqueness (Commit 12 gate)', () => {
-  // Read the mapping directly via dynamic import so the test reflects whatever
-  // is actually exported. Telangana splits off AP in Commit 12; until then the
-  // values-uniqueness assertion is skipped (kept here as a regression guard
-  // that flips on once the split lands).
-  it.skip('every value in GEO_NAME_TO_CODE is unique (flip on after Commit 12)', async () => {
+describe('GEO_NAME_TO_CODE — uniqueness (Commit 12 landed)', () => {
+  it('every value in GEO_NAME_TO_CODE is unique (no pathsByCode collisions)', async () => {
     const { GEO_NAME_TO_CODE } = await import('../../src/data/india-geo');
     const values = Object.values(GEO_NAME_TO_CODE);
     const uniq = new Set(values);
@@ -41,19 +36,15 @@ describe('GEO_NAME_TO_CODE — uniqueness (Commit 12 gate)', () => {
     expect(
       uniq.size,
       `Duplicate codes found: ${[...new Set(duplicates)].join(', ')}. ` +
-        'Every (feature-name → code) mapping must be a bijection onto the code space.',
+        'Every (feature-name → code) mapping must be a bijection onto the code space. ' +
+        'A duplicate causes MapStudio to leave one SVG path unattributed (ISSUE-009 — ' +
+        'the AP/Telangana collision that rendered one state black on every map view).',
     ).toBe(values.length);
   });
 
-  it('documents the current known collision (AP appears twice)', async () => {
+  it('Andhra Pradesh and Telangana now map to distinct codes', async () => {
     const { GEO_NAME_TO_CODE } = await import('../../src/data/india-geo');
-    const apKeys = Object.entries(GEO_NAME_TO_CODE)
-      .filter(([, code]) => code === 'AP')
-      .map(([name]) => name);
-    // This assertion is intentionally "equals 2" — it locks in the current
-    // broken state so that Commit 12 MUST touch this test (either flip the
-    // skipped test above OR delete this documenting-test below). Protects
-    // against a stealth change that breaks the invariant the other way.
-    expect(apKeys.sort()).toEqual(['Andhra Pradesh', 'Telangana']);
+    expect(GEO_NAME_TO_CODE['Andhra Pradesh']).toBe('AP');
+    expect(GEO_NAME_TO_CODE['Telangana']).toBe('TS');
   });
 });

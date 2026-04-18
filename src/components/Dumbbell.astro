@@ -4,11 +4,16 @@
 import { STATE_CENSUS, percentGrowth } from '../data/state-census';
 import { REGION_COLORS } from '../data/census';
 
-const rows = STATE_CENSUS.map((r) => ({
-  ...r,
-  early: percentGrowth(r, 1901, 1951),
-  late: percentGrowth(r, 1951, 2011),
-}));
+const rows = STATE_CENSUS
+  .map((r) => ({
+    ...r,
+    early: percentGrowth(r, 1901, 1951),
+    late: percentGrowth(r, 1951, 2011),
+  }))
+  // Post-18→36 backfill: UTs and NE states missing a 1901 or 1951 datum
+  // produce NaN growth rates. Without this filter, Math.min/Math.max below
+  // would NaN-poison the entire x-axis scale and collapse the chart.
+  .filter((r) => Number.isFinite(r.early) && Number.isFinite(r.late));
 rows.sort((a, b) => b.late - a.late);
 
 const W = 900;

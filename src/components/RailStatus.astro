@@ -1,0 +1,61 @@
+---
+// Rail status pill — replaces the freeform "Selected · N | Max · 18" counter
+// with a state-aware component. Exposes five named states on a data-attr so
+// studio.ts + tools.css can style + narrate each one without duplicating the
+// count-vs-cap math.
+//
+// States (resolved by computeRailState):
+//   - zero              → empty selection, needs at least one pick
+//   - under-min         → below the minimum (currently only relevant to
+//                         Compare, which refuses to render under 2 states)
+//   - ok                → count is within the workable band
+//   - approaching-max   → one short of the cap; hints that adding more
+//                         will require removing an existing chip
+//   - at-max            → at the cap; adds are refused
+//
+// The component ships a sensible server-render default, and studio.ts
+// rewrites data-state + the two text nodes on every studio:change event.
+
+export interface Props {
+  min: number;
+  max: number;
+  count: number;
+}
+const { min, max, count } = Astro.props;
+const state = computeRailState(count, min, max);
+const message = railStatusMessage(state, min, max);
+
+function computeRailState(c: number, mn: number, mx: number):
+  'zero' | 'under-min' | 'ok' | 'approaching-max' | 'at-max' {
+  if (c === 0) return 'zero';
+  if (c < mn) return 'under-min';
+  if (c >= mx) return 'at-max';
+  if (c >= mx - 1) return 'approaching-max';
+  return 'ok';
+}
+
+function railStatusMessage(s: ReturnType<typeof computeRailState>, mn: number, mx: number): string {
+  switch (s) {
+    case 'zero':            return mn > 0 ? `pick at least ${mn}` : 'pick one';
+    case 'under-min':       return `need ${mn}+ to render`;
+    case 'ok':              return '';
+    case 'approaching-max': return 'near cap';
+    case 'at-max':          return `cap · ${mx}`;
+  }
+}
+---
+
+<div
+  class="rail-status"
+  data-rail-status
+  data-state={state}
+  data-min={min}
+  data-max={max}
+>
+  <span class="rail-status-count">
+    <span data-rail-status-count>{count}</span>
+    <span class="rail-status-slash">/</span>
+    <span data-rail-status-max>{max}</span>
+  </span>
+  <span class="rail-status-msg" data-rail-status-msg>{message}</span>
+</div>

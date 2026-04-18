@@ -71,6 +71,45 @@ export function defaultsFor(preset: Preset): StudioState {
 // ——————————————————————————————————————————————
 // URL ⟷ state
 // ——————————————————————————————————————————————
+//
+// The shareable URL is the canonical representation of a Workshop view.
+// Two URLs that express the same state should be byte-identical, which means:
+//   1. Params are always written in the same (canonical) order.
+//   2. A `v` version param travels with every URL. Unknown v values are
+//      tolerated silently (v=0 URLs from before this param existed still
+//      parse); future schema changes bump URL_VERSION and, if needed, add
+//      a migration path in parseFromUrl.
+// The canonical param order is the same order the reader would set the
+// values in the rail (chart type → dataset → metric → years → entities),
+// with `v` last so it's the tail of the URL rather than interrupting the
+// semantic params.
+
+const URL_VERSION = 1;
+const URL_PARAM_ORDER = ['preset', 'dataset', 'metric', 'from', 'to', 'entities', 'v'] as const;
+
+// Letterhead — the four editable fields on the Compare worksheet header
+// (title, subtitle, byline, note). They live in the URL alongside the
+// studio params so a shared Compare link rehydrates the reader's copy
+// without a round trip through localStorage. URL bypasses the DOM
+// maxlength attribute, so every read clamps to the per-field cap below.
+// The URL keys use an `lh_` prefix so they sort together and don't
+// collide with future studio params.
+export type LetterheadField = 'title' | 'subtitle' | 'byline' | 'note';
+export type Letterhead = Record<LetterheadField, string>;
+export const LETTERHEAD_DEFAULT: Letterhead = { title: '', subtitle: '', byline: '', note: '' };
+export const LETTERHEAD_MAX_LEN: Record<LetterheadField, number> = {
+  title: 80,
+  subtitle: 80,
+  byline: 80,
+  note: 480,
+};
+const LETTERHEAD_URL_KEYS: Record<LetterheadField, string> = {
+  title: 'lh_title',
+  subtitle: 'lh_sub',
+  byline: 'lh_by',
+  note: 'lh_note',
+};
+const LETTERHEAD_FIELDS: readonly LetterheadField[] = ['title', 'subtitle', 'byline', 'note'];
 
 export function parseFromUrl(url: URL): StudioState {
   const preset = (url.searchParams.get('preset') ?? 'bar') as Preset;
@@ -80,6 +119,9 @@ export function parseFromUrl(url: URL): StudioState {
   const entities = url.searchParams.get('entities');
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
+  // `v` is read for future migration use; for v=1 we accept the URL as-is.
+  // Unknown/missing v values fall through to the base-defaults path, which
+  // means legacy (pre-v=1) URLs continue to work untouched.
   return {
     preset: base.preset,
     dataset: (ds as Dataset) ?? base.dataset,
@@ -90,14 +132,62 @@ export function parseFromUrl(url: URL): StudioState {
   };
 }
 
+// Pure helper — applies the canonical (preset,dataset,metric,from,to,entities,v)
+// ordering to an existing URLSearchParams by deleting our known keys then
+// re-setting them in order. Preserves any unrelated params the host page may
+// have attached. Extracted so it can be unit-tested without needing a DOM.
+export function canonicalizeUrlParams(params: URLSearchParams, state: StudioState): URLSearchParams {
+  const values: Record<string, string> = {
+    preset: state.preset,
+    dataset: state.dataset,
+    metric: state.metric,
+    from: String(state.from),
+    to: String(state.to),
+    entities: state.entities.join(','),
+    v: String(URL_VERSION),
+  };
+  for (const key of URL_PARAM_ORDER) params.delete(key);
+  for (const key of URL_PARAM_ORDER) params.set(key, values[key]);
+  return params;
+}
+
 export function writeToUrl(state: StudioState) {
   const url = new URL(window.location.href);
-  url.searchParams.set('preset', state.preset);
-  url.searchParams.set('dataset', state.dataset);
-  url.searchParams.set('metric', state.metric);
-  url.searchParams.set('entities', state.entities.join(','));
-  url.searchParams.set('from', String(state.from));
-  url.searchParams.set('to', String(state.to));
+  canonicalizeUrlParams(url.searchParams, state);
+  window.history.replaceState({}, '', url);
+}
+
+// Letterhead → URL. Empty fields are deleted (not set to the empty string)
+// so the canonical URL stays tight when the reader hasn't customized
+// anything. Overwrites the lh_* keys in place; other params stay put.
+export function canonicalizeLetterheadParams(params: URLSearchParams, lh: Letterhead): URLSearchParams {
+  for (const field of LETTERHEAD_FIELDS) {
+    const key = LETTERHEAD_URL_KEYS[field];
+    const raw = lh[field] ?? '';
+    const trimmed = raw.slice(0, LETTERHEAD_MAX_LEN[field]);
+    params.delete(key);
+    if (trimmed.length > 0) params.set(key, trimmed);
+  }
+  return params;
+}
+
+// URL → Letterhead. Always returns a fully-populated object (empty string
+// for any missing field) and clamps the length of every field to its
+// per-field max. The clamp lives here — not at the input's DOM maxlength
+// attribute — because a shared URL may have been hand-edited to exceed
+// the cap or to include a multi-kilobyte note.
+export function parseLetterheadFromUrl(url: URL): Letterhead {
+  const out: Letterhead = { ...LETTERHEAD_DEFAULT };
+  for (const field of LETTERHEAD_FIELDS) {
+    const raw = url.searchParams.get(LETTERHEAD_URL_KEYS[field]) ?? '';
+    out[field] = raw.slice(0, LETTERHEAD_MAX_LEN[field]);
+  }
+  return out;
+}
+
+export function writeLetterheadToUrl(lh: Letterhead) {
+  const url = new URL(window.location.href);
+  canonicalizeLetterheadParams(url.searchParams, lh);
   window.history.replaceState({}, '', url);
 }
 
@@ -146,29 +236,114 @@ function ensureStore(): Store {
   if (store) return store;
   const url = new URL(window.location.href);
   const parsed = parseFromUrl(url);
-  const initial = normalizeForPreset(parsed);
+  // Run the parsed URL through migrateStateForPatch so a manually-crafted
+  // URL like ?preset=compare&dataset=region (which can't actually render)
+  // is coerced to a valid shape before the store ever emits a change.
+  const { next: initial } = migrateStateForPatch(defaultsFor(parsed.preset), parsed);
   store = new Store(initial);
   writeToUrl(initial);
   return store;
 }
 
-// Compare reports are authored around state+population; normalize incoming
-// state so other metrics/datasets don't render silently.
+// Compare reports are authored around state+population; the migration
+// helper coerces that invariant whenever merged state lands at preset=compare.
 const LOCKED_COMPARE = { dataset: 'state' as Dataset, metric: 'population' as Metric };
-function normalizeForPreset(state: StudioState): StudioState {
-  if (state.preset !== 'compare') return state;
-  if (state.dataset === LOCKED_COMPARE.dataset && state.metric === LOCKED_COMPARE.metric) return state;
-  const keepEntities = state.dataset === LOCKED_COMPARE.dataset;
-  return {
-    ...state,
-    dataset: LOCKED_COMPARE.dataset,
-    metric: LOCKED_COMPARE.metric,
-    entities: keepEntities ? state.entities : ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'].slice(0, 3),
-  };
-}
 function lockedFieldsFor(preset: Preset): Partial<Record<keyof StudioState, string>> {
   if (preset === 'compare') return { dataset: LOCKED_COMPARE.dataset, metric: LOCKED_COMPARE.metric };
   return {};
+}
+
+// Dataset default entity seeds, used by migrateStateForPatch when a
+// dataset flip requires throwing away the prev entities (their code space
+// is different) and re-seeding with something sensible.
+const DEFAULT_ENTITIES_BY_DATASET: Record<Dataset, string[]> = {
+  region: ['East', 'West', 'North', 'South'],
+  state: ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'],
+  loksabha: [],
+};
+
+// Apply a user patch against the previous state, enforcing the three
+// invariants below, and report which entity codes (if any) had to be
+// dropped so the caller can toast the reader with an Undo option.
+//
+//   (1) Compare locks dataset=state + metric=population. Hitting compare
+//       from any dataset other than `state` drops every entity (code
+//       spaces don't overlap) and reseeds with the compare defaults.
+//   (2) A dataset change outside of compare drops all entities (same
+//       code-space reasoning) and reseeds from DEFAULT_ENTITIES_BY_DATASET.
+//   (3) Cap-trim: if the merged state's railStatusBounds.max is smaller
+//       than the current entity count (e.g. bar→compare shrinks cap 36→6),
+//       the overflow is trimmed to fit. Trimmed entities appear in dropped.
+//
+// The function is pure — it does no DOM or store work — so the user-action
+// wirings + the init path can share it, and tests can exercise every
+// branch without needing a browser.
+export function migrateStateForPatch(
+  prev: StudioState,
+  patch: Partial<StudioState>,
+): { next: StudioState; dropped: string[] } {
+  let merged: StudioState = {
+    ...prev,
+    ...patch,
+    entities: patch.entities ?? prev.entities,
+  };
+  const dropped: string[] = [];
+
+  if (merged.preset === 'compare') {
+    const needsReseed = merged.dataset !== LOCKED_COMPARE.dataset;
+    merged = { ...merged, dataset: LOCKED_COMPARE.dataset, metric: LOCKED_COMPARE.metric };
+    if (needsReseed) {
+      dropped.push(...merged.entities);
+      merged = { ...merged, entities: [...DEFAULTS.compare.entities] };
+    }
+  } else if (patch.dataset && patch.dataset !== prev.dataset) {
+    dropped.push(...prev.entities);
+    merged = { ...merged, entities: [...DEFAULT_ENTITIES_BY_DATASET[patch.dataset]] };
+  }
+
+  const { max } = railStatusBounds(merged);
+  if (merged.entities.length > max) {
+    dropped.push(...merged.entities.slice(max));
+    merged = { ...merged, entities: merged.entities.slice(0, max) };
+  }
+
+  return { next: merged, dropped: [...new Set(dropped)] };
+}
+
+// Entity-count bounds for the current studio state. Compare enforces a
+// min of 2 (below which the report refuses to render); all other presets
+// treat 0 as a valid (if empty) state. Max varies by dataset because the
+// entity space itself does — 5 regions, 18 major states + 18 UTs post-36
+// backfill, 36 state/UT rows on the loksabha dataset. RailStatus reads
+// these bounds, as does the picker's `capFor` gate.
+export type RailState = 'zero' | 'under-min' | 'ok' | 'approaching-max' | 'at-max';
+
+export function railStatusBounds(state: StudioState): { min: number; max: number } {
+  const min = state.preset === 'compare' ? 2 : 0;
+  const max = state.preset === 'compare'
+    ? 6
+    : state.dataset === 'region' ? 5
+    : state.dataset === 'state'  ? 36
+    : 36;
+  return { min, max };
+}
+
+export function computeRailState(count: number, min: number, max: number): RailState {
+  if (count === 0) return 'zero';
+  if (count < min) return 'under-min';
+  if (count >= max) return 'at-max';
+  if (count >= max - 1) return 'approaching-max';
+  return 'ok';
+}
+
+export function railStatusMessage(s: RailState, min: number, max: number): string {
+  switch (s) {
+    case 'zero':            return min > 0 ? `pick at least ${min}` : 'pick one';
+    case 'under-min':       return `need ${min}+ to render`;
+    case 'ok':              return '';
+    case 'approaching-max': return 'near cap';
+    case 'at-max':          return `cap · ${max}`;
+  }
 }
 
 export function initStudio(): Store {
@@ -190,11 +365,23 @@ export function getStore(): Store {
 // Control wiring
 // ——————————————————————————————————————————————
 
-const DEFAULT_ENTITIES_BY_DATASET: Record<Dataset, string[]> = {
-  region: ['East', 'West', 'North', 'South'],
-  state: ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'],
-  loksabha: [],
-};
+// Route a user-originated patch through migrateStateForPatch so the three
+// invariants (compare-lock, dataset-reseed, cap-trim) fire uniformly no
+// matter which rail control produced the patch. Fires an Undo toast when
+// the migration dropped entities — clicking Undo restores the entire
+// previous snapshot, including the entities + dataset + metric that were
+// in play at the moment of the action.
+function applyMigratedPatch(s: Store, patch: Partial<StudioState>) {
+  const prev = s.snapshot;
+  const { next, dropped } = migrateStateForPatch(prev, patch);
+  s.patch(next);
+  if (dropped.length > 0) {
+    const summary = dropped.length === 1
+      ? `Dropped entity ${dropped[0]}`
+      : `Dropped ${dropped.length} entities (${dropped.slice(0, 4).join(', ')}${dropped.length > 4 ? '…' : ''})`;
+    showActionToast(summary, { label: 'Undo', run: () => s.patch(prev) }, 'warn');
+  }
+}
 
 function wireRailControls(s: Store) {
   // plates: <button class="plate" data-field="dataset" data-value="state">
@@ -206,11 +393,7 @@ function wireRailControls(s: Store) {
       if (!field || value == null) return;
       const patch: Partial<StudioState> = {};
       (patch as Record<string, unknown>)[field] = value;
-      // Dataset switch → reset entities to a sensible set for the new dataset.
-      if (field === 'dataset' && value !== s.snapshot.dataset) {
-        patch.entities = [...DEFAULT_ENTITIES_BY_DATASET[value as Dataset]];
-      }
-      s.patch(patch);
+      applyMigratedPatch(s, patch);
     });
   });
 
@@ -251,6 +434,28 @@ function wireRailControls(s: Store) {
     document.querySelectorAll<HTMLElement>('[data-chip-count]').forEach((el) => {
       el.textContent = String(state.entities.length);
     });
+
+    // RailStatus pill — recompute min/max/state and rewrite the two text
+    // nodes + the data-state attribute that CSS hangs its tinting off.
+    renderRailStatus(state);
+  });
+}
+
+function renderRailStatus(state: StudioState) {
+  const { min, max } = railStatusBounds(state);
+  const count = state.entities.length;
+  const rs = computeRailState(count, min, max);
+  const msg = railStatusMessage(rs, min, max);
+  document.querySelectorAll<HTMLElement>('[data-rail-status]').forEach((el) => {
+    el.dataset.state = rs;
+    el.dataset.min = String(min);
+    el.dataset.max = String(max);
+    const countEl = el.querySelector<HTMLElement>('[data-rail-status-count]');
+    const maxEl = el.querySelector<HTMLElement>('[data-rail-status-max]');
+    const msgEl = el.querySelector<HTMLElement>('[data-rail-status-msg]');
+    if (countEl) countEl.textContent = String(count);
+    if (maxEl) maxEl.textContent = String(max);
+    if (msgEl) msgEl.textContent = msg;
   });
 }
 
@@ -291,13 +496,7 @@ function wireChartTypeSwitch(s: Store) {
     el.addEventListener('click', () => {
       const preset = el.dataset.type as Preset;
       if (!preset) return;
-      const cur = s.snapshot;
-      const next = normalizeForPreset({ ...cur, preset });
-      const patch: Partial<StudioState> = { preset };
-      if (next.dataset !== cur.dataset) patch.dataset = next.dataset;
-      if (next.metric !== cur.metric) patch.metric = next.metric;
-      if (next.entities !== cur.entities) patch.entities = next.entities;
-      s.patch(patch);
+      applyMigratedPatch(s, { preset });
     });
   });
 
@@ -355,8 +554,7 @@ function wireEntityPicker(s: Store) {
     }
   });
 
-  const capFor = (state: StudioState): number =>
-    state.preset === 'compare' ? 6 : (state.dataset === 'region' ? 5 : state.dataset === 'state' ? 18 : 36);
+  const capFor = (state: StudioState): number => railStatusBounds(state).max;
 
   function renderPicker() {
     // dynamic import would complicate plain <script> usage; inline fetch of
@@ -669,7 +867,8 @@ export async function exportDataCsv(): Promise<void> {
 }
 
 let toastTimer: number | null = null;
-export function showToast(message: string, variant: 'info' | 'warn' = 'info'): void {
+
+function ensureToastHost(): HTMLElement {
   let host = document.querySelector<HTMLElement>('[data-ws-toast]');
   if (!host) {
     host = document.createElement('div');
@@ -679,17 +878,57 @@ export function showToast(message: string, variant: 'info' | 'warn' = 'info'): v
     host.className = 'ws-toast';
     document.body.appendChild(host);
   }
-  host.classList.remove('warn', 'info', 'visible');
+  return host;
+}
+
+export function showToast(message: string, variant: 'info' | 'warn' = 'info'): void {
+  const host = ensureToastHost();
+  host.classList.remove('warn', 'info', 'visible', 'has-action');
   host.classList.add(variant);
-  host.textContent = message;
+  host.replaceChildren(document.createTextNode(message));
   // Reflow for restart of the fade-in transition when spam-clicking.
   void host.offsetWidth;
   host.classList.add('visible');
 
   if (toastTimer != null) window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
-    host!.classList.remove('visible');
+    host.classList.remove('visible');
   }, 2400);
+}
+
+// Action toast — like showToast, but appends a right-aligned action
+// button (e.g. "Undo") whose click runs the supplied callback and then
+// dismisses the toast. Used by migrateStateForPatch's drop-and-toast flow.
+// Longer auto-dismiss (5s) since the reader has to aim for the button.
+export function showActionToast(
+  message: string,
+  action: { label: string; run: () => void },
+  variant: 'info' | 'warn' = 'warn',
+): void {
+  const host = ensureToastHost();
+  host.classList.remove('warn', 'info', 'visible');
+  host.classList.add(variant, 'has-action');
+  const msg = document.createElement('span');
+  msg.className = 'ws-toast-msg';
+  msg.textContent = message;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'ws-toast-action';
+  btn.textContent = action.label;
+  btn.addEventListener(
+    'click',
+    () => {
+      action.run();
+      host.classList.remove('visible');
+    },
+    { once: true },
+  );
+  host.replaceChildren(msg, btn);
+  void host.offsetWidth;
+  host.classList.add('visible');
+
+  if (toastTimer != null) window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => host.classList.remove('visible'), 5000);
 }
 
 export function filenameFor(ext: string): string {
