@@ -822,6 +822,10 @@ const ordinals = [
         // the page to the matching segment.
         sliderEl.addEventListener('keydown', (ev) => {
           let next: number | null = null;
+          // Smooth for one-beat moves (reads as a confident hop). Instant
+          // for jump-to-extreme intent — Home/End across 14 census years
+          // is a 6300px scroll, which would feel like a 2s drift if smooth.
+          let behavior: ScrollBehavior = 'smooth';
           switch (ev.key) {
             case 'ArrowRight':
             case 'ArrowUp':
@@ -829,8 +833,8 @@ const ordinals = [
             case 'ArrowLeft':
             case 'ArrowDown':
               next = Math.max(0, currentIdx - 1); break;
-            case 'Home': next = 0; break;
-            case 'End':  next = lastIdx; break;
+            case 'Home': next = 0; behavior = 'auto'; break;
+            case 'End':  next = lastIdx; behavior = 'auto'; break;
           }
           if (next === null) return;
           ev.preventDefault();
@@ -840,7 +844,7 @@ const ordinals = [
           const targetRaw = targetProgress * 0.96 + 0.02;
           window.scrollTo({
             top: trackTop + targetRaw * scrollable,
-            behavior: 'smooth',
+            behavior,
           });
         });
 
