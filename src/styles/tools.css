@@ -419,6 +419,32 @@ body.workshop .btn.primary .mark { color: var(--paper-2); }
   color: var(--accent);
 }
 .ws-toast.warn::before { content: "!"; }
+/* Action-toast variant — entity-drop Undo surface from migrateStateForPatch. */
+.ws-toast.has-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+}
+.ws-toast-msg { flex: 1 1 auto; }
+.ws-toast-action {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: currentColor;
+  background: transparent;
+  border: 1px solid currentColor;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.ws-toast-action:hover,
+.ws-toast-action:focus-visible {
+  background: currentColor;
+  color: var(--paper);
+  outline: none;
+}
 @media print { .ws-toast { display: none; } }
 
 /* Sources drawer — right-side slide-in */

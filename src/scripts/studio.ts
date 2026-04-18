@@ -178,29 +178,78 @@ function ensureStore(): Store {
   if (store) return store;
   const url = new URL(window.location.href);
   const parsed = parseFromUrl(url);
-  const initial = normalizeForPreset(parsed);
+  // Run the parsed URL through migrateStateForPatch so a manually-crafted
+  // URL like ?preset=compare&dataset=region (which can't actually render)
+  // is coerced to a valid shape before the store ever emits a change.
+  const { next: initial } = migrateStateForPatch(defaultsFor(parsed.preset), parsed);
   store = new Store(initial);
   writeToUrl(initial);
   return store;
 }
 
-// Compare reports are authored around state+population; normalize incoming
-// state so other metrics/datasets don't render silently.
+// Compare reports are authored around state+population; the migration
+// helper coerces that invariant whenever merged state lands at preset=compare.
 const LOCKED_COMPARE = { dataset: 'state' as Dataset, metric: 'population' as Metric };
-function normalizeForPreset(state: StudioState): StudioState {
-  if (state.preset !== 'compare') return state;
-  if (state.dataset === LOCKED_COMPARE.dataset && state.metric === LOCKED_COMPARE.metric) return state;
-  const keepEntities = state.dataset === LOCKED_COMPARE.dataset;
-  return {
-    ...state,
-    dataset: LOCKED_COMPARE.dataset,
-    metric: LOCKED_COMPARE.metric,
-    entities: keepEntities ? state.entities : ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'].slice(0, 3),
-  };
-}
 function lockedFieldsFor(preset: Preset): Partial<Record<keyof StudioState, string>> {
   if (preset === 'compare') return { dataset: LOCKED_COMPARE.dataset, metric: LOCKED_COMPARE.metric };
   return {};
+}
+
+// Dataset default entity seeds, used by migrateStateForPatch when a
+// dataset flip requires throwing away the prev entities (their code space
+// is different) and re-seeding with something sensible.
+const DEFAULT_ENTITIES_BY_DATASET: Record<Dataset, string[]> = {
+  region: ['East', 'West', 'North', 'South'],
+  state: ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'],
+  loksabha: [],
+};
+
+// Apply a user patch against the previous state, enforcing the three
+// invariants below, and report which entity codes (if any) had to be
+// dropped so the caller can toast the reader with an Undo option.
+//
+//   (1) Compare locks dataset=state + metric=population. Hitting compare
+//       from any dataset other than `state` drops every entity (code
+//       spaces don't overlap) and reseeds with the compare defaults.
+//   (2) A dataset change outside of compare drops all entities (same
+//       code-space reasoning) and reseeds from DEFAULT_ENTITIES_BY_DATASET.
+//   (3) Cap-trim: if the merged state's railStatusBounds.max is smaller
+//       than the current entity count (e.g. bar→compare shrinks cap 36→6),
+//       the overflow is trimmed to fit. Trimmed entities appear in dropped.
+//
+// The function is pure — it does no DOM or store work — so the user-action
+// wirings + the init path can share it, and tests can exercise every
+// branch without needing a browser.
+export function migrateStateForPatch(
+  prev: StudioState,
+  patch: Partial<StudioState>,
+): { next: StudioState; dropped: string[] } {
+  let merged: StudioState = {
+    ...prev,
+    ...patch,
+    entities: patch.entities ?? prev.entities,
+  };
+  const dropped: string[] = [];
+
+  if (merged.preset === 'compare') {
+    const needsReseed = merged.dataset !== LOCKED_COMPARE.dataset;
+    merged = { ...merged, dataset: LOCKED_COMPARE.dataset, metric: LOCKED_COMPARE.metric };
+    if (needsReseed) {
+      dropped.push(...merged.entities);
+      merged = { ...merged, entities: [...DEFAULTS.compare.entities] };
+    }
+  } else if (patch.dataset && patch.dataset !== prev.dataset) {
+    dropped.push(...prev.entities);
+    merged = { ...merged, entities: [...DEFAULT_ENTITIES_BY_DATASET[patch.dataset]] };
+  }
+
+  const { max } = railStatusBounds(merged);
+  if (merged.entities.length > max) {
+    dropped.push(...merged.entities.slice(max));
+    merged = { ...merged, entities: merged.entities.slice(0, max) };
+  }
+
+  return { next: merged, dropped: [...new Set(dropped)] };
 }
 
 // Entity-count bounds for the current studio state. Compare enforces a
@@ -258,11 +307,23 @@ export function getStore(): Store {
 // Control wiring
 // ——————————————————————————————————————————————
 
-const DEFAULT_ENTITIES_BY_DATASET: Record<Dataset, string[]> = {
-  region: ['East', 'West', 'North', 'South'],
-  state: ['UP', 'MH', 'BR', 'WB', 'AP', 'MP', 'TN', 'RJ'],
-  loksabha: [],
-};
+// Route a user-originated patch through migrateStateForPatch so the three
+// invariants (compare-lock, dataset-reseed, cap-trim) fire uniformly no
+// matter which rail control produced the patch. Fires an Undo toast when
+// the migration dropped entities — clicking Undo restores the entire
+// previous snapshot, including the entities + dataset + metric that were
+// in play at the moment of the action.
+function applyMigratedPatch(s: Store, patch: Partial<StudioState>) {
+  const prev = s.snapshot;
+  const { next, dropped } = migrateStateForPatch(prev, patch);
+  s.patch(next);
+  if (dropped.length > 0) {
+    const summary = dropped.length === 1
+      ? `Dropped entity ${dropped[0]}`
+      : `Dropped ${dropped.length} entities (${dropped.slice(0, 4).join(', ')}${dropped.length > 4 ? '…' : ''})`;
+    showActionToast(summary, { label: 'Undo', run: () => s.patch(prev) }, 'warn');
+  }
+}
 
 function wireRailControls(s: Store) {
   // plates: <button class="plate" data-field="dataset" data-value="state">
@@ -274,11 +335,7 @@ function wireRailControls(s: Store) {
       if (!field || value == null) return;
       const patch: Partial<StudioState> = {};
       (patch as Record<string, unknown>)[field] = value;
-      // Dataset switch → reset entities to a sensible set for the new dataset.
-      if (field === 'dataset' && value !== s.snapshot.dataset) {
-        patch.entities = [...DEFAULT_ENTITIES_BY_DATASET[value as Dataset]];
-      }
-      s.patch(patch);
+      applyMigratedPatch(s, patch);
     });
   });
 
@@ -381,13 +438,7 @@ function wireChartTypeSwitch(s: Store) {
     el.addEventListener('click', () => {
       const preset = el.dataset.type as Preset;
       if (!preset) return;
-      const cur = s.snapshot;
-      const next = normalizeForPreset({ ...cur, preset });
-      const patch: Partial<StudioState> = { preset };
-      if (next.dataset !== cur.dataset) patch.dataset = next.dataset;
-      if (next.metric !== cur.metric) patch.metric = next.metric;
-      if (next.entities !== cur.entities) patch.entities = next.entities;
-      s.patch(patch);
+      applyMigratedPatch(s, { preset });
     });
   });
 
@@ -758,7 +809,8 @@ export async function exportDataCsv(): Promise<void> {
 }
 
 let toastTimer: number | null = null;
-export function showToast(message: string, variant: 'info' | 'warn' = 'info'): void {
+
+function ensureToastHost(): HTMLElement {
   let host = document.querySelector<HTMLElement>('[data-ws-toast]');
   if (!host) {
     host = document.createElement('div');
@@ -768,17 +820,57 @@ export function showToast(message: string, variant: 'info' | 'warn' = 'info'): v
     host.className = 'ws-toast';
     document.body.appendChild(host);
   }
-  host.classList.remove('warn', 'info', 'visible');
+  return host;
+}
+
+export function showToast(message: string, variant: 'info' | 'warn' = 'info'): void {
+  const host = ensureToastHost();
+  host.classList.remove('warn', 'info', 'visible', 'has-action');
   host.classList.add(variant);
-  host.textContent = message;
+  host.replaceChildren(document.createTextNode(message));
   // Reflow for restart of the fade-in transition when spam-clicking.
   void host.offsetWidth;
   host.classList.add('visible');
 
   if (toastTimer != null) window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
-    host!.classList.remove('visible');
+    host.classList.remove('visible');
   }, 2400);
+}
+
+// Action toast — like showToast, but appends a right-aligned action
+// button (e.g. "Undo") whose click runs the supplied callback and then
+// dismisses the toast. Used by migrateStateForPatch's drop-and-toast flow.
+// Longer auto-dismiss (5s) since the reader has to aim for the button.
+export function showActionToast(
+  message: string,
+  action: { label: string; run: () => void },
+  variant: 'info' | 'warn' = 'warn',
+): void {
+  const host = ensureToastHost();
+  host.classList.remove('warn', 'info', 'visible');
+  host.classList.add(variant, 'has-action');
+  const msg = document.createElement('span');
+  msg.className = 'ws-toast-msg';
+  msg.textContent = message;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'ws-toast-action';
+  btn.textContent = action.label;
+  btn.addEventListener(
+    'click',
+    () => {
+      action.run();
+      host.classList.remove('visible');
+    },
+    { once: true },
+  );
+  host.replaceChildren(msg, btn);
+  void host.offsetWidth;
+  host.classList.add('visible');
+
+  if (toastTimer != null) window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => host.classList.remove('visible'), 5000);
 }
 
 export function filenameFor(ext: string): string {
