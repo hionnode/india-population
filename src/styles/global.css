@@ -3463,12 +3463,22 @@ body.ready .editorial {
   margin-top: 10px;
 }
 
+/* ────────────────────────────────────────
+   SD-NARRATIVE — scroll-pinned chapter heads
+   The .sd-narrative wrapper scopes the
+   IntersectionObserver in the page script.
+   ──────────────────────────────────────── */
+
+.sd-narrative {
+  /* No layout of its own — the wrapper just exists for JS scoping. */
+}
+
 /* Date chapters */
 .sd-chapter {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 36px;
-  padding: 32px 0 22px;
+  grid-template-columns: 200px 1fr;
+  gap: 44px;
+  padding: 36px 0 28px;
 }
 
 .sd-chapter-accent {
@@ -3483,19 +3493,33 @@ body.ready .editorial {
 .sdc-head {
   position: relative;
   padding-top: 6px;
+  /* Pin the head while the body scrolls. align-self:start is required
+     for sticky to work inside a CSS grid cell — without it the cell
+     stretches to the row's full height and the sticky has no space to
+     travel within. The 24px top offset matches the homepage scrollytell
+     for visual rhythm. */
+  position: sticky;
+  top: 24px;
+  align-self: start;
 }
 
 .sdc-year {
   display: block;
   font-family: var(--serif);
   font-weight: 800;
-  font-size: clamp(48px, 7vw, 72px);
-  line-height: 0.9;
+  /* Bigger on desktop now that this is the moment. The clamp upper
+     bound was 72px when the head was a static label; lifting it to
+     112px makes the year-flip read as a beat. */
+  font-size: clamp(56px, 8.5vw, 112px);
+  line-height: 0.88;
   color: var(--ink);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   font-variant-numeric: lining-nums tabular-nums;
   font-variation-settings: 'opsz' 144;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  /* Tabular-nums ensures the year doesn't shift horizontally as we
+     swap 1951 → 1962 → 1976 etc. The whole frame stays still; only
+     the digits change. */
 }
 
 .sd-chapter-accent .sdc-year {
@@ -3568,10 +3592,108 @@ body.ready .editorial {
     margin-left: -12px;
     padding-left: 12px;
   }
+  /* On mobile the chapter stacks (year on top of body) — sticky head
+     would dominate the screen and bury the prose. Drop back to normal
+     flow on mobile, keep only the live TOC progress. */
+  .sdc-head {
+    position: static;
+    align-self: auto;
+  }
   .sdc-year {
-    font-size: 40px;
+    font-size: 44px;
+    line-height: 0.92;
   }
   .sdc-body p { font-size: 15.5px; }
+}
+
+/* Reduced-motion: drop sticky pin, render as the original page did. */
+@media (prefers-reduced-motion: reduce) {
+  .sdc-head {
+    position: static;
+    align-self: auto;
+  }
+}
+body.reduced-motion .sdc-head {
+  position: static;
+  align-self: auto;
+}
+
+/* ────────────────────────────────────────
+   SD-TOC live progress
+   The strip stays in normal flow, but its
+   nodes update as the reader scrolls past
+   chapters: --past = filled, --current =
+   highlighted, --future = muted-default.
+   ──────────────────────────────────────── */
+
+.sd-node {
+  /* Smooth state transitions so progress reads as choreography rather
+     than abrupt re-paints when scrolling fast. */
+  transition: background 0.28s ease, opacity 0.28s ease;
+}
+
+.sd-node .sd-year,
+.sd-node .sd-kicker {
+  transition: color 0.28s ease, opacity 0.28s ease, font-weight 0.2s ease;
+}
+
+/* Past: the reader has already crossed this date. The dot fills in. */
+.sd-node--past::before {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.sd-node--past.sd-node-accent::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.sd-node--past .sd-year { color: var(--muted); }
+.sd-node--past .sd-kicker { color: var(--dim); }
+
+/* Current: the chapter being read. Bold the year, ink-up the kicker,
+   nudge the underlying tile so it reads like "you are here". */
+.sd-node--current {
+  background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+}
+.sd-node-accent.sd-node--current {
+  background: color-mix(in srgb, var(--accent) 14%, var(--paper-2));
+}
+.sd-node--current .sd-year {
+  color: var(--ink);
+  /* A confident weight bump — the optical-size variation gives Fraunces
+     room to breathe at this scale. */
+  font-weight: 900;
+  font-variation-settings: 'opsz' 96;
+}
+.sd-node-accent.sd-node--current .sd-year {
+  color: var(--accent);
+}
+.sd-node--current .sd-kicker {
+  color: var(--ink);
+}
+.sd-node-accent.sd-node--current .sd-kicker {
+  color: var(--accent);
+}
+/* The dot for the current node grows just enough to feel "live" without
+   becoming a button. */
+.sd-node--current::before {
+  width: 11px;
+  height: 11px;
+  background: var(--accent);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Future: the chapters yet to come. Slightly muted so the eye reads the
+   TOC as a horizon. */
+.sd-node--future .sd-year { opacity: 0.55; }
+.sd-node--future .sd-kicker { opacity: 0.55; }
+
+/* Reduced-motion: skip all the JS-driven progress states; the TOC reads
+   as a flat reference strip. */
+@media (prefers-reduced-motion: reduce) {
+  .sd-node, .sd-node .sd-year, .sd-node .sd-kicker {
+    transition: none;
+  }
 }
 
 /* ────────────────────────────────────────
