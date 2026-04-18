@@ -87,6 +87,30 @@ export function defaultsFor(preset: Preset): StudioState {
 const URL_VERSION = 1;
 const URL_PARAM_ORDER = ['preset', 'dataset', 'metric', 'from', 'to', 'entities', 'v'] as const;
 
+// Letterhead — the four editable fields on the Compare worksheet header
+// (title, subtitle, byline, note). They live in the URL alongside the
+// studio params so a shared Compare link rehydrates the reader's copy
+// without a round trip through localStorage. URL bypasses the DOM
+// maxlength attribute, so every read clamps to the per-field cap below.
+// The URL keys use an `lh_` prefix so they sort together and don't
+// collide with future studio params.
+export type LetterheadField = 'title' | 'subtitle' | 'byline' | 'note';
+export type Letterhead = Record<LetterheadField, string>;
+export const LETTERHEAD_DEFAULT: Letterhead = { title: '', subtitle: '', byline: '', note: '' };
+export const LETTERHEAD_MAX_LEN: Record<LetterheadField, number> = {
+  title: 80,
+  subtitle: 80,
+  byline: 80,
+  note: 480,
+};
+const LETTERHEAD_URL_KEYS: Record<LetterheadField, string> = {
+  title: 'lh_title',
+  subtitle: 'lh_sub',
+  byline: 'lh_by',
+  note: 'lh_note',
+};
+const LETTERHEAD_FIELDS: readonly LetterheadField[] = ['title', 'subtitle', 'byline', 'note'];
+
 export function parseFromUrl(url: URL): StudioState {
   const preset = (url.searchParams.get('preset') ?? 'bar') as Preset;
   const base = defaultsFor(presetOrDefault(preset));
@@ -130,6 +154,40 @@ export function canonicalizeUrlParams(params: URLSearchParams, state: StudioStat
 export function writeToUrl(state: StudioState) {
   const url = new URL(window.location.href);
   canonicalizeUrlParams(url.searchParams, state);
+  window.history.replaceState({}, '', url);
+}
+
+// Letterhead → URL. Empty fields are deleted (not set to the empty string)
+// so the canonical URL stays tight when the reader hasn't customized
+// anything. Overwrites the lh_* keys in place; other params stay put.
+export function canonicalizeLetterheadParams(params: URLSearchParams, lh: Letterhead): URLSearchParams {
+  for (const field of LETTERHEAD_FIELDS) {
+    const key = LETTERHEAD_URL_KEYS[field];
+    const raw = lh[field] ?? '';
+    const trimmed = raw.slice(0, LETTERHEAD_MAX_LEN[field]);
+    params.delete(key);
+    if (trimmed.length > 0) params.set(key, trimmed);
+  }
+  return params;
+}
+
+// URL → Letterhead. Always returns a fully-populated object (empty string
+// for any missing field) and clamps the length of every field to its
+// per-field max. The clamp lives here — not at the input's DOM maxlength
+// attribute — because a shared URL may have been hand-edited to exceed
+// the cap or to include a multi-kilobyte note.
+export function parseLetterheadFromUrl(url: URL): Letterhead {
+  const out: Letterhead = { ...LETTERHEAD_DEFAULT };
+  for (const field of LETTERHEAD_FIELDS) {
+    const raw = url.searchParams.get(LETTERHEAD_URL_KEYS[field]) ?? '';
+    out[field] = raw.slice(0, LETTERHEAD_MAX_LEN[field]);
+  }
+  return out;
+}
+
+export function writeLetterheadToUrl(lh: Letterhead) {
+  const url = new URL(window.location.href);
+  canonicalizeLetterheadParams(url.searchParams, lh);
   window.history.replaceState({}, '', url);
 }
 
