@@ -5,6 +5,7 @@ import PageNav from '../components/PageNav.astro';
 import GrowthLines from '../components/GrowthLines.astro';
 import PopPerSeat from '../components/PopPerSeat.astro';
 import FreezePenalty from '../components/FreezePenalty.astro';
+import { sortedByPopPerSeat, LOKSABHA_META } from '../data/loksabha';
 
 const firstYear = CENSUS[0].year;
 const lastYear = CENSUS[CENSUS.length - 1].year;
@@ -13,6 +14,30 @@ const ordinals = [
   'the first','the second','the third','the fourth','the fifth','the sixth','the seventh',
   'the eighth','the ninth','the tenth','the eleventh','the twelfth','the thirteenth','the fourteenth',
 ];
+
+// Vote-value (Fig. 5): one row per state/UT, sorted descending by popPerSeat
+// (= ascending by vote value). ₹1 = the average Indian vote (currentAvgConstituency).
+const VV_AVG = LOKSABHA_META.currentAvgConstituency;
+const VV_ROWS = sortedByPopPerSeat().map((row) => ({
+  ...row,
+  voteValue: VV_AVG / row.popPerSeat,
+}));
+const VV_CAP = 2.0; // bar caps at ₹2.00; UTs with higher values show an arrow tip
+const vvFirst = VV_ROWS[0];
+const vvLast = VV_ROWS[VV_ROWS.length - 1];
+const vvRatio = vvLast.voteValue / vvFirst.voteValue;
+
+const formatRupees = (v: number) => v.toFixed(2);
+const formatBlurb = (v: number, name: string): string => {
+  if (v < 0.97) {
+    const paise = Math.round(v * 100);
+    return `worth ${paise} paise of an average Indian's vote`;
+  }
+  if (v <= 1.03) {
+    return `at par with the average Indian's vote`;
+  }
+  return `worth ₹${v.toFixed(2)} for every ₹1 of an average Indian's vote`;
+};
 ---
 
 <html lang="en">
@@ -61,66 +86,77 @@ const ordinals = [
 
       <hr class="rule" />
 
-      <!-- The year, enormous -->
-      <section class="year-section">
-        <div class="year-label-col">
-          <span class="smallcaps">the year ·&nbsp;<span class="hi">वर्ष</span></span>
-          <span class="year-ord" id="year-ord">{ordinals[initialIndex]} census</span>
-        </div>
-        <div class="year-big-col">
-          <span class="year-big" id="year-label">{CENSUS[initialIndex].year}</span>
-          <span class="estimated-tag" id="estimated-badge" hidden>
-            <span class="est-mark">†</span> figure reconstructed
-          </span>
-        </div>
-        <div class="year-total-col">
-          <span class="smallcaps">total India</span>
-          <span class="total-num" id="total-pop">—</span>
-          <span class="total-unit">million souls</span>
-        </div>
-      </section>
+      <!-- Scrollytelling pin: year + chart + rail freeze in the centre
+           of the viewport while page scroll advances the census year.   -->
+      <section class="scrollytell" id="scrollytell">
+        <div class="scrollytell-inner">
+          <!-- The year, enormous -->
+          <section class="year-section">
+            <div class="year-label-col">
+              <span class="smallcaps">the year ·&nbsp;<span class="hi">वर्ष</span></span>
+              <span class="year-ord" id="year-ord">{ordinals[initialIndex]} census</span>
+            </div>
+            <div class="year-big-col">
+              <span class="year-big" id="year-label" aria-live="polite">{CENSUS[initialIndex].year}{' '}</span>
+              <span class="estimated-tag" id="estimated-badge" hidden>
+                <span class="est-mark">†</span> figure reconstructed
+              </span>
+            </div>
+            <div class="year-total-col">
+              <span class="smallcaps">total India</span>
+              <span class="total-num" id="total-pop">—</span>
+              <span class="total-unit">million souls</span>
+            </div>
+          </section>
 
-      <!-- Fig. 1 — regional shares -->
-      <figure class="chart-figure">
-        <figcaption class="fig-head">
-          <span class="fig-label">Fig. 1</span>
-          <span class="fig-title">Share of the all-India total, by region</span>
-          <span class="fig-unit">— per cent —</span>
-        </figcaption>
-        <div id="chart" class="chart"></div>
-      </figure>
+          <!-- Fig. 1 — regional shares -->
+          <figure class="chart-figure">
+            <figcaption class="fig-head">
+              <span class="fig-label">Fig. 1</span>
+              <span class="fig-title">Share of the all-India total, by region</span>
+              <span class="fig-unit">— per cent —</span>
+            </figcaption>
+            <div id="chart" class="chart"></div>
+          </figure>
 
-      <hr class="rule" />
+          <hr class="rule" />
 
-      <!-- Timeline slider for Fig. 1 -->
-      <section class="timeline">
-        <div class="timeline-head">
-          <span class="smallcaps">drag the census year</span>
-          <span class="smallcaps dim"><span class="hi">वर्ष सरकाएँ</span></span>
-        </div>
-        <div class="slider-wrap">
-          <input
-            type="range"
-            id="year-slider"
-            min="0"
-            max={CENSUS.length - 1}
-            step="1"
-            value={initialIndex}
-            aria-label="Census year"
-          />
-          <div class="rail" aria-hidden="true">
-            {CENSUS.map((row, i) => (
-              <div
-                class={`tick ${row.estimated ? 'tick-est' : ''}`}
-                style={`left: ${(i / (CENSUS.length - 1)) * 100}%`}
-              >
-                <span class="tick-mark"></span>
-                <span class={`tick-year ${[0, 4, 7, 10, 13].includes(i) ? 'major' : ''}`}>
-                  {[0, 4, 7, 10, 13].includes(i) ? row.year : ''}
-                </span>
+          <!-- Timeline: read-only progress rail in scroll mode,
+               draggable slider in reduced-motion fallback.            -->
+          <section class="timeline">
+            <div class="timeline-head">
+              <span class="smallcaps timeline-hint timeline-hint-scroll">scroll the census year</span>
+              <span class="smallcaps timeline-hint timeline-hint-drag">drag the census year</span>
+              <span class="smallcaps dim"><span class="hi">वर्ष सरकाएँ</span></span>
+            </div>
+            <div class="slider-wrap">
+              <input
+                type="range"
+                id="year-slider"
+                min="0"
+                max={CENSUS.length - 1}
+                step="1"
+                value={initialIndex}
+                aria-label="Census year"
+              />
+              <div class="rail" aria-hidden="true">
+                <div class="rail-fill" id="rail-fill"></div>
+                {CENSUS.map((row, i) => (
+                  <div
+                    class={`tick ${row.estimated ? 'tick-est' : ''}`}
+                    data-idx={i}
+                    style={`left: ${(i / (CENSUS.length - 1)) * 100}%`}
+                  >
+                    <span class="tick-mark"></span>
+                    <span class={`tick-year ${[0, 4, 7, 10, 13].includes(i) ? 'major' : ''}`}>
+                      {[0, 4, 7, 10, 13].includes(i) ? row.year : ''}
+                    </span>
+                  </div>
+                ))}
+                <span class="rail-end" aria-hidden="true"></span>
               </div>
-            ))}
-          </div>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -197,6 +233,81 @@ const ordinals = [
 
       <FreezePenalty />
 
+      <hr class="rule" />
+
+      <!-- Vote-value lede + scrollytell (Fig. 5) -->
+      <aside class="vv-lede">
+        <p>
+          And so, depending on where you live, this is what your single
+          ballot weighs against an average Indian's. <b>One rupee</b> is the
+          mean weight; the closer to par, the closer your state sits to the
+          constitutional promise of <em>one person, one vote</em>.
+        </p>
+      </aside>
+
+      <section class="vote-value" id="vote-value" aria-label="Vote value across states">
+        <div class="vote-value-inner">
+          <figcaption class="fig-head vv-fig-head">
+            <span class="fig-label">Fig. 5</span>
+            <span class="fig-title">What is your vote worth?</span>
+            <span class="fig-unit">— in rupees, where ₹1 = the average Indian vote —</span>
+          </figcaption>
+
+          <div class="vv-stage">
+            <div class="vv-readout">
+              <div class="vv-readout-state" aria-live="polite">
+                <span class="vv-state-name" id="vv-state-name">{vvFirst.name}{' '}</span>
+                <span class="vv-state-hi hi" id="vv-state-hi">{vvFirst.nameHi}{' '}</span>
+              </div>
+              <div class="vv-readout-value">
+                <span class="vv-rupee">₹</span><span class="vv-amount" id="vv-amount">{formatRupees(vvFirst.voteValue)}{' '}</span>
+              </div>
+              <div class="vv-readout-blurb" id="vv-blurb">{formatBlurb(vvFirst.voteValue, vvFirst.name)}<span aria-hidden="true" class="vv-blurb-end"></span></div>
+            </div>
+
+            <div class="vv-listwrap">
+              <ol class="vv-list" id="vv-list">
+                {VV_ROWS.map((row, i) => {
+                  const v = row.voteValue;
+                  const cappedPct = Math.min(v, VV_CAP) / VV_CAP * 100;
+                  const overflow = v > VV_CAP;
+                  return (
+                    <li
+                      class={`vv-row ${i === 0 ? 'vv-current' : ''}${overflow ? ' vv-overflow' : ''}`}
+                      data-idx={i}
+                      style={`--vv-bar-pct: ${cappedPct.toFixed(2)}%; --region-color: ${REGION_COLORS[row.region]}`}
+                    >
+                      <span class="vv-row-name">{row.name}{' '}</span>
+                      <div class="vv-bar-wrap">
+                        <span class="vv-bar"></span>
+                        {overflow && <span class="vv-bar-tip">→</span>}
+                      </div>
+                      <span class="vv-row-value">₹{v.toFixed(2)}{' '}</span>
+                    </li>
+                  );
+                })}
+                <span class="vv-list-end" aria-hidden="true"></span>
+              </ol>
+              <span class="vv-par" aria-hidden="true">
+                <span class="vv-par-label">par · ₹1</span>
+              </span>
+            </div>
+          </div>
+
+          <input
+            type="range"
+            id="vv-slider"
+            class="sr-only"
+            min="0"
+            max={VV_ROWS.length - 1}
+            step="1"
+            value="0"
+            aria-label="Vote value by state"
+          />
+          <span aria-hidden="true" class="vv-shell-end"></span>
+        </div>
+      </section>
+
       <hr class="rule double" />
 
       <!-- Dramatis personae (region legend) -->
@@ -220,6 +331,7 @@ const ordinals = [
               <p class="region-states">{REGION_LABELS[region].states}</p>
             </article>
           ))}
+          <span aria-hidden="true" class="grid-end"></span>
         </div>
       </section>
 
@@ -312,15 +424,17 @@ const ordinals = [
           height: 440,
           fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
           toolbar: { show: false },
-          animations: {
-            enabled: true,
-            speed: 420,
-            animateGradually: { enabled: false },
-            dynamicAnimation: { enabled: true, speed: 420 },
-          },
+          // Animations disabled: scroll-driven updates need instant snap,
+          // not 420ms tweens that queue up on every frame.
+          animations: { enabled: false },
           background: 'transparent',
           parentHeightOffset: 0,
         },
+        // On phones the pinned frame is short. A 440px chart plus the giant
+        // year + rail overflows. Shrink so all three stay on-screen.
+        responsive: [
+          { breakpoint: 760, options: { chart: { height: 220 } } },
+        ],
         series: [{ name: 'Share of India', data: seriesFor(0) }],
         plotOptions: {
           bar: {
@@ -704,7 +818,17 @@ const ordinals = [
         document.body.classList.add('ready');
       });
 
+      const railFillEl = document.getElementById('rail-fill')!;
+      const scrollytellEl = document.getElementById('scrollytell')!;
+      const tickEls = Array.from(
+        document.querySelectorAll<HTMLElement>('.rail .tick'),
+      );
+      const lastIdx = CENSUS.length - 1;
+      let currentIdx = -1;
+
       const update = (idx: number) => {
+        if (idx === currentIdx) return;
+        currentIdx = idx;
         const row = CENSUS[idx];
         yearLabelEl.textContent = String(row.year);
         yearOrdEl.textContent = `${ordinals[idx]} census`;
@@ -712,13 +836,297 @@ const ordinals = [
         totalPopEl.textContent = row.totalIndiaMillions.toFixed(1);
         chart.updateSeries([{ name: 'Share of India', data: seriesFor(idx) }]);
 
+        // Keep the hidden range input in sync so tooltip & a11y read the
+        // current year, and so the reduced-motion fallback starts coherent.
+        if (sliderEl.value !== String(idx)) sliderEl.value = String(idx);
+
+        // Read-only progress rail: fill bar + active-tick highlight.
+        railFillEl.style.width = `${(idx / lastIdx) * 100}%`;
+        for (let i = 0; i < tickEls.length; i++) {
+          tickEls[i].classList.toggle('tick-current', i === idx);
+        }
+
         yearLabelEl.classList.remove('year-flash');
         void (yearLabelEl as HTMLElement).offsetWidth;
         yearLabelEl.classList.add('year-flash');
       };
 
       update(Number(sliderEl.value));
-      sliderEl.addEventListener('input', () => update(Number(sliderEl.value)));
+
+      /* ─────────────────────────────────────────────────────────────
+         Scroll-driven year controller
+         ─ IntersectionObserver gates the scroll listener so the rest
+           of the page costs nothing.
+         ─ rAF throttles to one read per frame.
+         ─ prefers-reduced-motion users get the original drag slider.
+         ───────────────────────────────────────────────────────────── */
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      const setupDragMode = () => {
+        document.body.classList.add('reduced-motion');
+        sliderEl.addEventListener('input', () => update(Number(sliderEl.value)));
+      };
+
+      const setupScrollMode = () => {
+        let inZone = false;
+        let ticking = false;
+        let trackTop = 0;
+        let trackHeight = 0;
+        let viewportH = 0;
+
+        const measure = () => {
+          const rect = scrollytellEl.getBoundingClientRect();
+          trackTop = rect.top + window.scrollY;
+          trackHeight = scrollytellEl.offsetHeight;
+          viewportH = window.innerHeight;
+        };
+
+        const tick = () => {
+          ticking = false;
+          const scrollable = trackHeight - viewportH;
+          if (scrollable <= 0) return;
+          const raw = (window.scrollY - trackTop) / scrollable;
+          // 2% dead-zones at top and bottom so first/last years don't
+          // trigger while half off-screen.
+          const progress = Math.max(0, Math.min(1, (raw - 0.02) / 0.96));
+          const idx = Math.max(0, Math.min(lastIdx, Math.floor(progress * CENSUS.length)));
+          update(idx);
+        };
+
+        const onScroll = () => {
+          if (!inZone || ticking) return;
+          ticking = true;
+          requestAnimationFrame(tick);
+        };
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              inZone = entry.isIntersecting;
+              if (inZone) tick();
+            }
+          },
+          { rootMargin: '0px 0px 0px 0px', threshold: 0 },
+        );
+        io.observe(scrollytellEl);
+
+        let resizeT: number | undefined;
+        const onResize = () => {
+          if (resizeT) window.clearTimeout(resizeT);
+          resizeT = window.setTimeout(() => {
+            measure();
+            tick();
+          }, 120);
+        };
+
+        // Keyboard a11y: arrow / Home / End on the hidden input scrolls
+        // the page to the matching segment.
+        sliderEl.addEventListener('keydown', (ev) => {
+          let next: number | null = null;
+          // Smooth for one-beat moves (reads as a confident hop). Instant
+          // for jump-to-extreme intent — Home/End across 14 census years
+          // is a 6300px scroll, which would feel like a 2s drift if smooth.
+          let behavior: ScrollBehavior = 'smooth';
+          switch (ev.key) {
+            case 'ArrowRight':
+            case 'ArrowUp':
+              next = Math.min(lastIdx, currentIdx + 1); break;
+            case 'ArrowLeft':
+            case 'ArrowDown':
+              next = Math.max(0, currentIdx - 1); break;
+            case 'Home': next = 0; behavior = 'auto'; break;
+            case 'End':  next = lastIdx; behavior = 'auto'; break;
+          }
+          if (next === null) return;
+          ev.preventDefault();
+          const scrollable = trackHeight - viewportH;
+          // Add a hair of margin past the dead-zone so floor() lands on `next`.
+          const targetProgress = next / CENSUS.length + 0.5 / CENSUS.length;
+          const targetRaw = targetProgress * 0.96 + 0.02;
+          window.scrollTo({
+            top: trackTop + targetRaw * scrollable,
+            behavior,
+          });
+        });
+
+        measure();
+        // Sync to current scroll position on first paint to avoid a 1881
+        // flash on hard reloads partway down the page.
+        tick();
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
+      };
+
+      if (reducedMotion.matches) setupDragMode();
+      else setupScrollMode();
+
+      // If the user toggles their OS reduced-motion setting mid-session,
+      // CSS reacts (slider becomes visible, sticky disengages) but the JS
+      // mode was bound on load. Reload so the right listener path runs.
+      reducedMotion.addEventListener('change', () => location.reload());
+
+      /* ─────────────────────────────────────────────────────────────
+         Fig. 5 — Vote-value across states (scrollytell)
+         ─ Same pin / IO / rAF pattern as Fig. 1, 35 beats instead of 14.
+         ─ Reduced-motion: no pin, no scroll listener; readout stays
+           on the first state and the visible list speaks for itself.
+         ───────────────────────────────────────────────────────────── */
+      const vvSection = document.getElementById('vote-value');
+      const vvList = document.getElementById('vv-list');
+      const vvSlider = document.getElementById('vv-slider') as HTMLInputElement | null;
+      const vvStateName = document.getElementById('vv-state-name');
+      const vvStateHi = document.getElementById('vv-state-hi');
+      const vvAmount = document.getElementById('vv-amount');
+      const vvBlurb = document.getElementById('vv-blurb');
+
+      if (vvSection && vvList && vvSlider && vvStateName && vvStateHi && vvAmount && vvBlurb) {
+        const vvAvg = LOKSABHA_META.currentAvgConstituency;
+        const vvRows = sortedByPopPerSeat().map((row) => ({
+          name: row.name,
+          nameHi: row.nameHi,
+          voteValue: vvAvg / row.popPerSeat,
+        }));
+        const vvLastIdx = vvRows.length - 1;
+        const vvRowEls = Array.from(vvList.querySelectorAll<HTMLElement>('.vv-row'));
+        const vvRupeeEl = vvAmount.previousElementSibling as HTMLElement | null;
+        let vvCurrentIdx = -1;
+
+        const vvBlurbFor = (v: number): string => {
+          if (v < 0.97) {
+            return `worth ${Math.round(v * 100)} paise of an average Indian's vote`;
+          }
+          if (v <= 1.03) {
+            return `at par with the average Indian's vote`;
+          }
+          return `worth ₹${v.toFixed(2)} for every ₹1 of an average Indian's vote`;
+        };
+
+        const vvUpdate = (idx: number) => {
+          if (idx === vvCurrentIdx) return;
+          vvCurrentIdx = idx;
+          const row = vvRows[idx];
+
+          if (idx === vvLastIdx) {
+            // Final beat: collapse to the comparison punchline.
+            const ratio = vvRows[vvLastIdx].voteValue / vvRows[0].voteValue;
+            vvStateName.textContent = `${row.name} vs ${vvRows[0].name}`;
+            vvStateHi.textContent = '';
+            vvAmount.textContent = `${ratio.toFixed(0)}×`;
+            vvBlurb.textContent = `A vote in ${row.name} is worth ${ratio.toFixed(0)}× a vote in ${vvRows[0].name}.`;
+            if (vvRupeeEl) vvRupeeEl.style.opacity = '0';
+          } else {
+            vvStateName.textContent = row.name;
+            vvStateHi.textContent = row.nameHi;
+            vvAmount.textContent = row.voteValue.toFixed(2);
+            vvBlurb.textContent = vvBlurbFor(row.voteValue);
+            if (vvRupeeEl) vvRupeeEl.style.opacity = '';
+          }
+
+          if (vvSlider.value !== String(idx)) vvSlider.value = String(idx);
+
+          for (let i = 0; i < vvRowEls.length; i++) {
+            vvRowEls[i].classList.toggle('vv-current', i === idx);
+          }
+
+          // Ticker: keep the active row centred in the clipped leaderboard.
+          // Manually setting scrollTop (vs scrollIntoView) prevents any
+          // ancestor — including window — from being scrolled during page
+          // scroll. Otherwise we'd fight the user's wheel input.
+          const activeEl = vvRowEls[idx];
+          if (activeEl) {
+            const target = activeEl.offsetTop - vvList.clientHeight / 2 + activeEl.offsetHeight / 2;
+            vvList.scrollTop = Math.max(0, target);
+          }
+
+          // Reuse the year-flash micro-animation as a value-flip cue.
+          vvAmount.classList.remove('year-flash');
+          void (vvAmount as HTMLElement).offsetWidth;
+          vvAmount.classList.add('year-flash');
+        };
+
+        const setupVvScrollMode = () => {
+          let inZone = false;
+          let ticking = false;
+          let trackTop = 0;
+          let trackHeight = 0;
+          let viewportH = 0;
+
+          const measure = () => {
+            const rect = vvSection.getBoundingClientRect();
+            trackTop = rect.top + window.scrollY;
+            trackHeight = vvSection.offsetHeight;
+            viewportH = window.innerHeight;
+          };
+
+          const tick = () => {
+            ticking = false;
+            const scrollable = trackHeight - viewportH;
+            if (scrollable <= 0) return;
+            const raw = (window.scrollY - trackTop) / scrollable;
+            const progress = Math.max(0, Math.min(1, (raw - 0.02) / 0.96));
+            const idx = Math.max(0, Math.min(vvLastIdx, Math.floor(progress * vvRows.length)));
+            vvUpdate(idx);
+          };
+
+          const onScroll = () => {
+            if (!inZone || ticking) return;
+            ticking = true;
+            requestAnimationFrame(tick);
+          };
+
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                inZone = entry.isIntersecting;
+                if (inZone) tick();
+              }
+            },
+            { rootMargin: '0px 0px 0px 0px', threshold: 0 },
+          );
+          io.observe(vvSection);
+
+          let resizeT: number | undefined;
+          const onResize = () => {
+            if (resizeT) window.clearTimeout(resizeT);
+            resizeT = window.setTimeout(() => { measure(); tick(); }, 120);
+          };
+
+          vvSlider.addEventListener('keydown', (ev) => {
+            let next: number | null = null;
+            let behavior: ScrollBehavior = 'smooth';
+            switch (ev.key) {
+              case 'ArrowRight':
+              case 'ArrowUp':
+                next = Math.min(vvLastIdx, vvCurrentIdx + 1); break;
+              case 'ArrowLeft':
+              case 'ArrowDown':
+                next = Math.max(0, vvCurrentIdx - 1); break;
+              case 'Home': next = 0; behavior = 'auto'; break;
+              case 'End':  next = vvLastIdx; behavior = 'auto'; break;
+            }
+            if (next === null) return;
+            ev.preventDefault();
+            const scrollable = trackHeight - viewportH;
+            const targetProgress = next / vvRows.length + 0.5 / vvRows.length;
+            const targetRaw = targetProgress * 0.96 + 0.02;
+            window.scrollTo({ top: trackTop + targetRaw * scrollable, behavior });
+          });
+
+          measure();
+          tick();
+          window.addEventListener('scroll', onScroll, { passive: true });
+          window.addEventListener('resize', onResize);
+        };
+
+        if (reducedMotion.matches) {
+          // Static mode: leave the readout on the first row; the full
+          // labelled leaderboard speaks for itself.
+          vvUpdate(0);
+        } else {
+          setupVvScrollMode();
+        }
+      }
     </script>
   </body>
 </html>

@@ -51,34 +51,35 @@ import BumpChart from '../components/BumpChart.astro';
 
       <hr class="rule" />
 
-      <!-- Chapter-style TOC — the strip doubles as navigation. -->
+      <!-- Chapter-style TOC — the strip doubles as navigation AND a live
+           progress indicator that highlights the chapter currently in view. -->
       <section class="seven-dates seven-dates-toc">
-        <ol class="seven-dates-strip">
-          <li class="sd-node"><a href="#d-1951">
+        <ol class="seven-dates-strip" id="sd-toc">
+          <li class="sd-node" data-target="d-1951"><a href="#d-1951">
             <span class="sd-year">1951</span>
             <span class="sd-kicker">First election</span>
           </a></li>
-          <li class="sd-node"><a href="#d-1962">
+          <li class="sd-node" data-target="d-1962"><a href="#d-1962">
             <span class="sd-year">1962</span>
             <span class="sd-kicker">Two-member seats end</span>
           </a></li>
-          <li class="sd-node sd-node-accent"><a href="#d-1976">
+          <li class="sd-node sd-node-accent" data-target="d-1976"><a href="#d-1976">
             <span class="sd-year">1976</span>
             <span class="sd-kicker">The freeze</span>
           </a></li>
-          <li class="sd-node sd-node-accent"><a href="#d-2001">
+          <li class="sd-node sd-node-accent" data-target="d-2001"><a href="#d-2001">
             <span class="sd-year">2001</span>
             <span class="sd-kicker">The extension</span>
           </a></li>
-          <li class="sd-node"><a href="#d-2008">
+          <li class="sd-node" data-target="d-2008"><a href="#d-2008">
             <span class="sd-year">2008</span>
             <span class="sd-kicker">Boundaries, not totals</span>
           </a></li>
-          <li class="sd-node"><a href="#d-2019">
+          <li class="sd-node" data-target="d-2019"><a href="#d-2019">
             <span class="sd-year">2019</span>
             <span class="sd-kicker">J&amp;K reorganised</span>
           </a></li>
-          <li class="sd-node sd-node-accent"><a href="#d-2026">
+          <li class="sd-node sd-node-accent" data-target="d-2026"><a href="#d-2026">
             <span class="sd-year">2026</span>
             <span class="sd-kicker">The trigger</span>
           </a></li>
@@ -86,6 +87,13 @@ import BumpChart from '../components/BumpChart.astro';
       </section>
 
       <hr class="rule" />
+
+      <!-- The seven chapters live in a narrative wrapper so the JS can
+           scope its IntersectionObserver to just this section. Each
+           chapter pins its head while its body scrolls past, then yields
+           to the next chapter — a year-flip effect that comes for free
+           from CSS sticky positioning. -->
+      <div class="sd-narrative" id="sd-narrative">
 
       <!-- Seven chapters, one per date -->
       <article class="sd-chapter" id="d-1951">
@@ -314,6 +322,8 @@ import BumpChart from '../components/BumpChart.astro';
         </div>
       </article>
 
+      </div>
+
       <hr class="rule double" />
 
       <!-- Historical state-level charts (moved from the old /part-two/) -->
@@ -391,6 +401,126 @@ import BumpChart from '../components/BumpChart.astro';
       requestAnimationFrame(() => {
         document.body.classList.add('ready');
       });
+
+      /* ─────────────────────────────────────────────────────────────
+         Live TOC progress
+         ─ Each .sd-chapter's .sdc-head pins via CSS sticky while the
+           reader scrolls through its body. The chapter currently in the
+           "reading band" near the top of the viewport gets reflected in
+           the TOC strip above: past dates fill in, current date glows,
+           upcoming dates stay muted.
+         ─ prefers-reduced-motion users skip the JS entirely (CSS also
+           drops the sticky pin in that mode) — the page reads as a
+           normal stack of chapters with anchor links.
+         ───────────────────────────────────────────────────────────── */
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      if (reducedMotion.matches) {
+        document.body.classList.add('reduced-motion');
+      } else {
+        const tocEl = document.getElementById('sd-toc');
+        const narrativeEl = document.getElementById('sd-narrative');
+        const chapterEls = narrativeEl
+          ? Array.from(narrativeEl.querySelectorAll<HTMLElement>('.sd-chapter'))
+          : [];
+        const tocNodes = tocEl
+          ? Array.from(tocEl.querySelectorAll<HTMLElement>('.sd-node'))
+          : [];
+
+        if (chapterEls.length && tocNodes.length === chapterEls.length) {
+          // Map each chapter's id (e.g. 'd-1976') to its index, so we can
+          // line up TOC nodes with the correct chapter.
+          const idIndex = new Map<string, number>();
+          chapterEls.forEach((el, i) => idIndex.set(el.id, i));
+
+          let currentIdx = -1;
+          const setCurrent = (idx: number) => {
+            if (idx === currentIdx) return;
+            currentIdx = idx;
+            for (let i = 0; i < tocNodes.length; i++) {
+              const node = tocNodes[i];
+              node.classList.toggle('sd-node--past', i < idx);
+              node.classList.toggle('sd-node--current', i === idx);
+              node.classList.toggle('sd-node--future', i > idx);
+            }
+          };
+
+          // Track which chapters are in the "reading band" — the top
+          // portion of the viewport where the pinned head sits. We pick
+          // the lowest-indexed chapter currently in that band as
+          // "current" — that way scrolling forward advances the TOC in
+          // step with what the eye is actually reading.
+          const inBand = new Set<number>();
+          const recompute = () => {
+            // If a chapter is in the band, the lowest-indexed one wins
+            // (forward scrolling advances naturally; reverse scrolling
+            // also lands on the right answer because the most-recent
+            // entrant from above has the lowest index in the band).
+            if (inBand.size > 0) {
+              let min = Infinity;
+              for (const i of inBand) if (i < min) min = i;
+              setCurrent(min);
+              return;
+            }
+            // Past the last chapter: the reader has finished the
+            // narrative; mark every node as past so the TOC reads as
+            // "all dates crossed."
+            const rect = narrativeEl!.getBoundingClientRect();
+            if (rect.bottom < 0) setCurrent(chapterEls.length);
+            // Before the first chapter (rare — we're between the TOC
+            // and 1951): hold at 0 so 1951 stays highlighted as
+            // "next up."
+            else if (rect.top > window.innerHeight) setCurrent(0);
+            // In the gap between two chapters' bands: hold the last
+            // value (no setCurrent call), which feels more stable than
+            // flickering.
+          };
+
+          // rootMargin: '-80px 0px -65% 0px' creates a thin band starting
+          // 80px from the top (clear of the pinned head's offset) down
+          // to 35% of the viewport height. Chapters in this band are
+          // what the reader is currently reading.
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                const i = idIndex.get((entry.target as HTMLElement).id);
+                if (i === undefined) continue;
+                if (entry.isIntersecting) inBand.add(i);
+                else inBand.delete(i);
+              }
+              recompute();
+            },
+            { rootMargin: '-80px 0px -65% 0px', threshold: 0 },
+          );
+
+          for (const el of chapterEls) io.observe(el);
+
+          // Past-the-end transitions don't always fire the IO (the
+          // narrative is fully scrolled out, no entry/exit events).
+          // A passive scroll listener catches those moments and lets
+          // recompute() mark everything as past.
+          let ticking = false;
+          window.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+              ticking = false;
+              if (inBand.size === 0) recompute();
+            });
+          }, { passive: true });
+
+          // On first paint, set the TOC to match wherever we landed.
+          // If we deep-linked to e.g. #d-2001, the IO callback will fire
+          // asynchronously and update — but seed with the URL hash too
+          // so the TOC isn't blank for a frame.
+          const hash = window.location.hash.slice(1);
+          const seedIdx = hash && idIndex.has(hash) ? idIndex.get(hash)! : 0;
+          setCurrent(seedIdx);
+        }
+      }
+
+      // Same OS-toggle reload trick as the homepage scrollytell.
+      reducedMotion.addEventListener('change', () => location.reload());
     </script>
   </body>
 </html>
