@@ -445,11 +445,43 @@ body {
 }
 
 /* ────────────────────────────────────────
+   SCROLLYTELL — sticky pin for year+chart
+   The outer .scrollytell is a tall scroll
+   "track"; the inner pins to viewport centre
+   while page scroll advances the year.
+   ──────────────────────────────────────── */
+
+.scrollytell {
+  position: relative;
+  /* 1 viewport for entry + 60vh per year-flip × 13 transitions. */
+  --beat-h: 60vh;
+  height: calc(100vh + 13 * var(--beat-h));
+}
+
+.scrollytell-inner {
+  position: sticky;
+  top: 50%;
+  transform: translateY(-50%);
+  /* Chart re-renders inside the sticky frame; contain prevents the
+     paint from spilling and creates a clean compositor layer. */
+  will-change: transform;
+}
+
+@media (max-width: 640px) {
+  /* Touch scrolls travel less per swipe — shorten the track. */
+  .scrollytell { --beat-h: 45vh; }
+}
+
+/* ────────────────────────────────────────
    TIMELINE / SLIDER
+   Default (scroll mode): rail + fill is a
+   read-only progress indicator; the <input>
+   is hidden but kept focusable for keyboard
+   and reduced-motion users.
    ──────────────────────────────────────── */
 
 .timeline {
-  padding: 22px 0 28px;
+  padding: 22px 0 6px;
 }
 
 .timeline-head {
@@ -463,9 +495,13 @@ body {
 
 .smallcaps.dim { color: var(--dim); }
 
+/* Hint copy swaps based on mode. */
+.timeline-hint-drag { display: none; }
+.timeline-hint-scroll { display: block; }
+
 .slider-wrap {
   position: relative;
-  padding: 22px 10px 0;
+  padding: 14px 10px 0;
 }
 
 input[type='range'] {
@@ -510,11 +546,44 @@ input[type='range']::-moz-range-thumb {
   transform: rotate(45deg);
 }
 
+/* In scroll mode the input is invisible but Tab-focusable.
+   :focus-visible reveals a thin focus ring on the rail for keyboard users. */
+body:not(.reduced-motion) input[type='range'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: default;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body:not(.reduced-motion) input[type='range']:focus-visible + .rail {
+  outline: 1px dashed var(--accent);
+  outline-offset: 6px;
+}
+
 .rail {
   position: relative;
   height: 48px;
   margin-top: 4px;
 }
+
+.rail-fill {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--accent);
+  transition: width 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* In drag-mode the fill is meaningless (the thumb is the indicator). */
+body.reduced-motion .rail-fill { display: none; }
 
 .tick {
   position: absolute;
@@ -524,6 +593,7 @@ input[type='range']::-moz-range-thumb {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  z-index: 2;
 }
 
 .tick-mark {
@@ -531,12 +601,20 @@ input[type='range']::-moz-range-thumb {
   height: 10px;
   background: var(--ink);
   display: block;
+  transition: height 240ms ease, width 240ms ease, background 240ms ease;
 }
 
 .tick-est .tick-mark {
   background: var(--accent);
   height: 8px;
   width: 1px;
+}
+
+.tick-current .tick-mark {
+  height: 16px;
+  width: 3px;
+  background: var(--accent);
+  margin-top: -3px;
 }
 
 .tick-year {
@@ -546,6 +624,7 @@ input[type='range']::-moz-range-thumb {
   letter-spacing: 0.02em;
   font-variant-numeric: lining-nums tabular-nums;
   opacity: 0;
+  transition: color 240ms ease, opacity 240ms ease;
 }
 
 .tick-year.major {
@@ -554,6 +633,40 @@ input[type='range']::-moz-range-thumb {
   font-weight: 600;
   color: var(--ink);
 }
+
+.tick-current .tick-year {
+  opacity: 1;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ────────────────────────────────────────
+   REDUCED-MOTION FALLBACK
+   Un-pin the scrollytell, restore the
+   draggable slider exactly as it was.
+   ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollytell { height: auto; }
+  .scrollytell-inner {
+    position: static;
+    transform: none;
+    will-change: auto;
+  }
+  .timeline-hint-scroll { display: none; }
+  .timeline-hint-drag { display: block; }
+}
+
+/* JS sets body.reduced-motion when matchMedia matches — keep CSS
+   in lockstep for users who land in the JS branch. */
+body.reduced-motion .scrollytell { height: auto; }
+body.reduced-motion .scrollytell-inner {
+  position: static;
+  transform: none;
+  will-change: auto;
+}
+body.reduced-motion .timeline-hint-scroll { display: none; }
+body.reduced-motion .timeline-hint-drag { display: block; }
 
 /* ────────────────────────────────────────
    DRAMATIS PERSONAE / REGIONS

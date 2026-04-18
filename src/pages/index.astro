@@ -61,66 +61,77 @@ const ordinals = [
 
       <hr class="rule" />
 
-      <!-- The year, enormous -->
-      <section class="year-section">
-        <div class="year-label-col">
-          <span class="smallcaps">the year ·&nbsp;<span class="hi">वर्ष</span></span>
-          <span class="year-ord" id="year-ord">{ordinals[initialIndex]} census</span>
-        </div>
-        <div class="year-big-col">
-          <span class="year-big" id="year-label">{CENSUS[initialIndex].year}</span>
-          <span class="estimated-tag" id="estimated-badge" hidden>
-            <span class="est-mark">†</span> figure reconstructed
-          </span>
-        </div>
-        <div class="year-total-col">
-          <span class="smallcaps">total India</span>
-          <span class="total-num" id="total-pop">—</span>
-          <span class="total-unit">million souls</span>
-        </div>
-      </section>
+      <!-- Scrollytelling pin: year + chart + rail freeze in the centre
+           of the viewport while page scroll advances the census year.   -->
+      <section class="scrollytell" id="scrollytell">
+        <div class="scrollytell-inner">
+          <!-- The year, enormous -->
+          <section class="year-section">
+            <div class="year-label-col">
+              <span class="smallcaps">the year ·&nbsp;<span class="hi">वर्ष</span></span>
+              <span class="year-ord" id="year-ord">{ordinals[initialIndex]} census</span>
+            </div>
+            <div class="year-big-col">
+              <span class="year-big" id="year-label" aria-live="polite">{CENSUS[initialIndex].year}</span>
+              <span class="estimated-tag" id="estimated-badge" hidden>
+                <span class="est-mark">†</span> figure reconstructed
+              </span>
+            </div>
+            <div class="year-total-col">
+              <span class="smallcaps">total India</span>
+              <span class="total-num" id="total-pop">—</span>
+              <span class="total-unit">million souls</span>
+            </div>
+          </section>
 
-      <!-- Fig. 1 — regional shares -->
-      <figure class="chart-figure">
-        <figcaption class="fig-head">
-          <span class="fig-label">Fig. 1</span>
-          <span class="fig-title">Share of the all-India total, by region</span>
-          <span class="fig-unit">— per cent —</span>
-        </figcaption>
-        <div id="chart" class="chart"></div>
-      </figure>
+          <!-- Fig. 1 — regional shares -->
+          <figure class="chart-figure">
+            <figcaption class="fig-head">
+              <span class="fig-label">Fig. 1</span>
+              <span class="fig-title">Share of the all-India total, by region</span>
+              <span class="fig-unit">— per cent —</span>
+            </figcaption>
+            <div id="chart" class="chart"></div>
+          </figure>
 
-      <hr class="rule" />
+          <hr class="rule" />
 
-      <!-- Timeline slider for Fig. 1 -->
-      <section class="timeline">
-        <div class="timeline-head">
-          <span class="smallcaps">drag the census year</span>
-          <span class="smallcaps dim"><span class="hi">वर्ष सरकाएँ</span></span>
-        </div>
-        <div class="slider-wrap">
-          <input
-            type="range"
-            id="year-slider"
-            min="0"
-            max={CENSUS.length - 1}
-            step="1"
-            value={initialIndex}
-            aria-label="Census year"
-          />
-          <div class="rail" aria-hidden="true">
-            {CENSUS.map((row, i) => (
-              <div
-                class={`tick ${row.estimated ? 'tick-est' : ''}`}
-                style={`left: ${(i / (CENSUS.length - 1)) * 100}%`}
-              >
-                <span class="tick-mark"></span>
-                <span class={`tick-year ${[0, 4, 7, 10, 13].includes(i) ? 'major' : ''}`}>
-                  {[0, 4, 7, 10, 13].includes(i) ? row.year : ''}
-                </span>
+          <!-- Timeline: read-only progress rail in scroll mode,
+               draggable slider in reduced-motion fallback.            -->
+          <section class="timeline">
+            <div class="timeline-head">
+              <span class="smallcaps timeline-hint timeline-hint-scroll">scroll the census year</span>
+              <span class="smallcaps timeline-hint timeline-hint-drag">drag the census year</span>
+              <span class="smallcaps dim"><span class="hi">वर्ष सरकाएँ</span></span>
+            </div>
+            <div class="slider-wrap">
+              <input
+                type="range"
+                id="year-slider"
+                min="0"
+                max={CENSUS.length - 1}
+                step="1"
+                value={initialIndex}
+                aria-label="Census year"
+              />
+              <div class="rail" aria-hidden="true">
+                <div class="rail-fill" id="rail-fill"></div>
+                {CENSUS.map((row, i) => (
+                  <div
+                    class={`tick ${row.estimated ? 'tick-est' : ''}`}
+                    data-idx={i}
+                    style={`left: ${(i / (CENSUS.length - 1)) * 100}%`}
+                  >
+                    <span class="tick-mark"></span>
+                    <span class={`tick-year ${[0, 4, 7, 10, 13].includes(i) ? 'major' : ''}`}>
+                      {[0, 4, 7, 10, 13].includes(i) ? row.year : ''}
+                    </span>
+                  </div>
+                ))}
+                <span class="rail-end" aria-hidden="true"></span>
               </div>
-            ))}
-          </div>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -312,12 +323,9 @@ const ordinals = [
           height: 440,
           fontFamily: '"Jost", "Tiro Devanagari Hindi", system-ui, sans-serif',
           toolbar: { show: false },
-          animations: {
-            enabled: true,
-            speed: 420,
-            animateGradually: { enabled: false },
-            dynamicAnimation: { enabled: true, speed: 420 },
-          },
+          // Animations disabled: scroll-driven updates need instant snap,
+          // not 420ms tweens that queue up on every frame.
+          animations: { enabled: false },
           background: 'transparent',
           parentHeightOffset: 0,
         },
@@ -704,7 +712,17 @@ const ordinals = [
         document.body.classList.add('ready');
       });
 
+      const railFillEl = document.getElementById('rail-fill')!;
+      const scrollytellEl = document.getElementById('scrollytell')!;
+      const tickEls = Array.from(
+        document.querySelectorAll<HTMLElement>('.rail .tick'),
+      );
+      const lastIdx = CENSUS.length - 1;
+      let currentIdx = -1;
+
       const update = (idx: number) => {
+        if (idx === currentIdx) return;
+        currentIdx = idx;
         const row = CENSUS[idx];
         yearLabelEl.textContent = String(row.year);
         yearOrdEl.textContent = `${ordinals[idx]} census`;
@@ -712,13 +730,126 @@ const ordinals = [
         totalPopEl.textContent = row.totalIndiaMillions.toFixed(1);
         chart.updateSeries([{ name: 'Share of India', data: seriesFor(idx) }]);
 
+        // Keep the hidden range input in sync so tooltip & a11y read the
+        // current year, and so the reduced-motion fallback starts coherent.
+        if (sliderEl.value !== String(idx)) sliderEl.value = String(idx);
+
+        // Read-only progress rail: fill bar + active-tick highlight.
+        railFillEl.style.width = `${(idx / lastIdx) * 100}%`;
+        for (let i = 0; i < tickEls.length; i++) {
+          tickEls[i].classList.toggle('tick-current', i === idx);
+        }
+
         yearLabelEl.classList.remove('year-flash');
         void (yearLabelEl as HTMLElement).offsetWidth;
         yearLabelEl.classList.add('year-flash');
       };
 
       update(Number(sliderEl.value));
-      sliderEl.addEventListener('input', () => update(Number(sliderEl.value)));
+
+      /* ─────────────────────────────────────────────────────────────
+         Scroll-driven year controller
+         ─ IntersectionObserver gates the scroll listener so the rest
+           of the page costs nothing.
+         ─ rAF throttles to one read per frame.
+         ─ prefers-reduced-motion users get the original drag slider.
+         ───────────────────────────────────────────────────────────── */
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      const setupDragMode = () => {
+        document.body.classList.add('reduced-motion');
+        sliderEl.addEventListener('input', () => update(Number(sliderEl.value)));
+      };
+
+      const setupScrollMode = () => {
+        let inZone = false;
+        let ticking = false;
+        let trackTop = 0;
+        let trackHeight = 0;
+        let viewportH = 0;
+
+        const measure = () => {
+          const rect = scrollytellEl.getBoundingClientRect();
+          trackTop = rect.top + window.scrollY;
+          trackHeight = scrollytellEl.offsetHeight;
+          viewportH = window.innerHeight;
+        };
+
+        const tick = () => {
+          ticking = false;
+          const scrollable = trackHeight - viewportH;
+          if (scrollable <= 0) return;
+          const raw = (window.scrollY - trackTop) / scrollable;
+          // 2% dead-zones at top and bottom so first/last years don't
+          // trigger while half off-screen.
+          const progress = Math.max(0, Math.min(1, (raw - 0.02) / 0.96));
+          const idx = Math.max(0, Math.min(lastIdx, Math.floor(progress * CENSUS.length)));
+          update(idx);
+        };
+
+        const onScroll = () => {
+          if (!inZone || ticking) return;
+          ticking = true;
+          requestAnimationFrame(tick);
+        };
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              inZone = entry.isIntersecting;
+              if (inZone) tick();
+            }
+          },
+          { rootMargin: '0px 0px 0px 0px', threshold: 0 },
+        );
+        io.observe(scrollytellEl);
+
+        let resizeT: number | undefined;
+        const onResize = () => {
+          if (resizeT) window.clearTimeout(resizeT);
+          resizeT = window.setTimeout(() => {
+            measure();
+            tick();
+          }, 120);
+        };
+
+        // Keyboard a11y: arrow / Home / End on the hidden input scrolls
+        // the page to the matching segment.
+        sliderEl.addEventListener('keydown', (ev) => {
+          let next: number | null = null;
+          switch (ev.key) {
+            case 'ArrowRight':
+            case 'ArrowUp':
+              next = Math.min(lastIdx, currentIdx + 1); break;
+            case 'ArrowLeft':
+            case 'ArrowDown':
+              next = Math.max(0, currentIdx - 1); break;
+            case 'Home': next = 0; break;
+            case 'End':  next = lastIdx; break;
+          }
+          if (next === null) return;
+          ev.preventDefault();
+          const scrollable = trackHeight - viewportH;
+          // Add a hair of margin past the dead-zone so floor() lands on `next`.
+          const targetProgress = next / CENSUS.length + 0.5 / CENSUS.length;
+          const targetRaw = targetProgress * 0.96 + 0.02;
+          window.scrollTo({
+            top: trackTop + targetRaw * scrollable,
+            behavior: 'smooth',
+          });
+        });
+
+        measure();
+        // Sync to current scroll position on first paint to avoid a 1881
+        // flash on hard reloads partway down the page.
+        tick();
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
+      };
+
+      if (reducedMotion.matches) setupDragMode();
+      else setupScrollMode();
     </script>
   </body>
 </html>
