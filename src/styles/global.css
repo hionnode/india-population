@@ -468,24 +468,18 @@ body {
 
 .scrollytell-inner {
   position: sticky;
-  top: 50%;
-  transform: translateY(-50%);
-  /* Chart re-renders inside the sticky frame; contain prevents the
-     paint from spilling and creates a clean compositor layer. */
-  will-change: transform;
+  /* Top-pin (not centre-pin). Centre-pin (top: 50% transform: translateY(-50%))
+     applies the transform unconditionally — even before the sticky boundary
+     engages — so at scroll=0 the inner's visual content gets pulled UP into
+     the masthead above. Top-pin keeps the inner inside its parent's box at
+     all times. */
+  top: 24px;
 }
 
 @media (max-width: 760px) {
   /* Touch scrolls travel less per swipe — shorten the track. */
   .scrollytell { --beat-h: 45vh; }
-  /* On phones the inner is taller than the viewport (large year + chart +
-     rail + stacked year-section). Centre-pin would push the giant year
-     off the top. Switch to top-pin so the year stays the first thing the
-     reader sees as it flips. */
-  .scrollytell-inner {
-    top: 12px;
-    transform: none;
-  }
+  .scrollytell-inner { top: 12px; }
 }
 
 /* ────────────────────────────────────────
