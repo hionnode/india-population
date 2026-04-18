@@ -2947,7 +2947,14 @@ body.ready .editorial {
     font-size: 11px;
   }
   .pn-item {
-    padding: 2px 6px;
+    padding: 0;
+  }
+  .pn-link, .pn-current {
+    padding: 14px 6px;
+    min-height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
   }
   .pn-title, .pn-sep, .pn-hi {
     display: none;
