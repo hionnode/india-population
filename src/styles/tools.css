@@ -821,6 +821,39 @@ body.workshop .chip-counter {
   border-top: 1px solid var(--measure-soft);
 }
 
+/* RailStatus pill — one row split into (count / cap) and a short teaching
+   message. `data-state` swaps the colour band; copy comes from studio.ts.
+   The `--status-tint` custom prop is the only thing each state overrides,
+   keeping the five selectors two lines each. */
+body.workshop .rail-status {
+  --status-tint: var(--measure);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--status-tint);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 2px 0;
+  border-top: 1px solid var(--measure-soft);
+  transition: color 200ms ease;
+}
+body.workshop .rail-status-count {
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+body.workshop .rail-status-slash {
+  opacity: 0.45;
+  margin: 0 2px;
+}
+body.workshop .rail-status-msg:empty { display: none; }
+body.workshop .rail-status[data-state="zero"],
+body.workshop .rail-status[data-state="under-min"]         { --status-tint: #b36a00; }
+body.workshop .rail-status[data-state="approaching-max"]   { --status-tint: #8a6b1f; }
+body.workshop .rail-status[data-state="at-max"]            { --status-tint: #a63d24; }
+
 /* drafting-table slider (time range) */
 body.workshop .ts-slider { padding: 14px 8px 6px; position: relative; }
 body.workshop .ts-slider-rail {

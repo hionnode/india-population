@@ -1,9 +1,11 @@
 ---
-import { CENSUS_YEARS } from '../../scripts/studio';
+import { CENSUS_YEARS, railStatusBounds } from '../../scripts/studio';
 import type { StudioState } from '../../scripts/studio';
+import RailStatus from '../RailStatus.astro';
 
 export interface Props { initial: StudioState }
 const { initial } = Astro.props;
+const { min: railMin, max: railMax } = railStatusBounds(initial);
 
 const DATASET_OPTIONS = [
   { value: 'region',   label: 'Region',    hint: '5 rows'  },
@@ -100,10 +102,7 @@ const Y_MAX = YEARS[YEARS.length - 1];
         <!-- chips are rendered dynamically in studio.ts based on state.entities -->
         <button class="chip-add" type="button" data-action="open-picker">+ add</button>
       </div>
-      <div class="chip-counter">
-        <span>Selected · <span data-chip-count>{initial.entities.length}</span></span>
-        <span>Max · 18</span>
-      </div>
+      <RailStatus min={railMin} max={railMax} count={initial.entities.length} />
       <div class="chip-picker" data-chip-picker hidden>
         <div class="chip-picker-head">
           <span>Available · <span data-picker-dataset>state</span></span>

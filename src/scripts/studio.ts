@@ -203,6 +203,42 @@ function lockedFieldsFor(preset: Preset): Partial<Record<keyof StudioState, stri
   return {};
 }
 
+// Entity-count bounds for the current studio state. Compare enforces a
+// min of 2 (below which the report refuses to render); all other presets
+// treat 0 as a valid (if empty) state. Max varies by dataset because the
+// entity space itself does — 5 regions, 18 major states + 18 UTs post-36
+// backfill, 36 state/UT rows on the loksabha dataset. RailStatus reads
+// these bounds, as does the picker's `capFor` gate.
+export type RailState = 'zero' | 'under-min' | 'ok' | 'approaching-max' | 'at-max';
+
+export function railStatusBounds(state: StudioState): { min: number; max: number } {
+  const min = state.preset === 'compare' ? 2 : 0;
+  const max = state.preset === 'compare'
+    ? 6
+    : state.dataset === 'region' ? 5
+    : state.dataset === 'state'  ? 36
+    : 36;
+  return { min, max };
+}
+
+export function computeRailState(count: number, min: number, max: number): RailState {
+  if (count === 0) return 'zero';
+  if (count < min) return 'under-min';
+  if (count >= max) return 'at-max';
+  if (count >= max - 1) return 'approaching-max';
+  return 'ok';
+}
+
+export function railStatusMessage(s: RailState, min: number, max: number): string {
+  switch (s) {
+    case 'zero':            return min > 0 ? `pick at least ${min}` : 'pick one';
+    case 'under-min':       return `need ${min}+ to render`;
+    case 'ok':              return '';
+    case 'approaching-max': return 'near cap';
+    case 'at-max':          return `cap · ${max}`;
+  }
+}
+
 export function initStudio(): Store {
   const s = ensureStore();
   if (wired) return s;
@@ -283,6 +319,28 @@ function wireRailControls(s: Store) {
     document.querySelectorAll<HTMLElement>('[data-chip-count]').forEach((el) => {
       el.textContent = String(state.entities.length);
     });
+
+    // RailStatus pill — recompute min/max/state and rewrite the two text
+    // nodes + the data-state attribute that CSS hangs its tinting off.
+    renderRailStatus(state);
+  });
+}
+
+function renderRailStatus(state: StudioState) {
+  const { min, max } = railStatusBounds(state);
+  const count = state.entities.length;
+  const rs = computeRailState(count, min, max);
+  const msg = railStatusMessage(rs, min, max);
+  document.querySelectorAll<HTMLElement>('[data-rail-status]').forEach((el) => {
+    el.dataset.state = rs;
+    el.dataset.min = String(min);
+    el.dataset.max = String(max);
+    const countEl = el.querySelector<HTMLElement>('[data-rail-status-count]');
+    const maxEl = el.querySelector<HTMLElement>('[data-rail-status-max]');
+    const msgEl = el.querySelector<HTMLElement>('[data-rail-status-msg]');
+    if (countEl) countEl.textContent = String(count);
+    if (maxEl) maxEl.textContent = String(max);
+    if (msgEl) msgEl.textContent = msg;
   });
 }
 
@@ -387,8 +445,7 @@ function wireEntityPicker(s: Store) {
     }
   });
 
-  const capFor = (state: StudioState): number =>
-    state.preset === 'compare' ? 6 : (state.dataset === 'region' ? 5 : state.dataset === 'state' ? 18 : 36);
+  const capFor = (state: StudioState): number => railStatusBounds(state).max;
 
   function renderPicker() {
     // dynamic import would complicate plain <script> usage; inline fetch of
