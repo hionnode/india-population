@@ -859,6 +859,11 @@ const ordinals = [
 
       if (reducedMotion.matches) setupDragMode();
       else setupScrollMode();
+
+      // If the user toggles their OS reduced-motion setting mid-session,
+      // CSS reacts (slider becomes visible, sticky disengages) but the JS
+      // mode was bound on load. Reload so the right listener path runs.
+      reducedMotion.addEventListener('change', () => location.reload());
     </script>
   </body>
 </html>
